@@ -1,20 +1,21 @@
-#include "myarea.h"
 #include <cairomm/context.h>
 #include <cmath>
 #include <iostream>
+#include "drawingarea.h"
 
-MyArea::MyArea()
+
+DrawingArea::DrawingArea()
 {
-  std::cout << "MyArea constructor is called." << std::endl;
-  set_size_request(400,400);
+  std::cout << "DrawingArea constructor is called." << std::endl;
+  set_size_request(100,200);
 }
 
-MyArea::~MyArea()
+DrawingArea::~DrawingArea()
 {
-  std::cout << "MyArea destructor is called." << std::endl;
+  std::cout << "DrawingArea destructor is called." << std::endl;
 }
 
-bool MyArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
+bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context>& cr)
 {
   std::cout << "MyArea on_draw is called." << std::endl;
   // This is where we draw on the window

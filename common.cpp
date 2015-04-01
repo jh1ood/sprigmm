@@ -1,5 +1,6 @@
 #include "radiobuttons.h"
-#include "myarea.h"
+#include "drawingarea.h"
+#include "Scales.h"
 #include <gtkmm/application.h>
 #include <gtkmm/window.h>
 #include <iostream>
@@ -42,12 +43,15 @@
 int fd;
 int operating_mode = 3, dsp_filter = 1;
 
-int serial_init (void) {
+
+int rig_init_serial (char* serial_port) {
   struct termios tio;
 
-  fd = open ("/dev/ttyUSB0", O_RDWR | O_NOCTTY);
+  std::cout << "rig_init_serial: begin ... \n";
+
+  fd = open (serial_port, O_RDWR | O_NOCTTY);
   if (fd < 0) {
-    std::cout << "error: can not open myrig." << std::endl;
+    std::cout << "error: can not open myrig. \n";
     return 1;
   }
 
@@ -65,6 +69,7 @@ int serial_init (void) {
 
   return 0;
 }
+
 
 int mystrlen (unsigned char *string) {
   unsigned char *t;
@@ -111,10 +116,10 @@ int receive_fb (void) {
       fprintf(stderr, "%02x ", response[i]);
     }
     fprintf(stderr, "\n");
-    return FALSE;
+    return false;
   }
 
-  return TRUE;
+  return true;
 }
 
 int send_command (unsigned char *partial_command) {
@@ -151,10 +156,10 @@ int send_command (unsigned char *partial_command) {
 
   if ((n_echoback != n_command) || (mystrcmp (command, echoback) != 0)) {
     fprintf(stderr, "              *** error *** echoback does not much. \n");
-    return FALSE;
+    return false;
   }
 
-  return TRUE;
+  return true;
 }
 
 void set_operating_mode (void)
@@ -210,29 +215,3 @@ void myfunc (int index) {
   }
 }
 
-int main(int argc, char *argv[])
-{
-  serial_init ();
-
-  Glib::RefPtr<Gtk::Application> app = Gtk::Application::create(argc, argv, "org.gtkmm.example");
-
-  Gtk::Window  win;
-  Gtk::Box     bigbox;
-  RadioButtons buttons;
-  MyArea       area;
-
-  win.set_title("Spinor Lab");
-  win.set_default_size(1000,400);
-  win.set_border_width(10);
-
-  bigbox.set_orientation(Gtk::ORIENTATION_VERTICAL);
-  bigbox.pack_start(buttons, FALSE, FALSE, 0);
-  bigbox.pack_start(area   , FALSE, FALSE, 0);
-
-  buttons.show();
-  area.show();
-  bigbox.show();
-
-  win.add(bigbox);
-  return app->run(win);
-}
