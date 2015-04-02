@@ -22,30 +22,8 @@ using namespace std;
 #define TIMEOUT_VALUE           100
 #define END_OF_COMMAND          0xfd
 
-  static unsigned char command3 [4] = { 0x16, 0x47, 0x00, 0xfd };       /* BKIN OFF  */
-  static unsigned char command4 [4] = { 0x16, 0x47, 0x01, 0xfd };       /* BKIN ON   */
-  static unsigned char command5 [4] = { 0x16, 0x47, 0x02, 0xfd };       /* BKIN FULL */
-  static unsigned char command6 [4] = { 0x16, 0x55, 0x00, 0xfd };       /* IF FIL1 */
-//static unsigned char command7 [4] = { 0x16, 0x55, 0x01, 0xfd };       /* if fil2 */
-  static unsigned char command8 [4] = { 0x16, 0x55, 0x02, 0xfd };       /* IF FIL3 */
-  static unsigned char command9 [4] = { 0x16, 0x02, 0x00, 0xfd };       /* PRE-AMP OFF */
-  static unsigned char command10[4] = { 0x16, 0x02, 0x01, 0xfd };       /* PRE-AMP 1  */
-  static unsigned char command11[4] = { 0x16, 0x02, 0x02, 0xfd };       /* PRE-AMP 2  */
-  static unsigned char command12[3] = { 0x11, 0x00, 0xfd };             /* ATT OFF  */
-  static unsigned char command13[3] = { 0x11, 0x20, 0xfd };             /* ATT 20dB */
-  static unsigned char command14[3] = { 0x12, 0x00, 0xfd };             /* ANT 1 */
-  static unsigned char command15[3] = { 0x12, 0x01, 0xfd };             /* ANT 2 */
-  static unsigned char command16[4] = { 0x16, 0x12, 0x01, 0xfd };       /* AGC FAST  */
-  static unsigned char command17[4] = { 0x16, 0x12, 0x02, 0xfd };       /* AGC FAST  */
-  static unsigned char command18[4] = { 0x16, 0x12, 0x03, 0xfd };       /* AGC SLOW  */
-  static unsigned char command19[4] = { 0x16, 0x56, 0x00, 0xfd };       /* DSP SHARP */
-  static unsigned char command20[4] = { 0x16, 0x56, 0x01, 0xfd };       /* DSP SOFT */
-  static vector<unsigned char> command19x = { 0x16, 0x56, 0x00 };  /* without EOC */      /* DSP SHARP */
-  static vector<unsigned char> command20x = { 0x16, 0x56, 0x01 };  /* without EOC */     /* DSP SOFT */
-
 int fd;
-int operating_mode = 3, dsp_filter = 1;
-
+static int operating_mode = 3, dsp_filter = 1;
 
 int rig_init_serial (char* serial_port) {
   struct termios tio;
@@ -165,7 +143,7 @@ int send_command (unsigned char *partial_command) {
   return true;
 }
 
-int send_commandx (vector<unsigned char> &partial_command) {
+int send_commandx (const vector<unsigned char> &partial_command) {
   int n_partial, n_command;
   int n_echoback;
   unsigned char command [256] = {0xfe, 0xfe, 0x80, 0xe0}; /* preamble */
@@ -178,7 +156,7 @@ int send_commandx (vector<unsigned char> &partial_command) {
   for(int i=0;i<n_partial;i++) {
     command[4+i] = partial_command.at(i);
   }
-  command[n_command-1] = 0xfd;
+  command[n_command-1] = 0xfd; /* End_Of_Command */
 
   write (fd, command, n_command);
   n_echoback = myread(echoback);
@@ -228,45 +206,103 @@ void set_operating_modex (void)
 }
 
 void myfunc (int index) {
-  std::cout << "myfunc: " << index << std::endl;
-  if(index >= 1 && index <= 7) {
+	static vector<unsigned char> command1x  = { 0x06, 0x03, 0x01};  /* OP MODE & FIL SET */
+	static vector<unsigned char> command6x  = { 0x16, 0x55, 0x00};  /* IF FIL1/2/3 */
+	static vector<unsigned char> command19x = { 0x16, 0x56, 0x00};  /* DSP SHARP/SOFT */
+	static vector<unsigned char> command9x  = { 0x16, 0x02, 0x00};  /* PRE-AMP OFF/1/2 */
+	static vector<unsigned char> command12x = { 0x11, 0x00};        /* ATT OFF  */
+	static vector<unsigned char> command16x = { 0x16, 0x12, 0x01};  /* AGC FAST  */
+	static vector<unsigned char> command14x = { 0x12, 0x00};        /* ANT 1/2 */
+	static vector<unsigned char> command3x  = { 0x16, 0x47, 0x00};  /* BKIN OFF/SEMI/FULL  */
+
+	std::cout << "myfunc: index = " << index << std::endl;
+  if(index >= 0 && index <= 7) { /* OP MODE */
     switch (index) {
-      case 1:
+      case 0: /* CW */
       operating_mode = 0x03;
       break;
-      case 2:
+      case 1: /* CW-R */
       operating_mode = 0x07;
       break;
-      case 3:
+      case 2: /* RTTY */
+      operating_mode = 0x04;
+      break;
+      case 3: /* RTTY-R */
+      operating_mode = 0x08;
+      break;
+      case 4: /* LSB */
       operating_mode = 0x00;
       break;
-      case 4:
-      operating_mode = 0x01;
+      case 5: /* USB */
+      operating_mode  = 0x01;
       break;
-      case 5:
-      dsp_filter     = 0x01;
+      case 6: /* AM */
+      operating_mode    = 0x02;
       break;
-      case 6:
-      dsp_filter     = 0x02;
-      break;
-      case 7:
-      dsp_filter     = 0x03;
+      case 7: /* FM */
+      operating_mode    = 0x05;
       break;
     }
-    set_operating_modex();
+    command1x[1] = operating_mode;
+    send_commandx (command1x);
+    receive_fb ();
+    return;
   }
 
-  if(index >= 8 && index <= 9) {
-    switch (index) {
-      case 8:
+  if(index >= 8 && index <= 10) { /* DAP SHARP/SOFT */
+    command1x[2] = (index - 8) + 1; /* start from 1 */
+    send_commandx(command1x);
+    receive_fb();
+	return;
+  }
+
+  if(index >= 11 && index <= 12) { /* DAP SHARP/SOFT */
+    command19x[2] = index - 11;
     send_commandx(command19x);
     receive_fb();
-    break;
-      case 9:
-    send_commandx(command20x);
-    receive_fb();
-    break;
+	return;
   }
-  }
-}
 
+  if(index >= 13 && index <= 15) { /* IF FIL 1/2/3 */
+	command6x[2] = index - 13;
+	send_commandx(command6x);
+	receive_fb();
+	return;
+  }
+
+  if(index >= 16 && index <= 18) { /* PRE-AMP OFF/1/2 */
+	command9x[2] = index - 16;
+	send_commandx(command9x);
+	receive_fb();
+	return;
+  }
+
+  if(index >= 19 && index <= 20) { /* PRE-AMP OFF/1/2 */
+	command12x[1] = (index - 19) * 0x20;
+	send_commandx(command12x);
+	receive_fb();
+	return;
+  }
+
+  if(index >= 21 && index <= 23) { /* AGC F/M/S */
+	command16x[2] = (index - 21) +1; /* start from 1 */
+	send_commandx(command16x);
+	receive_fb();
+	return;
+  }
+
+  if(index >= 24 && index <= 25) { /* ANT 1/2 */
+	command14x[1] = index - 24;
+	send_commandx(command14x);
+	receive_fb();
+	return;
+  }
+
+  if(index >= 26 && index <= 28) { /* BKIN OFF/SEMI/FULL */
+	command3x[2] = index - 26;
+	send_commandx(command3x);
+	receive_fb();
+	return;
+  }
+
+}

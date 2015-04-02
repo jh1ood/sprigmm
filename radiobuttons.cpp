@@ -15,14 +15,15 @@ RadioButtons::RadioButtons() :
 {
 
   vector<vector<string>> label
-  { {"CW", "CW-R", "LSB", "USB"},
+  { {"CW", "CW-R", "RTTY", "RTTY-R", "LSB", "USB", "AM", "FM"},
 	{"DSP FIL 1", "DSP FIL 2", "DSP FIL 3"},
 	{"DSP SHARP", "DSP SOFT"},
 	{"IF FIL 1", "IF FIL 2", "IF FIL 3"},
-	{"PRE-AMP1", "PRE-AMP2", "ATT 20dB", "BOTH OFF"},
+	{"PRE-AMP OFF", "PRE-AMP 1", "PRE-AMP 2" },
+	{"ATT OFF", "ATT 20dB"},
 	{"AGC FAST", "AGC MID", "AGC SLOW"},
 	{"ANT 1", "ANT 2"},
-	{"BKIN OFF", "BKIN ON", "BKIN FULL"},
+	{"BKIN OFF", "BKIN SEMI", "BKIN FULL"},
   };
 
   int index = 0;
@@ -69,12 +70,12 @@ void RadioButtons::on_button_clicked_quit()
   hide(); //to close the application.
 }
 
-void RadioButtons::on_button_clicked_all(gint data)
+void RadioButtons::on_button_clicked_all(int index)
 {
 
-  if(m_RadioButton[data].get_active()) {
-    std::cout << "button " << data << " is active " << std::endl;
-    myfunc(data+1); /*** temporary measure */
+  if(m_RadioButton[index].get_active()) {
+    std::cout << "button " << index << " is active " << std::endl;
+    myfunc(index); /*** temporary measure */
   }
 
 }
