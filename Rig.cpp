@@ -6,16 +6,15 @@
 #include <gtkmm/application.h>
 #include <gtkmm/window.h>
 
-
 void rig_init_serial(char*);
 void rig_init_sound (char*);
 
 int main(int argc, char *argv[])
 {
   if(argc != 3) {
-    std::cout << "Usage: " << argv[0] << " /dev/ttyUSB0 hw:2,0 \n";
-	std::cout << " --> try % ls -l /dev/ttyUSB*, and % arecord -l to know these parameters.\n";
-	return false;
+    std::cout << "Usage example: " << argv[0] << " /dev/ttyUSB0 hw:2,0 \n";
+	  std::cout << " --> try % ls -l /dev/ttyUSB*, and % arecord -l to know these parameters.\n";
+	  return false;
   }
   std::cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2] << std::endl;
   rig_init_serial(argv[1]);

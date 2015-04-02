@@ -6,6 +6,7 @@
 #include <iostream>
 #include <termios.h>
 #include <fcntl.h>
+using namespace std;
 
 #define DEBUG
 #define NO_MARKER
@@ -27,8 +28,6 @@
   static unsigned char command6 [4] = { 0x16, 0x55, 0x00, 0xfd };       /* IF FIL1 */
 //static unsigned char command7 [4] = { 0x16, 0x55, 0x01, 0xfd };       /* if fil2 */
   static unsigned char command8 [4] = { 0x16, 0x55, 0x02, 0xfd };       /* IF FIL3 */
-  static unsigned char command19[4] = { 0x16, 0x56, 0x00, 0xfd };       /* DSP SHARP */
-  static unsigned char command20[4] = { 0x16, 0x56, 0x01, 0xfd };       /* DSP SOFT */
   static unsigned char command9 [4] = { 0x16, 0x02, 0x00, 0xfd };       /* PRE-AMP OFF */
   static unsigned char command10[4] = { 0x16, 0x02, 0x01, 0xfd };       /* PRE-AMP 1  */
   static unsigned char command11[4] = { 0x16, 0x02, 0x02, 0xfd };       /* PRE-AMP 2  */
@@ -39,6 +38,10 @@
   static unsigned char command16[4] = { 0x16, 0x12, 0x01, 0xfd };       /* AGC FAST  */
   static unsigned char command17[4] = { 0x16, 0x12, 0x02, 0xfd };       /* AGC FAST  */
   static unsigned char command18[4] = { 0x16, 0x12, 0x03, 0xfd };       /* AGC SLOW  */
+  static unsigned char command19[4] = { 0x16, 0x56, 0x00, 0xfd };       /* DSP SHARP */
+  static unsigned char command20[4] = { 0x16, 0x56, 0x01, 0xfd };       /* DSP SOFT */
+  static vector<unsigned char> command19x = { 0x16, 0x56, 0x00, 0xfd };       /* DSP SHARP */
+  static vector<unsigned char> command20x = { 0x16, 0x56, 0x01, 0xfd };       /* DSP SOFT */
 
 int fd;
 int operating_mode = 3, dsp_filter = 1;
@@ -162,6 +165,48 @@ int send_command (unsigned char *partial_command) {
   return true;
 }
 
+int send_commandx (vector<unsigned char> &partial_command) {
+  int n_partial, n_command;
+  int n_echoback;
+  unsigned char command [256] = {0xfe, 0xfe, 0x80, 0xe0}; /* preamble */
+  unsigned char echoback[256];
+
+  n_partial = partial_command.size();
+  cout << "send_commandx: n_partial = " << n_partial << endl;
+
+  n_command = 4 + n_partial; /* add preamble(4) */
+  for(int i=0;i<n_partial;i++) {
+    command[4+i] = partial_command.at(i);
+  }
+  command[n_command-1] = 0xfd;
+
+  write (fd, command, n_command);
+  n_echoback = myread(echoback);
+
+#ifdef DEBUG
+  unsigned char *s;
+  s = command;
+  fprintf(stderr, "send_command: n_command  = %2d, command  = ", n_command);
+  for (int i = 0; i < n_command; i++) {
+        fprintf(stderr, "[%02x] ", *s++);
+  }
+  fprintf(stderr, "\n");
+  fprintf(stderr, "              n_echoback = %2d, echoback = ", n_echoback);
+  s = echoback;
+  for (int i = 0; i < n_echoback; i++) {
+        fprintf(stderr, "[%02x] ", *s++);
+  }
+  fprintf(stderr, "\n");
+#endif
+
+  if ((n_echoback != n_command) || (mystrcmp (command, echoback) != 0)) {
+    fprintf(stderr, "              *** error *** echoback does not much. \n");
+    return false;
+  }
+
+  return true;
+}
+
 void set_operating_mode (void)
 {
   static unsigned char command1[4] = { 0x06, 0x03, 0x01, 0xfd };
@@ -169,6 +214,16 @@ void set_operating_mode (void)
   command1[1] = operating_mode;
   command1[2] = dsp_filter;;
   send_command (command1);
+  receive_fb ();
+}
+
+void set_operating_modex (void)
+{
+  vector<unsigned char> command1 = { 0x06, 0x03, 0x01, 0xfd };
+
+  command1[1] = operating_mode;
+  command1[2] = dsp_filter;
+  send_commandx (command1);
   receive_fb ();
 }
 
@@ -198,17 +253,17 @@ void myfunc (int index) {
       dsp_filter     = 0x03;
       break;
     }
-    set_operating_mode();
+    set_operating_modex();
   }
 
   if(index >= 8 && index <= 9) {
     switch (index) {
       case 8:
-    send_command(command19);
+    send_commandx(command19x);
     receive_fb();
     break;
       case 9:
-    send_command(command20);
+    send_commandx(command20x);
     receive_fb();
     break;
   }
