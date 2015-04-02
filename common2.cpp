@@ -18,6 +18,10 @@
 #include <asoundlib.h>
 #include <fftw3.h>
 
+void send_command (unsigned char *partial_command);
+void receive_fb ();
+
+
 static unsigned int rate = 32000;	/* stream rate */
 static unsigned int channels = 1;	/* count of channels */
 static int byte_per_sample = 2;	/* 16 bit format */
@@ -290,6 +294,27 @@ rig_init_sound (char *sound_device)
     }
 
   return 0;
+}
+
+void
+set_cw_speed (int wpm)
+{
+  static unsigned char command1[5] = { 0x14, 0x0c, 0x00, 0x32, 0xfd };
+  int iii, i100, i10, i1;
+
+  if (wpm < 6)
+    wpm = 6;
+  if (wpm > 48)
+    wpm = 48;
+  iii = 255 * (wpm - 6) / (48 - 6);
+  i100 = iii / 100;
+  i10 = (iii - 100 * i100) / 10;
+  i1 = iii % 10;
+//  fprintf(stderr, "wpm changed %d %d %d %d \n", wpm, i100, i10, i1);
+  command1[2] = i100;
+  command1[3] = 16 * i10 + i1;
+  send_command (command1);
+  receive_fb ();
 }
 
 

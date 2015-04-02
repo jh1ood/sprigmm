@@ -1,5 +1,7 @@
 #include "Scales.h"
 #include <iostream>
+using namespace std;
+void set_cw_speed (int wpm);
 
 Scales::Scales ():
 m_VBox_Top (Gtk::ORIENTATION_VERTICAL, 0),
@@ -9,11 +11,12 @@ m_HBox_Scales (Gtk::ORIENTATION_HORIZONTAL, 10),
 m_HBox_Combo (Gtk::ORIENTATION_HORIZONTAL, 10),
 m_HBox_Digits (Gtk::ORIENTATION_HORIZONTAL, 10),
 m_HBox_PageSize (Gtk::ORIENTATION_HORIZONTAL, 10),
-m_adjustment (Gtk::Adjustment::create (0.0, 0.0, 101.0, 0.1, 1.0, 1.0)),
+m_adjustment (Gtk::Adjustment::create (25.0, 6.0, 49.0, 1.0, 1.0, 1.0)),
 m_adjustment_digits (Gtk::Adjustment::create (1.0, 0.0, 5.0, 1.0, 2.0)),
 m_adjustment_pagesize (Gtk::Adjustment::create (1.0, 1.0, 101.0)),
 m_VScale (m_adjustment, Gtk::ORIENTATION_VERTICAL),
 m_HScale (m_adjustment, Gtk::ORIENTATION_HORIZONTAL),
+m_Scale (m_adjustment),
 m_Scale_Digits (m_adjustment_digits),
 m_Scale_PageSize (m_adjustment_pagesize),
 m_CheckButton ("Display value on scale widgets", 0),
@@ -21,13 +24,13 @@ m_Scrollbar (m_adjustment), m_Button_Quit ("Quit")
 {
 
   //VScale:
-  m_VScale.set_digits (1);
+  m_VScale.set_digits (0);
   m_VScale.set_value_pos (Gtk::POS_TOP);
   m_VScale.set_draw_value ();
   m_VScale.set_inverted ();	// highest value at top
 
   //HScale:
-  m_HScale.set_digits (1);
+  m_HScale.set_digits (0);
   m_HScale.set_value_pos (Gtk::POS_TOP);
   m_HScale.set_draw_value ();
 
@@ -35,15 +38,21 @@ m_Scrollbar (m_adjustment), m_Button_Quit ("Quit")
   m_VBox_Top.pack_start (m_VBox2);
   m_VBox2.set_border_width (10);
   m_VBox2.pack_start (m_HBox_Scales);
+  m_VBox2.pack_start (*Gtk::manage (new Gtk::Label ("CW Key Speed:", 0)), Gtk::PACK_SHRINK);
+  m_Scale.set_digits (0);
+  m_adjustment->signal_value_changed ().connect (sigc::mem_fun (*this,
+								       &Scales::
+								       on_adjustment0_value_changed));
+
 
   //Put VScale and HScale (above scrollbar) side-by-side.
-  m_HBox_Scales.pack_start (m_VScale);
+//  m_HBox_Scales.pack_start (m_VScale);
   m_HBox_Scales.pack_start (m_VBox_HScale);
 
   m_VBox_HScale.pack_start (m_HScale);
 
   //Scrollbar:
-  m_VBox_HScale.pack_start (m_Scrollbar);
+//  m_VBox_HScale.pack_start (m_Scrollbar);
 
   //CheckButton:
   m_CheckButton.set_active ();
@@ -90,7 +99,6 @@ m_Scrollbar (m_adjustment), m_Button_Quit ("Quit")
 								       &Scales::
 								       on_adjustment1_value_changed));
   m_HBox_Digits.pack_start (m_Scale_Digits);
-
   //Page Size:
   m_HBox_PageSize.
     pack_start (*Gtk::manage (new Gtk::Label ("Scrollbar Page Size:", 0)),
@@ -143,11 +151,22 @@ Scales::on_combo_position ()
 }
 
 void
+Scales::on_adjustment0_value_changed ()
+{
+  const double val = m_adjustment->get_value ();
+  m_Scale.set_digits(0);
+  cout << "adjustment0 = " <<  val << endl;
+  int ival = val;
+  set_cw_speed (ival);
+}
+
+void
 Scales::on_adjustment1_value_changed ()
 {
   const double val = m_adjustment_digits->get_value ();
-  m_VScale.set_digits ((int) val);
-  m_HScale.set_digits ((int) val);
+//  m_VScale.set_digits ((int) val);
+//  m_HScale.set_digits ((int) val);
+  cout << "adjustment1 = " << (int) val << endl;
 }
 
 void

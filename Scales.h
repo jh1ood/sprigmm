@@ -22,6 +22,8 @@ protected:
   void
   on_combo_position ();
   void
+  on_adjustment0_value_changed ();
+  void
   on_adjustment1_value_changed ();
   void
   on_adjustment2_value_changed ();
@@ -45,6 +47,7 @@ protected:
     m_VScale;
   Gtk::Scale
     m_HScale,
+	m_Scale,
     m_Scale_Digits,
     m_Scale_PageSize;
   Gtk::Separator
