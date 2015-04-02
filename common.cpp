@@ -40,8 +40,8 @@ using namespace std;
   static unsigned char command18[4] = { 0x16, 0x12, 0x03, 0xfd };       /* AGC SLOW  */
   static unsigned char command19[4] = { 0x16, 0x56, 0x00, 0xfd };       /* DSP SHARP */
   static unsigned char command20[4] = { 0x16, 0x56, 0x01, 0xfd };       /* DSP SOFT */
-  static vector<unsigned char> command19x = { 0x16, 0x56, 0x00, 0xfd };       /* DSP SHARP */
-  static vector<unsigned char> command20x = { 0x16, 0x56, 0x01, 0xfd };       /* DSP SOFT */
+  static vector<unsigned char> command19x = { 0x16, 0x56, 0x00 };  /* without EOC */      /* DSP SHARP */
+  static vector<unsigned char> command20x = { 0x16, 0x56, 0x01 };  /* without EOC */     /* DSP SOFT */
 
 int fd;
 int operating_mode = 3, dsp_filter = 1;
@@ -174,7 +174,7 @@ int send_commandx (vector<unsigned char> &partial_command) {
   n_partial = partial_command.size();
   cout << "send_commandx: n_partial = " << n_partial << endl;
 
-  n_command = 4 + n_partial; /* add preamble(4) */
+  n_command = 4 + n_partial + 1; /* add preamble(4) and EOC(1) */
   for(int i=0;i<n_partial;i++) {
     command[4+i] = partial_command.at(i);
   }
@@ -219,7 +219,7 @@ void set_operating_mode (void)
 
 void set_operating_modex (void)
 {
-  vector<unsigned char> command1 = { 0x06, 0x03, 0x01, 0xfd };
+  vector<unsigned char> command1 = { 0x06, 0x03, 0x01}; /* without EOC */
 
   command1[1] = operating_mode;
   command1[2] = dsp_filter;
