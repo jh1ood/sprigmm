@@ -31,7 +31,7 @@ main (int argc, char *argv[])
     Gtk::Application::create (argc, argv, "org.gtkmm.example");
 
   MyWindow win;
-  win.set_title ("IC-7410 Rig Control Program (C++ version 3)");
+  win.set_title ("IC-7410 Rig Control Program (C++ version)");
   win.set_default_size (50, 50);
   win.set_border_width (5);
   win.show_all_children ();

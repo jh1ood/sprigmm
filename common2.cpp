@@ -317,6 +317,27 @@ set_cw_speed (int wpm)
   receive_fb ();
 }
 
+void
+set_tx_power (int txp)
+{
+  static unsigned char command1[5] = { 0x14, 0x0a, 0x00, 0x32, 0xfd };
+  int iii, i100, i10, i1;
+
+  if (txp < 2)
+    txp = 2;
+  if (txp > 100)
+    txp = 100;
+  iii = 255.0 * (txp - 2) / 100.0;
+  i100 = iii / 100;
+  i10 = (iii - 100 * i100) / 10;
+  i1 = iii % 10;
+//  fprintf(stderr, "txpower changed %d %d %d %d \n", txpower, i100, i10, i1);
+  command1[2] = i100;
+  command1[3] = 16 * i10 + i1;
+  send_command (command1);
+  receive_fb ();
+}
+
 
 #if 0
 
@@ -325,7 +346,27 @@ set_cw_speed (int wpm)
 #define NFFT                    4096
 #define WINDOW_XSIZE            1320
 #define WINDOW_YSIZE             500
-#define AREA1_XSIZE               99
+#define AREA1_XSIZE               99void
+set_tx_power (int txpower)
+{
+  static unsigned char command1[5] = { 0x14, 0x0a, 0x00, 0x32, 0xfd };
+  int iii, i100, i10, i1;
+
+  if (txpower < 2)
+    txpower = 2;
+  if (txpower > 100)
+    txpower = 100;
+  iii = 255.0 * (txpower - 2) / 100.0;
+  i100 = iii / 100;
+  i10 = (iii - 100 * i100) / 10;
+  i1 = iii % 10;
+//  fprintf(stderr, "txpower changed %d %d %d %d \n", txpower, i100, i10, i1);
+  command1[2] = i100;
+  command1[3] = 16 * i10 + i1;
+  send_command (command1);
+  receive_fb ();
+}
+
 #define AREA1_YSIZE               50
 #define WATERFALL_XSIZE          512
 #define WATERFALL_YSIZE          768
@@ -351,6 +392,26 @@ set_cw_speed (int wpm)
 #include <unistd.h>
 #include <fftw3.h>
 #include <complex.h>
+void
+set_tx_power (int txpower)
+{
+  static unsigned char command1[5] = { 0x14, 0x0a, 0x00, 0x32, 0xfd };
+  int iii, i100, i10, i1;
+
+  if (txpower < 2)
+    txpower = 2;
+  if (txpower > 100)
+    txpower = 100;
+  iii = 255.0 * (txpower - 2) / 100.0;
+  i100 = iii / 100;
+  i10 = (iii - 100 * i100) / 10;
+  i1 = iii % 10;
+//  fprintf(stderr, "txpower changed %d %d %d %d \n", txpower, i100, i10, i1);
+  command1[2] = i100;
+  command1[3] = 16 * i10 + i1;
+  send_command (command1);
+  receive_fb ();
+}
 
 static char myrig[256] = "/dev/ttyUSB0";
 static char device[256] = "hw:2,0";	/* sound capture device */
@@ -515,7 +576,27 @@ cb_expose2 (GtkWidget * widget, GdkEventExpose * event, gpointer user_data)
   if (operating_mode == 0x03 || operating_mode == 0x07)
     {
       waterfall_scale_x = 2.0;
-    }
+    }void
+	set_tx_power (int txpower)
+	{
+	  static unsigned char command1[5] = { 0x14, 0x0a, 0x00, 0x32, 0xfd };
+	  int iii, i100, i10, i1;
+
+	  if (txpower < 2)
+	    txpower = 2;
+	  if (txpower > 100)
+	    txpower = 100;
+	  iii = 255.0 * (txpower - 2) / 100.0;
+	  i100 = iii / 100;
+	  i10 = (iii - 100 * i100) / 10;
+	  i1 = iii % 10;
+	//  fprintf(stderr, "txpower changed %d %d %d %d \n", txpower, i100, i10, i1);
+	  command1[2] = i100;
+	  command1[3] = 16 * i10 + i1;
+	  send_command (command1);
+	  receive_fb ();
+	}
+
   else if (operating_mode == 0x00 || operating_mode == 0x01)
     {
       waterfall_scale_x = 1.0;
@@ -626,7 +707,27 @@ set_hwparams (snd_pcm_t * handle, snd_pcm_hw_params_t * params)
   err =
     snd_pcm_hw_params_set_buffer_time_near (handle, params, &buffer_time,
 					    &dir);
-  if (err < 0)
+  if (err < 0)void
+		  set_tx_power (int txpower)
+		  {
+		    static unsigned char command1[5] = { 0x14, 0x0a, 0x00, 0x32, 0xfd };
+		    int iii, i100, i10, i1;
+
+		    if (txpower < 2)
+		      txpower = 2;
+		    if (txpower > 100)
+		      txpower = 100;
+		    iii = 255.0 * (txpower - 2) / 100.0;
+		    i100 = iii / 100;
+		    i10 = (iii - 100 * i100) / 10;
+		    i1 = iii % 10;
+		  //  fprintf(stderr, "txpower changed %d %d %d %d \n", txpower, i100, i10, i1);
+		    command1[2] = i100;
+		    command1[3] = 16 * i10 + i1;
+		    send_command (command1);
+		    receive_fb ();
+		  }
+
     {
       fprintf (stderr, "Unable to set buffer time %i for playback: %s\n",
 	       buffer_time, snd_strerror (err));
@@ -652,7 +753,27 @@ set_hwparams (snd_pcm_t * handle, snd_pcm_hw_params_t * params)
     {
       fprintf (stderr, "Unable to set period time %i for playback: %s\n",
 	       period_time, snd_strerror (err));
-      return err;
+      return err;void
+      set_tx_power (int txpower)
+      {
+        static unsigned char command1[5] = { 0x14, 0x0a, 0x00, 0x32, 0xfd };
+        int iii, i100, i10, i1;
+
+        if (txpower < 2)
+          txpower = 2;
+        if (txpower > 100)
+          txpower = 100;
+        iii = 255.0 * (txpower - 2) / 100.0;
+        i100 = iii / 100;
+        i10 = (iii - 100 * i100) / 10;
+        i1 = iii % 10;
+      //  fprintf(stderr, "txpower changed %d %d %d %d \n", txpower, i100, i10, i1);
+        command1[2] = i100;
+        command1[3] = 16 * i10 + i1;
+        send_command (command1);
+        receive_fb ();
+      }
+
     }
   fprintf (stderr, "period_time = %8d, dir   = %d \n", period_time, dir);
 
