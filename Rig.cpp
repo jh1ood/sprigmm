@@ -25,7 +25,7 @@ main (int argc, char *argv[])
     cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2] <<
     std::endl;
   rig_init_serial (argv[1]);
-  rig_init_sound (argv[2]);
+  rig_init_sound  (argv[2]);
 
   argc = 1;			/* just for the next line */
   Glib::RefPtr < Gtk::Application > app =

@@ -380,7 +380,6 @@ set_tx_power (int txp)
 }
 
 bool
-//myclock (gpointer data)
 myclock ()
 {
   static unsigned char command1[2] = { 0x03, 0xfd };
@@ -405,7 +404,7 @@ myclock ()
 //      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
 //				    TRUE);
 //    }
-//  if (operating_mode == 0x07)
+//  if (operating_mode == 0x07)Hi there!
 //    {				/* CW-R */
 //      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
 //				    TRUE);
@@ -438,8 +437,8 @@ myclock ()
 
 /* freq response in char[8]-char[5] */
 
-//  send_command (command1);
-//  res = myread (buf);
+  send_command (command1);
+  res = myread (buf);
 
 #ifdef DEBUG
   unsigned char *s;
@@ -452,12 +451,13 @@ myclock ()
   fprintf (stderr, "\n");
 #endif
 
-//  if (res != 11)
-//    {
-//      fprintf (stderr, "frequency response is wrong! \n");
-//    }
-//  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
-//  ifreq_in_hz = atoi (string);
+  if (res != 11)
+    {
+      fprintf (stderr, "frequency response is wrong! \n");
+    }
+  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+  ifreq_in_hz = atoi (string);
+  cout << "ifreq_in_hz = " << ifreq_in_hz << endl;
 
 /* S-meter response in char[6]-char[5] */
 

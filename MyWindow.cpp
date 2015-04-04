@@ -10,9 +10,9 @@
 MyWindow::MyWindow ()
 {
   mybox.set_orientation (Gtk::ORIENTATION_VERTICAL);
+  mybox.pack_start (myarea,    FALSE, FALSE, 0);
   mybox.pack_start (mybuttons, FALSE, FALSE, 0);
-  mybox.pack_start (myscales, FALSE, FALSE, 0);
-  mybox.pack_start (myarea, FALSE, FALSE, 0);
+  mybox.pack_start (myscales,  FALSE, FALSE, 0);
   add (mybox);
 }
 
