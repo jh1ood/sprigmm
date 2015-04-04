@@ -10,7 +10,8 @@ void myfunc (int);
 RadioButtons::RadioButtons ():
 m_Box_Top (Gtk::ORIENTATION_VERTICAL),
 m_Box1 (Gtk::ORIENTATION_HORIZONTAL, 10),
-m_Box2 (Gtk::ORIENTATION_VERTICAL, 10), m_Button_Quit ("Quit")
+m_Box2 (Gtk::ORIENTATION_VERTICAL, 10)
+//, m_Button_Quit ("Quit")
 {
 
   vector < vector < string >> label
@@ -66,11 +67,11 @@ m_Box2 (Gtk::ORIENTATION_VERTICAL, 10), m_Button_Quit ("Quit")
 	}
       m_Box1.pack_start (m_BoxGroup[i]);
     }
-  m_Box2.pack_start (m_Button_Quit);
-  m_Button_Quit.set_can_default ();
-  m_Button_Quit.grab_default ();
-  m_Button_Quit.signal_clicked ().
-    connect (sigc::mem_fun (*this, &RadioButtons::on_button_clicked_quit));
+//  m_Box2.pack_start (m_Button_Quit);
+//  m_Button_Quit.set_can_default ();
+//  m_Button_Quit.grab_default ();
+//  m_Button_Quit.signal_clicked ().
+//    connect (sigc::mem_fun (*this, &RadioButtons::on_button_clicked_quit));
 
   m_Box1.set_border_width (10);
   m_Box2.set_border_width (10);

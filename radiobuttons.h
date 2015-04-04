@@ -34,8 +34,8 @@ private:
     m_HSeparator;
   Gtk::VSeparator
     m_VSeparator[100];
-  Gtk::Button
-    m_Button_Quit;
+//  Gtk::Button
+//    m_Button_Quit;
 };
 
 #endif //GTKMM_EXAMPLE_RADIOBUTTONS_H

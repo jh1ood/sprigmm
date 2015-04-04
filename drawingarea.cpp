@@ -7,9 +7,10 @@
 #include <glibmm/main.h>
 #include "drawingarea.h"
 using namespace std;
+
 extern int s_meter;
 extern long int ifreq_in_hz;
-
+void set_freq (long int ifreq_in_hz);
 void myclock();
 int colormap_r(double);
 int colormap_g(double);
@@ -27,6 +28,7 @@ DrawingArea::DrawingArea ()
   signal_draw().connect(sigc::mem_fun(*this, &DrawingArea::on_draw), false);
   #endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
 
+  add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK  |Gdk::SMOOTH_SCROLL_MASK);
 }
 
 DrawingArea::~DrawingArea ()
@@ -59,6 +61,12 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 // frequency display
   cr->save ();
   draw_text(cr, rectangle_width, rectangle_height);
+//  cr->set_source_rgb(0.1, 0.7, 0.3);
+//  for(int i=0;i<10;i++) {
+//	  cr->move_to(10.0+31.0*i, 3.0);
+//	  cr->line_to(10.0+31.0*i,46.0);
+//      cr->stroke();
+//  }
   cr->restore ();
 
 // S meter
@@ -89,13 +97,6 @@ bool DrawingArea::on_timeout()
     return true;
 }
 
-void DrawingArea::draw_rectangle(const Cairo::RefPtr<Cairo::Context>& cr,
-                            int width, int height)
-{
-  cr->rectangle(0, 0, width, height);
-  cr->fill();
-}
-
 void DrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr,
                        int rectangle_width, int rectangle_height)
 {
@@ -119,4 +120,33 @@ void DrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr,
   cr->set_source_rgb(1.0, 1.0, 1.0);
   layout->show_in_cairo_context(cr);
   cr->stroke();
+}
+
+bool DrawingArea::on_scroll_event(GdkEventScroll *event)
+{
+    double x, dy;
+    x  = event->x;
+    dy = event->delta_y;
+    int digit_pos;
+    digit_pos = (x-10.0) / 31.0;
+    cout << "digit_pos = " << digit_pos << endl;
+
+    int frequency_delta = 0.0;
+    if(digit_pos >= 0 && digit_pos <=4) {
+      frequency_delta = pow(10.0, 7-digit_pos);
+    } else if(digit_pos >=6 && digit_pos <=8) {
+        frequency_delta = pow(10.0, 8-digit_pos);
+    }
+
+    if(dy>0) {
+    	frequency_delta = -frequency_delta;
+    }
+
+    int ifreq_in_hz_new = ifreq_in_hz + frequency_delta;
+    if(ifreq_in_hz_new > 0 && ifreq_in_hz_new < 60000000) {
+    	ifreq_in_hz = ifreq_in_hz_new;
+    }
+    set_freq (ifreq_in_hz);
+
+    return true;
 }

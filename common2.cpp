@@ -53,7 +53,30 @@ fftw_plan p;
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
 
-void set_freq (long int ifreq_in_hz);
+void
+set_freq (long int ifreq_in_hz)
+{
+  fprintf (stderr, "freq set to %12.3f [kHz] \n",
+	   (double) ifreq_in_hz / 1000.0);
+  static unsigned char command1[7] =
+    { 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfd };
+  long int ifreq_wrk;
+  int idigit[8];
+
+  ifreq_wrk = ifreq_in_hz;
+
+  for (int i = 0; i < 8; i++)
+    {
+      idigit[i] = ifreq_wrk % 10;
+      ifreq_wrk /= 10;
+    }
+  command1[1] = 16 * idigit[1] + idigit[0];
+  command1[2] = 16 * idigit[3] + idigit[2];
+  command1[3] = 16 * idigit[5] + idigit[4];
+  command1[4] = 16 * idigit[7] + idigit[6];
+  send_command (command1);
+  receive_fb ();
+}
 
 int colormap_r (double tmp)
 {
