@@ -17,10 +17,12 @@
 #include <iostream>
 #include <asoundlib.h>
 #include <fftw3.h>
+using namespace std;
 
 void send_command (unsigned char *partial_command);
 void receive_fb ();
-
+int myread (unsigned char *myresponse);
+extern int fd;
 
 static unsigned int rate = 32000;	/* stream rate */
 static unsigned int channels = 1;	/* count of channels */
@@ -39,7 +41,7 @@ static double bin_size, waterfall_scale_x;
 static double amax = 14.0, amin = 7.0;
 
 long int ifreq_in_hz = 7026000;
-int s_meter;
+extern int s_meter;
 extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
 extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
 // int fd = -1;
@@ -52,6 +54,45 @@ static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
 
 void set_freq (long int ifreq_in_hz);
+
+int colormap_r (double tmp)
+{
+  double val;
+  if (tmp < 0.50) {
+    val = 0.0;
+  } else if (tmp > 0.75) {
+    val = 1.0;
+  } else {
+   val = 4.0 * tmp - 2.0;
+  }
+  return (int) (255.0*val);
+}
+
+int colormap_g (double tmp)
+{
+  double val;
+  if (tmp < 0.25) {
+  val = 4.0 * tmp;
+  } else if (tmp > 0.75) {
+  val = -4.0 * tmp + 4.0;
+  } else {
+  val =  1.0;
+  }
+  return (int) (255.0*val);
+}
+
+int colormap_b (double tmp)
+{
+  double val;
+  if (tmp < 0.25) {
+  val = 1.0;
+  } else if (tmp > 0.50) {
+  val = 0.0;
+  } else {
+  val = -4.0 * tmp + 2.0;
+  }
+  return (int) (255.0*val);
+}
 
 static int
 set_hwparams (snd_pcm_t * handle, snd_pcm_hw_params_t * params)
@@ -338,6 +379,101 @@ set_tx_power (int txp)
   receive_fb ();
 }
 
+bool
+//myclock (gpointer data)
+myclock ()
+{
+  static unsigned char command1[2] = { 0x03, 0xfd };
+  static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+  static unsigned char command3[2] = { 0x04, 0xfd };
+  char string[256];
+  unsigned char buf[255];
+  int res;
+
+/* read operating mode, response in char[5]-char[6] */
+
+//  send_command (command3);
+//  res = myread (buf);
+//  if (res != 8)
+//    {
+//      fprintf (stderr, "operating mode response is wrong! \n");
+//    }
+//  operating_mode = buf[5];
+//  dsp_filter = buf[6];
+//  if (operating_mode == 0x03)
+//    {				/* CW */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+//				    TRUE);
+//    }
+//  if (operating_mode == 0x07)
+//    {				/* CW-R */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+//				    TRUE);
+//    }
+//  if (operating_mode == 0x00)
+//    {				/* LSB */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+//				    TRUE);
+//    }
+//  if (operating_mode == 0x01)
+//    {				/* USB */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+//				    TRUE);
+//    }
+//  if (dsp_filter == 0x01)
+//    {				/* FIL1 */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+//				    TRUE);
+//    }
+//  if (dsp_filter == 0x02)
+//    {				/* FIL2 */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+//				    TRUE);
+//    }
+//  if (dsp_filter == 0x03)
+//    {				/* FIL3 */
+//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+//				    TRUE);
+//    }
+
+/* freq response in char[8]-char[5] */
+
+//  send_command (command1);
+//  res = myread (buf);
+
+#ifdef DEBUG
+  unsigned char *s;
+  fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+  s = buf;
+  for (int i = 0; i < res; i++)
+    {
+      fprintf (stderr, "[%02x] ", *s++);
+    }
+  fprintf (stderr, "\n");
+#endif
+
+//  if (res != 11)
+//    {
+//      fprintf (stderr, "frequency response is wrong! \n");
+//    }
+//  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+//  ifreq_in_hz = atoi (string);
+
+/* S-meter response in char[6]-char[5] */
+
+  send_command (command2);
+  res = myread (buf);
+
+  if (res != 9)
+    {
+      fprintf (stderr, "S-meter response is wrong! \n");
+    }
+
+  sprintf (string, "%02x%02x", buf[6], buf[7]);
+  s_meter = atoi (string);
+  cout << "s_meter = " << s_meter << endl;
+  return true;
+}
 
 #if 0
 
@@ -420,7 +556,472 @@ static unsigned int channels = 1;	/* count of channels */
 static int byte_per_sample = 2;	/* 16 bit format */
 static unsigned int buffer_time = 500000;	/* ring buffer length in us */
 static unsigned int period_time = 128000;	/* period time in us */
-static int resample = 0;	/* disable resample */
+static int resample = 0;	/* disable resample */gboolean
+myclock (gpointer data)
+{
+  static unsigned char command1[2] = { 0x03, 0xfd };
+  static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+  static unsigned char command3[2] = { 0x04, 0xfd };
+  char string[256];
+  unsigned char buf[255];
+  int res;
+
+/* read operating mode, response in char[5]-char[6] */
+
+  send_command (command3);
+  res = myread (buf);
+  if (res != 8)
+    {gboolean
+	  myclock (gpointer data)
+	  {
+	    static unsigned char command1[2] = { 0x03, 0xfd };
+	    static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+	    static unsigned char command3[2] = { 0x04, 0xfd };
+	    char string[256];
+	    unsigned char buf[255];
+	    int res;
+
+	  /* read operating mode, response in char[5]-char[6] */
+
+	    send_command (command3);
+	    res = myread (buf);
+	    if (res != 8)
+	      {
+	        fprintf (stderr, "operating mode response is wrong! \n");
+	      }
+	    operating_mode = buf[5];
+	    dsp_filter = buf[6];
+	    if (operating_mode == 0x03)
+	      {				/* CW */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x07)
+	      {				/* CW-R */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x00)
+	      {				/* LSB */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x01)
+	      {				/* USB */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x01)
+	      {				/* FIL1 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x02)
+	      {				/* FIL2 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x03)
+	      {				/* FIL3 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+	  				    TRUE);
+	      }
+
+	  /* freq response in char[8]-char[5] */
+
+	    send_command (command1);
+	    res = myread (buf);
+
+	  #ifdef DEBUG
+	    unsigned char *s;
+	    fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+	    s = buf;
+	    for (int i = 0; i < res; i++)
+	      {
+	        fprintf (stderr, "[%02x] ", *s++);
+	      }
+	    fprintf (stderr, "\n");
+	  #endif
+
+	    if (res != 11)
+	      {
+	        fprintf (stderr, "frequency response is wrong! \n");
+	      }
+	    sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+	    ifreq_in_hz = atoi (string);
+
+	  /* S-meter response in char[6]-char[5] */
+
+	    send_command (command2);
+	    res = myread (buf);
+	    if (res != 9)
+	      {
+	        fprintf (stderr, "S-meter response is wrong! \n");
+	      }
+
+	    sprintf (string, "%02x%02x", buf[6], buf[7]);
+	    s_meter = atoi (string);
+
+	    return TRUE;
+	  }
+
+      fprintf (stderr, "operating mode response is wrong! \n");
+    }
+  operating_mode = buf[5];
+  dsp_filter = buf[6];
+  if (operating_mode == 0x03)
+    {				/* CW */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+				    TRUE);
+    }
+  if (operating_mode == 0x07)
+    {				/* CW-R */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+				    TRUE);
+    }
+  if (operating_mode == 0x00)
+    {				/* LSB */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+				    TRUE);
+    }
+  if (operating_mode == 0x01)
+    {				/* USB */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+				    TRUE);
+    }
+  if (dsp_filter == 0x01)
+    {				/* FIL1 */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+				    TRUE);
+    }
+  if (dsp_filter == 0x02)
+    {				/* FIL2 */gboolean
+	  myclock (gpointer data)
+	  {
+	    static unsigned char command1[2] = { 0x03, 0xfd };
+	    static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+	    static unsigned char command3[2] = { 0x04, 0xfd };
+	    char string[256];
+	    unsigned char buf[255];
+	    int res;
+
+	  /* read operating mode, response in char[5]-char[6] */
+
+	    send_command (command3);
+	    res = myread (buf);
+	    if (res != 8)
+	      {
+	        fprintf (stderr, "operating mode response is wrong! \n");
+	      }
+	    operating_mode = buf[5];
+	    dsp_filter = buf[6];
+	    if (operating_mode == 0x03)
+	      {				/* CW */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x07)
+	      {				/* CW-R */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x00)
+	      {				/* LSB */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+	  				    TRUE);
+	      }gboolean
+		  myclock (gpointer data)
+		  {
+		    static unsigned char command1[2] = { 0x03, 0xfd };
+		    static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+		    static unsigned char command3[2] = { 0x04, 0xfd };
+		    char string[256];
+		    unsigned char buf[255];
+		    int res;
+
+		  /* read operating mode, response in char[5]-char[6] */
+
+		    send_command (command3);
+		    res = myread (buf);
+		    if (res != 8)
+		      {
+		        fprintf (stderr, "operating mode response is wrong! \n");
+		      }
+		    operating_mode = buf[5];
+		    dsp_filter = buf[6];
+		    if (operating_mode == 0x03)
+		      {				/* CW */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+		  				    TRUE);
+		      }
+		    if (operating_mode == 0x07)
+		      {				/* CW-R */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+		  				    TRUE);
+		      }
+		    if (operating_mode == 0x00)
+		      {				/* LSB */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+		  				    TRUE);
+		      }
+		    if (operating_mode == 0x01)
+		      {				/* USB */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+		  				    TRUE);
+		      }
+		    if (dsp_filter == 0x01)
+		      {				/* FIL1 */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+		  				    TRUE);
+		      }
+		    if (dsp_filter == 0x02)
+		      {				/* FIL2 */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+		  				    TRUE);
+		      }
+		    if (dsp_filter == 0x03)
+		      {				/* FIL3 */
+		        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+		  				    TRUE);
+		      }
+
+		  /* freq response in char[8]-char[5] */
+
+		    send_command (command1);
+		    res = myread (buf);
+
+		  #ifdef DEBUG
+		    unsigned char *s;
+		    fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+		    s = buf;
+		    for (int i = 0; i < res; i++)
+		      {
+		        fprintf (stderr, "[%02x] ", *s++);
+		      }
+		    fprintf (stderr, "\n");
+		  #endif
+
+		    if (res != 11)
+		      {
+		        fprintf (stderr, "frequency response is wrong! \n");
+		      }
+		    sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+		    ifreq_in_hz = atoi (string);
+
+		  /* S-meter response in char[6]-char[5] */
+
+		    send_command (command2);
+		    res = myread (buf);
+		    if (res != 9)
+		      {
+		        fprintf (stderr, "S-meter response is wrong! \n");
+		      }
+
+		    sprintf (string, "%02x%02x", buf[6], buf[7]);
+		    s_meter = atoi (string);
+
+		    return TRUE;
+		  }
+
+	    if (operating_mode == 0x01)
+	      {				/* USB */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x01)
+	      {				/* FIL1 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x02)
+	      {				/* FIL2 */gboolean
+	    	myclock (gpointer data)
+	    	{
+	    	  static unsigned char command1[2] = { 0x03, 0xfd };
+	    	  static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+	    	  static unsigned char command3[2] = { 0x04, 0xfd };
+	    	  char string[256];
+	    	  unsigned char buf[255];
+	    	  int res;
+
+	    	/* read operating mode, response in char[5]-char[6] */
+
+	    	  send_command (command3);
+	    	  res = myread (buf);
+	    	  if (res != 8)
+	    	    {
+	    	      fprintf (stderr, "operating mode response is wrong! \n");
+	    	    }
+	    	  operating_mode = buf[5];
+	    	  dsp_filter = buf[6];
+	    	  if (operating_mode == 0x03)
+	    	    {				/* CW */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+	    					    TRUE);
+	    	    }
+	    	  if (operating_mode == 0x07)
+	    	    {				/* CW-R */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+	    					    TRUE);
+	    	    }
+	    	  if (operating_mode == 0x00)
+	    	    {				/* LSB */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+	    					    TRUE);
+	    	    }
+	    	  if (operating_mode == 0x01)
+	    	    {				/* USB */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+	    					    TRUE);
+	    	    }
+	    	  if (dsp_filter == 0x01)
+	    	    {				/* FIL1 */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+	    					    TRUE);
+	    	    }
+	    	  if (dsp_filter == 0x02)
+	    	    {				/* FIL2 */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+	    					    TRUE);
+	    	    }
+	    	  if (dsp_filter == 0x03)
+	    	    {				/* FIL3 */
+	    	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+	    					    TRUE);
+	    	    }
+
+	    	/* freq response in char[8]-char[5] */
+
+	    	  send_command (command1);
+	    	  res = myread (buf);
+
+	    	#ifdef DEBUG
+	    	  unsigned char *s;
+	    	  fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+	    	  s = buf;
+	    	  for (int i = 0; i < res; i++)
+	    	    {
+	    	      fprintf (stderr, "[%02x] ", *s++);
+	    	    }
+	    	  fprintf (stderr, "\n");
+	    	#endif
+
+	    	  if (res != 11)
+	    	    {
+	    	      fprintf (stderr, "frequency response is wrong! \n");
+	    	    }
+	    	  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+	    	  ifreq_in_hz = atoi (string);
+
+	    	/* S-meter response in char[6]-char[5] */
+
+	    	  send_command (command2);
+	    	  res = myread (buf);
+	    	  if (res != 9)
+	    	    {
+	    	      fprintf (stderr, "S-meter response is wrong! \n");
+	    	    }
+
+	    	  sprintf (string, "%02x%02x", buf[6], buf[7]);
+	    	  s_meter = atoi (string);
+
+	    	  return TRUE;
+	    	}
+
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x03)
+	      {				/* FIL3 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+	  				    TRUE);
+	      }
+
+	  /* freq response in char[8]-char[5] */
+
+	    send_command (command1);
+	    res = myread (buf);
+
+	  #ifdef DEBUG
+	    unsigned char *s;
+	    fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+	    s = buf;
+	    for (int i = 0; i < res; i++)
+	      {
+	        fprintf (stderr, "[%02x] ", *s++);
+	      }
+	    fprintf (stderr, "\n");
+	  #endif
+
+	    if (res != 11)
+	      {
+	        fprintf (stderr, "frequency response is wrong! \n");
+	      }
+	    sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+	    ifreq_in_hz = atoi (string);
+
+	  /* S-meter response in char[6]-char[5] */
+
+	    send_command (command2);
+	    res = myread (buf);
+	    if (res != 9)
+	      {
+	        fprintf (stderr, "S-meter response is wrong! \n");
+	      }
+
+	    sprintf (string, "%02x%02x", buf[6], buf[7]);
+	    s_meter = atoi (string);
+
+	    return TRUE;
+	  }
+
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+				    TRUE);
+    }
+  if (dsp_filter == 0x03)
+    {				/* FIL3 */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+				    TRUE);
+    }
+
+/* freq response in char[8]-char[5] */
+
+  send_command (command1);
+  res = myread (buf);
+
+#ifdef DEBUG
+  unsigned char *s;
+  fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+  s = buf;
+  for (int i = 0; i < res; i++)
+    {
+      fprintf (stderr, "[%02x] ", *s++);
+    }
+  fprintf (stderr, "\n");
+#endif
+
+  if (res != 11)
+    {
+      fprintf (stderr, "frequency response is wrong! \n");
+    }
+  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+  ifreq_in_hz = atoi (string);
+
+/* S-meter response in char[6]-char[5] */
+
+  send_command (command2);
+  res = myread (buf);
+  if (res != 9)
+    {
+      fprintf (stderr, "S-meter response is wrong! \n");
+    }
+
+  sprintf (string, "%02x%02x", buf[6], buf[7]);
+  s_meter = atoi (string);
+
+  return TRUE;
+}
+
 static int period_event = 0;	/* produce poll event after each period */
 static double audio_signal[NFFT];
 static double audio_signal_ffted[NFFT];
@@ -524,12 +1125,291 @@ colormap_b (double tmp)
   double val;
   if (tmp < 0.25)
     {
-      val = 1.0;
+      val = 1.0;gboolean
+      myclock (gpointer data)
+      {
+        static unsigned char command1[2] = { 0x03, 0xfd };
+        static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+        static unsigned char command3[2] = { 0x04, 0xfd };
+        char string[256];
+        unsigned char buf[255];
+        int res;
+
+      /* read operating mode, response in char[5]-char[6] */
+
+        send_command (command3);
+        res = myread (buf);
+        if (res != 8)
+          {
+            fprintf (stderr, "operating mode response is wrong! \n");
+          }
+        operating_mode = buf[5];
+        dsp_filter = buf[6];
+        if (operating_mode == 0x03)
+          {				/* CW */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+      				    TRUE);
+          }
+        if (operating_mode == 0x07)
+          {				/* CW-R */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+      				    TRUE);
+          }
+        if (operating_mode == 0x00)
+          {				/* LSB */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+      				    TRUE);
+          }
+        if (operating_mode == 0x01)
+          {				/* USB */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+      				    TRUE);
+          }
+        if (dsp_filter == 0x01)
+          {				/* FIL1 */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+      				    TRUE);
+          }
+        if (dsp_filter == 0x02)
+          {				/* FIL2 */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+      				    TRUE);
+          }
+        if (dsp_filter == 0x03)
+          {				/* FIL3 */
+            gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+      				    TRUE);
+          }
+
+      /* freq response in char[8]-char[5] */
+
+        send_command (command1);
+        res = myread (buf);
+
+      #ifdef DEBUG
+        unsigned char *s;
+        fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+        s = buf;
+        for (int i = 0; i < res; i++)
+          {
+            fprintf (stderr, "[%02x] ", *s++);
+          }
+        fprintf (stderr, "\n");
+      #endif
+
+        if (res != 11)
+          {
+            fprintf (stderr, "frequency response is wrong! \n");
+          }
+        sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+        ifreq_in_hz = atoi (string);
+
+      /* S-meter response in char[6]-char[5] */
+
+        send_command (command2);
+        res = myread (buf);
+        if (res != 9)
+          {
+            fprintf (stderr, "S-meter response is wrong! \n");
+          }
+
+        sprintf (string, "%02x%02x", buf[6], buf[7]);
+        s_meter = atoi (string);
+
+        return TRUE;
+      }
+
     }
   else if (tmp > 0.50)
     {
       val = 0.0;
-    }
+    }gboolean
+	myclock (gpointer data)
+	{
+	  static unsigned char command1[2] = { 0x03, 0xfd };
+	  static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+	  static unsigned char command3[2] = { 0x04, 0xfd };
+	  char string[256];
+	  unsigned char buf[255];
+	  int res;
+
+	/* read operating mode, response in char[5]-char[6] */
+
+	  send_command (command3);gboolean
+	  myclock (gpointer data)
+	  {
+	    static unsigned char command1[2] = { 0x03, 0xfd };
+	    static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+	    static unsigned char command3[2] = { 0x04, 0xfd };
+	    char string[256];
+	    unsigned char buf[255];
+	    int res;
+
+	  /* read operating mode, response in char[5]-char[6] */
+
+	    send_command (command3);
+	    res = myread (buf);
+	    if (res != 8)
+	      {
+	        fprintf (stderr, "operating mode response is wrong! \n");
+	      }
+	    operating_mode = buf[5];
+	    dsp_filter = buf[6];
+	    if (operating_mode == 0x03)
+	      {				/* CW */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x07)
+	      {				/* CW-R */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x00)
+	      {				/* LSB */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+	  				    TRUE);
+	      }
+	    if (operating_mode == 0x01)
+	      {				/* USB */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x01)
+	      {				/* FIL1 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x02)
+	      {				/* FIL2 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+	  				    TRUE);
+	      }
+	    if (dsp_filter == 0x03)
+	      {				/* FIL3 */
+	        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+	  				    TRUE);
+	      }
+
+	  /* freq response in char[8]-char[5] */
+
+	    send_command (command1);
+	    res = myread (buf);
+
+	  #ifdef DEBUG
+	    unsigned char *s;
+	    fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+	    s = buf;
+	    for (int i = 0; i < res; i++)
+	      {
+	        fprintf (stderr, "[%02x] ", *s++);
+	      }
+	    fprintf (stderr, "\n");
+	  #endif
+
+	    if (res != 11)
+	      {
+	        fprintf (stderr, "frequency response is wrong! \n");
+	      }
+	    sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+	    ifreq_in_hz = atoi (string);
+
+	  /* S-meter response in char[6]-char[5] */
+
+	    send_command (command2);
+	    res = myread (buf);
+	    if (res != 9)
+	      {
+	        fprintf (stderr, "S-meter response is wrong! \n");
+	      }
+
+	    sprintf (string, "%02x%02x", buf[6], buf[7]);
+	    s_meter = atoi (string);
+
+	    return TRUE;
+	  }
+
+	  res = myread (buf);
+	  if (res != 8)
+	    {
+	      fprintf (stderr, "operating mode response is wrong! \n");
+	    }
+	  operating_mode = buf[5];
+	  dsp_filter = buf[6];
+	  if (operating_mode == 0x03)
+	    {				/* CW */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+					    TRUE);
+	    }
+	  if (operating_mode == 0x07)
+	    {				/* CW-R */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+					    TRUE);
+	    }
+	  if (operating_mode == 0x00)
+	    {				/* LSB */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+					    TRUE);
+	    }
+	  if (operating_mode == 0x01)
+	    {				/* USB */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+					    TRUE);
+	    }
+	  if (dsp_filter == 0x01)
+	    {				/* FIL1 */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+					    TRUE);
+	    }
+	  if (dsp_filter == 0x02)
+	    {				/* FIL2 */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+					    TRUE);
+	    }
+	  if (dsp_filter == 0x03)
+	    {				/* FIL3 */
+	      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+					    TRUE);
+	    }
+
+	/* freq response in char[8]-char[5] */
+
+	  send_command (command1);
+	  res = myread (buf);
+
+	#ifdef DEBUG
+	  unsigned char *s;
+	  fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+	  s = buf;
+	  for (int i = 0; i < res; i++)
+	    {
+	      fprintf (stderr, "[%02x] ", *s++);
+	    }
+	  fprintf (stderr, "\n");
+	#endif
+
+	  if (res != 11)
+	    {
+	      fprintf (stderr, "frequency response is wrong! \n");
+	    }
+	  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+	  ifreq_in_hz = atoi (string);
+
+	/* S-meter response in char[6]-char[5] */
+
+	  send_command (command2);
+	  res = myread (buf);
+	  if (res != 9)
+	    {
+	      fprintf (stderr, "S-meter response is wrong! \n");
+	    }
+
+	  sprintf (string, "%02x%02x", buf[6], buf[7]);
+	  s_meter = atoi (string);
+
+	  return TRUE;
+	}
+
   else
     {
       val = -4.0 * tmp + 2.0;
@@ -546,7 +1426,100 @@ cb_expose2 (GtkWidget * widget, GdkEventExpose * event, gpointer user_data)
   int w, h, n, rowstride;
   guchar *p, *q;
 
-  w = gdk_pixbuf_get_width (pixbuf);
+  w = gdk_pixbuf_get_width (pixbuf);gboolean
+  myclock (gpointer data)
+  {
+    static unsigned char command1[2] = { 0x03, 0xfd };
+    static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+    static unsigned char command3[2] = { 0x04, 0xfd };
+    char string[256];
+    unsigned char buf[255];
+    int res;
+
+  /* read operating mode, response in char[5]-char[6] */
+
+    send_command (command3);
+    res = myread (buf);
+    if (res != 8)
+      {
+        fprintf (stderr, "operating mode response is wrong! \n");
+      }
+    operating_mode = buf[5];
+    dsp_filter = buf[6];
+    if (operating_mode == 0x03)
+      {				/* CW */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+  				    TRUE);
+      }
+    if (operating_mode == 0x07)
+      {				/* CW-R */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+  				    TRUE);
+      }
+    if (operating_mode == 0x00)
+      {				/* LSB */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+  				    TRUE);
+      }
+    if (operating_mode == 0x01)
+      {				/* USB */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+  				    TRUE);
+      }
+    if (dsp_filter == 0x01)
+      {				/* FIL1 */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+  				    TRUE);
+      }
+    if (dsp_filter == 0x02)
+      {				/* FIL2 */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+  				    TRUE);
+      }
+    if (dsp_filter == 0x03)
+      {				/* FIL3 */
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+  				    TRUE);
+      }
+
+  /* freq response in char[8]-char[5] */
+
+    send_command (command1);
+    res = myread (buf);
+
+  #ifdef DEBUG
+    unsigned char *s;
+    fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+    s = buf;
+    for (int i = 0; i < res; i++)
+      {
+        fprintf (stderr, "[%02x] ", *s++);
+      }
+    fprintf (stderr, "\n");
+  #endif
+
+    if (res != 11)
+      {
+        fprintf (stderr, "frequency response is wrong! \n");
+      }
+    sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+    ifreq_in_hz = atoi (string);
+
+  /* S-meter response in char[6]-char[5] */
+
+    send_command (command2);
+    res = myread (buf);
+    if (res != 9)
+      {
+        fprintf (stderr, "S-meter response is wrong! \n");
+      }
+
+    sprintf (string, "%02x%02x", buf[6], buf[7]);
+    s_meter = atoi (string);
+
+    return TRUE;
+  }
+
   h = gdk_pixbuf_get_height (pixbuf);
   n = gdk_pixbuf_get_n_channels (pixbuf);
   rowstride = gdk_pixbuf_get_rowstride (pixbuf);
@@ -631,7 +1604,100 @@ cb_expose2 (GtkWidget * widget, GdkEventExpose * event, gpointer user_data)
   return TRUE;
 }
 
-static int
+static intgboolean
+myclock (gpointer data)
+{
+  static unsigned char command1[2] = { 0x03, 0xfd };
+  static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+  static unsigned char command3[2] = { 0x04, 0xfd };
+  char string[256];
+  unsigned char buf[255];
+  int res;
+
+/* read operating mode, response in char[5]-char[6] */
+
+  send_command (command3);
+  res = myread (buf);
+  if (res != 8)
+    {
+      fprintf (stderr, "operating mode response is wrong! \n");
+    }
+  operating_mode = buf[5];
+  dsp_filter = buf[6];
+  if (operating_mode == 0x03)
+    {				/* CW */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
+				    TRUE);
+    }
+  if (operating_mode == 0x07)
+    {				/* CW-R */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
+				    TRUE);
+    }
+  if (operating_mode == 0x00)
+    {				/* LSB */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
+				    TRUE);
+    }
+  if (operating_mode == 0x01)
+    {				/* USB */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
+				    TRUE);
+    }
+  if (dsp_filter == 0x01)
+    {				/* FIL1 */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
+				    TRUE);
+    }
+  if (dsp_filter == 0x02)
+    {				/* FIL2 */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
+				    TRUE);
+    }
+  if (dsp_filter == 0x03)
+    {				/* FIL3 */
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
+				    TRUE);
+    }
+
+/* freq response in char[8]-char[5] */
+
+  send_command (command1);
+  res = myread (buf);
+
+#ifdef DEBUG
+  unsigned char *s;
+  fprintf (stderr, "response for frequncy read, res = %2d : ", res);
+  s = buf;
+  for (int i = 0; i < res; i++)
+    {
+      fprintf (stderr, "[%02x] ", *s++);
+    }
+  fprintf (stderr, "\n");
+#endif
+
+  if (res != 11)
+    {
+      fprintf (stderr, "frequency response is wrong! \n");
+    }
+  sprintf (string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
+  ifreq_in_hz = atoi (string);
+
+/* S-meter response in char[6]-char[5] */
+
+  send_command (command2);
+  res = myread (buf);
+  if (res != 9)
+    {
+      fprintf (stderr, "S-meter response is wrong! \n");
+    }
+
+  sprintf (string, "%02x%02x", buf[6], buf[7]);
+  s_meter = atoi (string);
+
+  return TRUE;
+}
+
 set_hwparams (snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 {
   unsigned int rrate;

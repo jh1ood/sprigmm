@@ -1,13 +1,27 @@
 #include <cairomm/context.h>
 #include <cmath>
+#include <ctime>
 #include <iostream>
+#include <glibmm/main.h>
 #include "drawingarea.h"
-
+extern int s_meter;
+void myclock();
+int colormap_r(double);
+int colormap_g(double);
+int colormap_b(double);
 
 DrawingArea::DrawingArea ()
 {
   std::cout << "DrawingArea constructor is called." << std::endl;
   set_size_request (100, 200);
+
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 250 );
+
+  #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
+  //Connect the signal handler if it isn't already a virtual method override:
+  signal_draw().connect(sigc::mem_fun(*this, &DrawingArea::on_draw), false);
+  #endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
+
 }
 
 DrawingArea::~DrawingArea ()
@@ -19,59 +33,42 @@ bool
 DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 {
   std::cout << "MyArea on_draw is called." << std::endl;
-  // This is where we draw on the window
+
+  myclock(); /* to get inf from IC-7410 */
+
   Gtk::Allocation allocation = get_allocation ();
   const int width = allocation.get_width ();
   const int height = allocation.get_height ();
   const int lesser = MIN (width, height);
 
-  // coordinates for the center of the window
   int xc, yc;
   xc = width / 2;
   yc = height / 2;
 
-  cr->set_line_width (lesser * 0.02);	// outline thickness changes
-  // with window size
+  cr->set_line_width (lesser * 0.02);
 
-  // first draw a simple unclosed arc
-  cr->save ();
-  cr->arc (width / 3.0, height / 4.0, lesser / 4.0, -(M_PI / 5.0), M_PI);
-  cr->close_path ();		// line back to start point
-  cr->set_source_rgb (0.0, 0.8, 0.0);
-  cr->fill_preserve ();
-  cr->restore ();		// back to opaque black
-  cr->stroke ();		// outline it
+  double s_frac = (double) s_meter / 255.0;
 
   // now draw a circle
   cr->save ();
-  cr->arc (xc, yc, lesser / 4.0, 0.0, 2.0 * M_PI);	// full circle
-  cr->set_source_rgba (0.0, 0.0, 0.8, 0.6);	// partially translucent
-  cr->fill_preserve ();
-  cr->restore ();		// back to opaque black
-  cr->stroke ();
-
-  // and finally an ellipse
-  double ex, ey, ew, eh;
-  // center of ellipse
-  ex = xc;
-  ey = 3.0 * height / 4.0;
-  // ellipse dimensions
-  ew = 3.0 * width / 4.0;
-  eh = height / 3.0;
-
-  cr->save ();
-
-  cr->translate (ex, ey);	// make (ex, ey) == (0, 0)
-  cr->scale (ew / 2.0, eh / 2.0);	// for width: ew / 2.0 == 1.0
-  // for height: eh / 2.0 == 1.0
-
-  cr->arc (0.0, 0.0, 1.0, 0.0, 2 * M_PI);	// 'circle' centered at (0, 0)
-  // with 'radius' of 1.0
-
-  cr->set_source_rgba (0.8, 0.0, 0.0, 0.7);
+  cr->arc (xc/4, yc, (0.2+s_frac)* lesser / 4.0, 0.0, 2.0 * M_PI);	// full circle
+  cr->set_source_rgba (colormap_r(s_frac)/255.0, colormap_g(s_frac)/255.0, colormap_b(s_frac), 1.0);	// partially translucent
   cr->fill_preserve ();
   cr->restore ();		// back to opaque black
   cr->stroke ();
 
   return true;
+}
+
+bool DrawingArea::on_timeout()
+{
+    // force our program to redraw the entire clock.
+    Glib::RefPtr<Gdk::Window> win = get_window();
+    if (win)
+    {
+        Gdk::Rectangle r(0, 0, get_allocation().get_width(),
+                get_allocation().get_height());
+        win->invalidate_rect(r, false);
+    }
+    return true;
 }

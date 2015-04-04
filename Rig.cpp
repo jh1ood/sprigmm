@@ -8,6 +8,7 @@
 
 void rig_init_serial (char *);
 void rig_init_sound (char *);
+//MyWindow win;
 
 int
 main (int argc, char *argv[])

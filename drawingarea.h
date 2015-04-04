@@ -16,6 +16,7 @@ protected:
   virtual
     bool
   on_draw (const Cairo::RefPtr < Cairo::Context > &cr);
+  bool on_timeout();
 };
 
 #endif // GTKMM_EXAMPLE_DRAWINGAREA_H

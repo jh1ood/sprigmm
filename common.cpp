@@ -23,7 +23,8 @@ using namespace std;
 #define END_OF_COMMAND          0xfd
 
 int fd;
-static int operating_mode = 3, dsp_filter = 1;
+int operating_mode = 3, dsp_filter = 1;
+int s_meter;
 
 int
 rig_init_serial (char *serial_port)
