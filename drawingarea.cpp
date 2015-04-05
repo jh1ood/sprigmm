@@ -6,6 +6,7 @@
 #include <cairo.h>
 #include <glibmm/main.h>
 #include <asoundlib.h>
+#include <fftw3.h>
 #include "drawingarea.h"
 using namespace std;
 
@@ -55,6 +56,10 @@ int colormap_r(double);
 int colormap_g(double);
 int colormap_b(double);
 
+extern double *in;
+extern fftw_complex *out;
+extern fftw_plan p;
+
 DrawingArea::DrawingArea ()
 {
   std::cout << "DrawingArea constructor is called." << std::endl;
@@ -68,6 +73,16 @@ DrawingArea::DrawingArea ()
   #endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
 
   add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK  |Gdk::SMOOTH_SCROLL_MASK);
+
+  bin_size = rate / (double) NFFT;
+  for (int i = 0; i < NFFT; i++) {
+        fft_window[i] = 0.54 - 0.46 * cos (2.0 * M_PI * i / (double) NFFT);
+  }
+
+  in  = malloc (sizeof (double) * NFFT);
+  out = (fftw_complex *) fftw_malloc (sizeof (fftw_complex) * (NFFT / 2 + 1));
+  p   = fftw_plan_dft_r2c_1d (NFFT, in, out, FFTW_MEASURE);
+
 }
 
 DrawingArea::~DrawingArea ()
@@ -82,10 +97,40 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 
   myclock(); /* to get inf from IC-7410 */
 
+  /* audio signal FFT */
+        cout << "audio signal FFT begin1.. \n";
+        for (int i = 0; i < NFFT; i++)
+  	{
+  	  in[i] = fft_window[i] * audio_signal[i];
+  	}
+
+        cout << "audio signal FFT begin2.. \n";
+        fftw_execute (p);
+        cout << "audio signal FFT begin3.. \n";
+
+  /* log10 and normalize */
+
+        for (int i = 0; i < NFFT / 4; i++)
+  	{
+  	  double val;
+  	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
+  	  if (val < pow (10.0, amin))
+  	    {
+  	      audio_signal_ffted[i] = 0.0;
+  	    }
+  	  else if (val > pow (10.0, amax))
+  	    {
+  	      audio_signal_ffted[i] = 1.0;
+  	    }
+  	  else
+  	    {
+  	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
+  	    }
+  	}
+
   Gtk::Allocation allocation = get_allocation ();
   const int width  = allocation.get_width ();
   const int height = allocation.get_height (); /* eg. 50 */
-  const int lesser = MIN (width, height);
   const int rectangle_width  = width;
   const int rectangle_height = height; /* eg. 50 */
 
@@ -97,35 +142,6 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   cr->stroke ();
   cr->restore ();
 
-  ///* audio signal FFT */
-  //
-  //      for (int i = 0; i < NFFT; i++)
-  //	{
-  //	  in[i] = fft_window[i] * audio_signal[i];
-  //	}
-  //
-  //      fftw_execute (p);
-  //
-  ///* log10 and normalize */
-  //
-  //      for (int i = 0; i < NFFT / 4; i++)
-  //	{
-  //	  double val;
-  //	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
-  //	  if (val < pow (10.0, amin))
-  //	    {
-  //	      audio_signal_ffted[i] = 0.0;
-  //	    }
-  //	  else if (val > pow (10.0, amax))
-  //	    {
-  //	      audio_signal_ffted[i] = 1.0;
-  //	    }
-  //	  else
-  //	    {
-  //	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
-  //	    }
-  //	}
-  ////      timeout2 (NULL);
 
 // frequency display
   cr->save ();
@@ -153,49 +169,26 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 // Waveform
   cr->save ();
   cr->set_source_rgb(0.9, 0.9, 0.2);
-  cr->move_to(570.0, audio_signal[0]/16384.0 * 24.0 + 25.0);
-  for(int i=0;i<400;i++) {
-	  cr->line_to(570+i, audio_signal[i]/16384.0 * 24.0 + 25.0);
+  cr->move_to(520.0, audio_signal[0]/16384.0 * 24.0 + 25.0);
+  for(int i=0;i<200;i++) {
+	  cr->line_to(520+i, audio_signal[i]/16384.0 * 24.0 + 25.0);
+  }
+  cr->stroke();
+  cr->restore ();
+
+// Spectrum
+
+  cr->save ();
+  cr->set_source_rgb(0.2, 0.9, 0.9);
+  cr->move_to(780.0, 40.0*(1.0-audio_signal_ffted[0])+5.0);
+  for(int i=0;i<170;i++) {
+	  cr->line_to(780+i, 40.0*(1.0-audio_signal_ffted[i])+5.0);
   }
   cr->stroke();
   cr->restore ();
 
 
 
-
-  ///* audio signal FFT */
-  //
-  //      for (int i = 0; i < NFFT; i++)
-  //	{
-  //	  in[i] = fft_window[i] * audio_signal[i];
-  //	}
-  //
-  //      fftw_execute (p);
-  //
-  ///* log10 and normalize */
-  //
-  //      for (int i = 0; i < NFFT / 4; i++)
-  //	{
-  //	  double val;
-  //	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
-  //	  if (val < pow (10.0, amin))
-  //	    {
-  //	      audio_signal_ffted[i] = 0.0;
-  //	    }
-  //	  else if (val > pow (10.0, amax))
-  //	    {
-  //	      audio_signal_ffted[i] = 1.0;
-  //	    }
-  //	  else
-  //	    {
-  //	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
-  //	    }
-  //	}
-  ////      timeout2 (NULL);
-
-  cr->restore ();
-
-  cr->stroke ();
 
   return true;
 }

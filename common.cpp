@@ -7,6 +7,7 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <asoundlib.h>
+#include <fftw3.h>
 using namespace std;
 
 #define DEBUG
@@ -48,6 +49,9 @@ extern snd_pcm_sframes_t period_size;
 extern snd_pcm_t *handle;
 extern snd_pcm_hw_params_t *hwparams;
 extern snd_pcm_sw_params_t *swparams;
+extern double *in;
+extern fftw_complex *out;
+extern fftw_plan p;
 
 int send_command (unsigned char *partial_command);
 int receive_fb ();
@@ -424,37 +428,7 @@ async_callback (snd_async_handler_t * ahandler)
 #endif
 
 	}
-//      fprintf(stderr, "async_callback: icount = %12d, iwater = %12d \n", icount++, iwater);
 
-///* audio signal FFT */
-//
-//      for (int i = 0; i < NFFT; i++)
-//	{
-//	  in[i] = fft_window[i] * audio_signal[i];
-//	}
-//
-//      fftw_execute (p);
-//
-///* log10 and normalize */
-//
-//      for (int i = 0; i < NFFT / 4; i++)
-//	{
-//	  double val;
-//	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
-//	  if (val < pow (10.0, amin))
-//	    {
-//	      audio_signal_ffted[i] = 0.0;
-//	    }
-//	  else if (val > pow (10.0, amax))
-//	    {
-//	      audio_signal_ffted[i] = 1.0;
-//	    }
-//	  else
-//	    {
-//	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
-//	    }
-//	}
-////      timeout2 (NULL);
 
       avail = snd_pcm_avail_update (handle);
     }

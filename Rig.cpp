@@ -6,6 +6,7 @@
 #include <gtkmm/application.h>
 #include <gtkmm/window.h>
 #include <asoundlib.h>
+#include <fftw3.h>
 
 #define DEBUG
 #define NO_MARKER
@@ -46,6 +47,9 @@ snd_pcm_sframes_t period_size;
 snd_pcm_t *handle;
 snd_pcm_hw_params_t *hwparams;
 snd_pcm_sw_params_t *swparams;
+double *in;
+fftw_complex *out;
+fftw_plan p;
 
 void rig_init_serial (char *);
 void rig_init_sound  (char *);
