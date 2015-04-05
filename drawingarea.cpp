@@ -5,11 +5,50 @@
 #include <stdio.h>
 #include <cairo.h>
 #include <glibmm/main.h>
+#include <asoundlib.h>
 #include "drawingarea.h"
 using namespace std;
 
-extern int s_meter;
+#define DEBUG
+#define NO_MARKER
+#define NFFT                    4096
+#define WINDOW_XSIZE            1320
+#define WINDOW_YSIZE             500
+#define AREA1_XSIZE               99
+#define AREA1_YSIZE               50
+#define WATERFALL_XSIZE          512
+#define WATERFALL_YSIZE          768
+#define WAVEFORM_LEN             128
+#define BAUDRATE                B19200
+#define TIMEOUT_VALUE           100
+#define END_OF_COMMAND          0xfd
+
+extern int fd;
+extern unsigned int rate;
+extern unsigned int channels;	/* count of channels */
+extern int byte_per_sample;	/* 16 bit format */
+extern unsigned int buffer_time;	/* ring buffer length in us */
+extern unsigned int period_time;	/* period time in us */
+extern int resample;	/* disable resample */
+extern int period_event;	/* produce poll event after each period */
+extern double audio_signal[NFFT];
+extern double audio_signal_ffted[NFFT];
+extern double fft_window[NFFT];
+extern int cw_pitch;
+extern int iwater;
+extern int nsamples;
+extern double bin_size, waterfall_scale_x;
+extern double amax, amin;
 extern long int ifreq_in_hz;
+extern int s_meter;
+extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
+extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
+extern snd_pcm_sframes_t buffer_size;
+extern snd_pcm_sframes_t period_size;
+extern snd_pcm_t *handle;
+extern snd_pcm_hw_params_t *hwparams;
+extern snd_pcm_sw_params_t *swparams;
+
 void set_freq (long int ifreq_in_hz);
 void myclock();
 int colormap_r(double);
@@ -58,6 +97,36 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   cr->stroke ();
   cr->restore ();
 
+  ///* audio signal FFT */
+  //
+  //      for (int i = 0; i < NFFT; i++)
+  //	{
+  //	  in[i] = fft_window[i] * audio_signal[i];
+  //	}
+  //
+  //      fftw_execute (p);
+  //
+  ///* log10 and normalize */
+  //
+  //      for (int i = 0; i < NFFT / 4; i++)
+  //	{
+  //	  double val;
+  //	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
+  //	  if (val < pow (10.0, amin))
+  //	    {
+  //	      audio_signal_ffted[i] = 0.0;
+  //	    }
+  //	  else if (val > pow (10.0, amax))
+  //	    {
+  //	      audio_signal_ffted[i] = 1.0;
+  //	    }
+  //	  else
+  //	    {
+  //	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
+  //	    }
+  //	}
+  ////      timeout2 (NULL);
+
 // frequency display
   cr->save ();
   draw_text(cr, rectangle_width, rectangle_height);
@@ -73,11 +142,58 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   double s_frac = 2.0 * (double) s_meter / 255.0;
   if (s_frac > 1.0) { s_frac = 1.0; }
   cr->save ();
-  cr->set_line_width (lesser * 0.01);
+  cr->set_line_width (2);
   cr->set_source_rgba (colormap_r(s_frac)/255.0, colormap_g(s_frac)/255.0, colormap_b(s_frac), 1.0);	// partially translucent
   cr->rectangle(310,5,200*s_frac,40);
   cr->fill_preserve ();
-  cr->restore ();		// back to opaque black
+  cr->set_source_rgb(0.0, 0.0, 0.0);
+  cr->stroke();
+  cr->restore ();
+
+// Waveform
+  cr->save ();
+  cr->set_source_rgb(0.9, 0.9, 0.2);
+  cr->move_to(570.0, audio_signal[0]/16384.0 * 24.0 + 25.0);
+  for(int i=0;i<400;i++) {
+	  cr->line_to(570+i, audio_signal[i]/16384.0 * 24.0 + 25.0);
+  }
+  cr->stroke();
+  cr->restore ();
+
+
+
+
+  ///* audio signal FFT */
+  //
+  //      for (int i = 0; i < NFFT; i++)
+  //	{
+  //	  in[i] = fft_window[i] * audio_signal[i];
+  //	}
+  //
+  //      fftw_execute (p);
+  //
+  ///* log10 and normalize */
+  //
+  //      for (int i = 0; i < NFFT / 4; i++)
+  //	{
+  //	  double val;
+  //	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
+  //	  if (val < pow (10.0, amin))
+  //	    {
+  //	      audio_signal_ffted[i] = 0.0;
+  //	    }
+  //	  else if (val > pow (10.0, amax))
+  //	    {
+  //	      audio_signal_ffted[i] = 1.0;
+  //	    }
+  //	  else
+  //	    {
+  //	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
+  //	    }
+  //	}
+  ////      timeout2 (NULL);
+
+  cr->restore ();
 
   cr->stroke ();
 

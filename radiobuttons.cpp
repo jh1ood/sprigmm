@@ -11,7 +11,6 @@ RadioButtons::RadioButtons ():
 m_Box_Top (Gtk::ORIENTATION_VERTICAL),
 m_Box1 (Gtk::ORIENTATION_HORIZONTAL, 10),
 m_Box2 (Gtk::ORIENTATION_VERTICAL, 10)
-//, m_Button_Quit ("Quit")
 {
 
   vector < vector < string >> label
@@ -81,6 +80,7 @@ m_Box2 (Gtk::ORIENTATION_VERTICAL, 10)
 
   show_all_children ();
 }
+
 
 RadioButtons::~RadioButtons ()
 {
