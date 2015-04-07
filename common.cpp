@@ -194,7 +194,7 @@ int send_command (unsigned char *partial_command)
   if ((n_echoback != n_command) || (mystrcmp (command, echoback) != 0))
     {
       fprintf (stderr,
-	       "              *** error *** echoback does not much. \n");
+	       "   send_command():  *** error *** echoback does not much. \n");
       return false;
     }
 
@@ -243,7 +243,7 @@ send_commandx (const vector < unsigned char >&partial_command)
   if ((n_echoback != n_command) || (mystrcmp (command, echoback) != 0))
     {
       fprintf (stderr,
-	       "              *** error *** echoback does not much. \n");
+   	       "   send_commandx():  *** error *** echoback does not much. \n");
       return false;
     }
 
@@ -389,7 +389,8 @@ myfunc (int index)
 static void
 async_callback (snd_async_handler_t * ahandler)
 {
-  cout << "async_callback begin.. \n";
+  static int icount = 0;
+  cout << "async_callback() is called. icount = " << icount++ << "\n";
 
   snd_pcm_t *handle = snd_async_handler_get_pcm (ahandler);
   signed short *samples = snd_async_handler_get_callback_private (ahandler);
@@ -428,7 +429,6 @@ async_callback (snd_async_handler_t * ahandler)
 #endif
 
 	}
-
 
       avail = snd_pcm_avail_update (handle);
     }
@@ -775,7 +775,7 @@ rig_init_sound (char *sound_device)
       fprintf (stderr, "No enough memory\n");
       exit (EXIT_FAILURE);
     }
-  cout << "going to async_loop \n";
+  cout << "going to async_loop() from rig_init_sound() \n";
   err = async_loop (handle, samples);
   cout << "returned from async_loop \n";
 
@@ -834,6 +834,8 @@ myclock ()
   unsigned char buf[255];
   int res;
 
+  cout << "myclock(): begin.. \n";
+
 /* read operating mode, response in char[5]-char[6] */
 
 //  send_command (command3);
@@ -881,9 +883,11 @@ myclock ()
 //    }
 
 /* freq response in char[8]-char[5] */
-
+  cout << "myclock(): going to send_command() \n";
   send_command (command1);
+  cout << "myclock(): going to myread() \n";
   res = myread (buf);
+  cout << "myclock(): returned from myread() \n";
 
 #ifdef DEBUG
   unsigned char *s;
@@ -917,6 +921,9 @@ myclock ()
   sprintf (string, "%02x%02x", buf[6], buf[7]);
   s_meter = atoi (string);
   cout << "s_meter = " << s_meter << endl;
+
+  cout << "myclock(): end.. \n";
+
   return true;
 }
 

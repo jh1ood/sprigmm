@@ -65,7 +65,7 @@ DrawingArea::DrawingArea ()
   std::cout << "DrawingArea constructor is called." << std::endl;
   set_size_request (99, 50); /* width is dummy, determined by radiobuttons */
 
-  Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 100 );
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 1250 );
 
   #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
   //Connect the signal handler if it isn't already a virtual method override:
@@ -93,9 +93,11 @@ DrawingArea::~DrawingArea ()
 bool
 DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 {
-  std::cout << "DrawingArea on_draw is called." << std::endl;
+	static int icountx = 0;
+	cout << "on_draw: icountx = " << icountx++ << endl;
 
-  myclock(); /* to get inf from IC-7410 */
+   myclock(); /* to get inf from IC-7410 */
+	cout << "on_draw: returned from myclock() \n";
 
   /* audio signal FFT */
         cout << "audio signal FFT begin1.. \n";
@@ -127,6 +129,7 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
   	    }
   	}
+    	cout << "on_draw: done fftw, etc. \n";
 
   Gtk::Allocation allocation = get_allocation ();
   const int width  = allocation.get_width ();
@@ -187,14 +190,14 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   cr->stroke();
   cr->restore ();
 
-
-
-
   return true;
 }
 
 bool DrawingArea::on_timeout()
 {
+	static int icountw = 0;
+	cout << "on_timeout: icountw = " << icountw++ << endl;
+
     // force our program to redraw the entire clock.
     Glib::RefPtr<Gdk::Window> win = get_window();
     if (win)
