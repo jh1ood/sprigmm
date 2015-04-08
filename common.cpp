@@ -52,6 +52,7 @@ extern snd_pcm_sw_params_t *swparams;
 extern double *in;
 extern fftw_complex *out;
 extern fftw_plan p;
+extern int flag_togo;
 
 int send_command (unsigned char *partial_command);
 int receive_fb ();
@@ -391,6 +392,8 @@ async_callback (snd_async_handler_t * ahandler)
 {
   static int icount = 0;
   cout << "async_callback() is called. icount = " << icount++ << "\n";
+
+  flag_togo = 1; /* to activate on_draw() */
 
   snd_pcm_t *handle = snd_async_handler_get_pcm (ahandler);
   signed short *samples = snd_async_handler_get_callback_private (ahandler);
@@ -769,7 +772,7 @@ rig_init_sound (char *sound_device)
 //static  signed short *samples;
 //  samples = malloc (nsamples);
 
-  static signed short samples[9999];
+  static signed short samples[99999];
   if (samples == NULL)
     {
       fprintf (stderr, "No enough memory\n");

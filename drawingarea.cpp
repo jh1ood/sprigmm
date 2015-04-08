@@ -49,6 +49,7 @@ extern snd_pcm_sframes_t period_size;
 extern snd_pcm_t *handle;
 extern snd_pcm_hw_params_t *hwparams;
 extern snd_pcm_sw_params_t *swparams;
+extern int flag_togo;
 
 void set_freq (long int ifreq_in_hz);
 void myclock();
@@ -65,7 +66,7 @@ DrawingArea::DrawingArea ()
   std::cout << "DrawingArea constructor is called." << std::endl;
   set_size_request (99, 50); /* width is dummy, determined by radiobuttons */
 
-  Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 1250 );
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 50 );
 
   #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
   //Connect the signal handler if it isn't already a virtual method override:
@@ -195,8 +196,13 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 
 bool DrawingArea::on_timeout()
 {
-	static int icountw = 0;
+	static int icountw = 0, icountv = 0;
 	cout << "on_timeout: icountw = " << icountw++ << endl;
+	if(flag_togo == 0) {
+		return true;
+	}
+	flag_togo = 0;
+	cout << "on_timeout: icountv = " << icountv++ << endl;
 
     // force our program to redraw the entire clock.
     Glib::RefPtr<Gdk::Window> win = get_window();

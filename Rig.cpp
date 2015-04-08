@@ -23,8 +23,15 @@
 #define END_OF_COMMAND          0xfd
 
 int fd = -1;
-unsigned int rate = 32000;	/* stream rate */
-unsigned int channels = 1;	/* count of channels */
+
+/* for IC-7410 */
+//unsigned int rate = 32000;	/* stream rate */
+//unsigned int channels = 1;	/* count of channels */
+
+/* for PC soundcard */
+unsigned int rate = 48000;	/* stream rate */
+unsigned int channels = 2;	/* count of channels */
+
 int byte_per_sample = 2;	/* 16 bit format */
 unsigned int buffer_time = 500000;	/* ring buffer length in us */
 unsigned int period_time = 128000;	/* period time in us */
@@ -50,6 +57,7 @@ snd_pcm_sw_params_t *swparams;
 double *in;
 fftw_complex *out;
 fftw_plan p;
+int flag_togo = 0;
 
 void rig_init_serial (char *);
 void rig_init_sound  (char *);
