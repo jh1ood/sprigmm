@@ -114,28 +114,26 @@ Waterfall::~Waterfall ()
 bool
 Waterfall::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 {
-
-	if(!m_image) {
-		cout << "Waterfall::on_draw: error m_image \n";
-		return false;
-	}
 	static int icountx = 0;
 	cout << "Waterfall::on_draw: icountx = " << icountx++ << endl;
 
-//  Gtk::Allocation allocation = get_allocation ();
-//  const int width  = allocation.get_width ();
-//  const int height = allocation.get_height (); /* eg. 50 */
+    char* p;
 
-	  char* p;
-	  p = m_image->get_pixels() + (icountx % 384) * 3 * 1024;
-	  cout << "Waterfall::on_draw: p = " << p << endl;
-	  for(int i=0;i<1024;i++) {
-		  double tmp = audio_signal_ffted[i];
-		  *p++ = colormap_r(tmp);
-		  *p++ = colormap_g(tmp);
-		  *p++ = colormap_b(tmp);
+// shift up pixbuf
+	  p = m_image->get_pixels();
+	  for(int i=0;i<384-1;i++) {
+		  for(int j=0;j<1024*3;j++) {
+			  *p = *(p+1024*3);
+			  p++;
+		  }
 	  }
-
+// write into the bottom line
+	  for(int i=0;i<1024;i++) {
+	    double tmp = audio_signal_ffted[i];
+	    *p++ = colormap_r(tmp);
+	    *p++ = colormap_g(tmp);
+	    *p++ = colormap_b(tmp);
+	  }
 
 	  Gdk::Cairo::set_source_pixbuf(cr, m_image, 0,0);
 	  cr->paint();
