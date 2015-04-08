@@ -9,6 +9,7 @@
 #define MYWINDOW_H_
 #include "radiobuttons.h"
 #include "drawingarea.h"
+#include "waterfall.h"
 #include "Scales.h"
 #include <gtkmm/window.h>
 
@@ -28,6 +29,8 @@ private:
     myscales;
   DrawingArea
     myarea;
+  Waterfall
+    mywaterfall;
 };
 
 #endif /* MYWINDOW_H_ */

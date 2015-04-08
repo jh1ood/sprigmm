@@ -1,16 +1,16 @@
-#ifndef GTKMM_EXAMPLE_DRAWINGAREA_H
-#define GTKMM_EXAMPLE_DRAWINGAREA_H
+#ifndef GTKMM_EXAMPLE_WATERFALL_H
+#define GTKMM_EXAMPLE_WATERFALL_H
 
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/pixbuf.h>
 
-class DrawingArea:public
+class Waterfall:public
   Gtk::DrawingArea
 {
 public:
-  DrawingArea ();
+  Waterfall ();
   virtual ~
-  DrawingArea ();
+  Waterfall ();
 
 protected:
   //Override default signal handler:
@@ -23,4 +23,4 @@ private:
   void draw_text     (const Cairo::RefPtr<Cairo::Context>& cr, int rectangle_width, int rectangle_height);
 };
 
-#endif // GTKMM_EXAMPLE_DRAWINGAREA_H
+#endif // GTKMM_EXAMPLE_WATERFALL_H

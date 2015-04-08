@@ -52,7 +52,7 @@ extern snd_pcm_sw_params_t *swparams;
 extern double *in;
 extern fftw_complex *out;
 extern fftw_plan p;
-extern int flag_togo;
+extern int flag_togo1, flag_togo2;
 
 int send_command (unsigned char *partial_command);
 int receive_fb ();
@@ -393,7 +393,8 @@ async_callback (snd_async_handler_t * ahandler)
   static int icount = 0;
   cout << "async_callback() is called. icount = " << icount++ << "\n";
 
-  flag_togo = 1; /* to activate on_draw() */
+  flag_togo1 = 1; /* to activate DrawArea::on_draw() */
+  flag_togo2 = 1; /* to activate Waterfall::on_draw() */
 
   snd_pcm_t *handle = snd_async_handler_get_pcm (ahandler);
   signed short *samples = snd_async_handler_get_callback_private (ahandler);

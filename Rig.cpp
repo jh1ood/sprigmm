@@ -25,12 +25,12 @@
 int fd = -1;
 
 /* for IC-7410 */
-//unsigned int rate = 32000;	/* stream rate */
-//unsigned int channels = 1;	/* count of channels */
+unsigned int rate = 32000;	/* stream rate */
+unsigned int channels = 1;	/* count of channels */
 
 /* for PC soundcard */
-unsigned int rate = 48000;	/* stream rate */
-unsigned int channels = 2;	/* count of channels */
+//unsigned int rate = 48000;	/* stream rate */
+//unsigned int channels = 2;	/* count of channels */
 
 int byte_per_sample = 2;	/* 16 bit format */
 unsigned int buffer_time = 500000;	/* ring buffer length in us */
@@ -57,7 +57,7 @@ snd_pcm_sw_params_t *swparams;
 double *in;
 fftw_complex *out;
 fftw_plan p;
-int flag_togo = 0;
+int flag_togo1 = 0, flag_togo2 = 0;
 
 void rig_init_serial (char *);
 void rig_init_sound  (char *);
@@ -88,6 +88,5 @@ main (int argc, char *argv[])
   win.set_default_size (50, 50);
   win.set_border_width (5);
   win.show_all_children ();
-
   return app->run (win);
 }

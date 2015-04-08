@@ -1,4 +1,4 @@
-#include "drawingarea.h"
+#include "waterfall.h"
 #include <cairomm/context.h>
 #include <gdkmm/general.h> // set_source_pixbuf()
 #include <glibmm/fileutils.h>
@@ -63,148 +63,96 @@ extern double *in;
 extern fftw_complex *out;
 extern fftw_plan p;
 
-DrawingArea::DrawingArea ()
+Waterfall::Waterfall ()
 {
-  std::cout << "DrawingArea constructor is called." << std::endl;
-  set_size_request (1200, 50); /* width is dummy, determined by radiobuttons */
+  std::cout << "Waterfall constructor is called." << std::endl;
+  set_size_request (1024, 384); /* width is dummy, determined by radiobuttons */
 
-  Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 50 );
+//  m_image = Gdk::Pixbuf::create_from_file("sprig_image.png");
+//  if(m_image) { cout << "m_image OK \n"; } else { cout << "m_image failed \n"; }
+
+  m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, 1024, 384);
+  cout << "m_image size is" << m_image->get_width() << ", " << m_image->get_height() << endl;
+
+  char* p;
+  p = m_image->get_pixels();
+
+  for(int j=0;j<2;j++) {
+  for(int i=0;i<1024*64;i++) {
+	  *p++ = i % 256;
+	  *p++ = 0;
+	  *p++ = 0;
+  }
+  for(int i=0;i<1024*64;i++) {
+	  *p++ = 0;
+	  *p++ = i % 256;
+	  *p++ = 0;
+  }
+  for(int i=0;i<1024*64;i++) {
+	  *p++ = 0;
+	  *p++ = 0;
+	  *p++ = i % 256;
+  }
+  }
+
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &Waterfall::on_timeout), 50 );
 
   #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
   //Connect the signal handler if it isn't already a virtual method override:
-  signal_draw().connect(sigc::mem_fun(*this, &DrawingArea::on_draw), false);
+  signal_draw().connect(sigc::mem_fun(*this, &Waterfall::on_draw), false);
   #endif //GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
 
   add_events(Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK  |Gdk::SMOOTH_SCROLL_MASK);
 
-  bin_size = rate / (double) NFFT;
-  for (int i = 0; i < NFFT; i++) {
-        fft_window[i] = 0.54 - 0.46 * cos (2.0 * M_PI * i / (double) NFFT);
-  }
-
-  in  = malloc (sizeof (double) * NFFT);
-  out = (fftw_complex *) fftw_malloc (sizeof (fftw_complex) * (NFFT / 2 + 1));
-  p   = fftw_plan_dft_r2c_1d (NFFT, in, out, FFTW_MEASURE);
-
 }
 
-DrawingArea::~DrawingArea ()
+Waterfall::~Waterfall ()
 {
-  std::cout << "DrawingArea destructor is called." << std::endl;
+  std::cout << "Waterfall destructor is called." << std::endl;
 }
 
 bool
-DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
+Waterfall::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 {
+
+	if(!m_image) {
+		cout << "Waterfall::on_draw: error m_image \n";
+		return false;
+	}
 	static int icountx = 0;
-	cout << "on_draw: icountx = " << icountx++ << endl;
+	cout << "Waterfall::on_draw: icountx = " << icountx++ << endl;
 
-   myclock(); /* to get inf from IC-7410 */
-	cout << "on_draw: returned from myclock() \n";
+//  Gtk::Allocation allocation = get_allocation ();
+//  const int width  = allocation.get_width ();
+//  const int height = allocation.get_height (); /* eg. 50 */
 
-  /* audio signal FFT */
-        cout << "audio signal FFT begin1.. \n";
-        for (int i = 0; i < NFFT; i++)
-  	{
-  	  in[i] = fft_window[i] * audio_signal[i];
-  	}
+	  char* p;
+	  p = m_image->get_pixels() + (icountx % 384) * 3 * 1024;
+	  cout << "Waterfall::on_draw: p = " << p << endl;
+	  for(int i=0;i<1024;i++) {
+		  double tmp = audio_signal_ffted[i];
+		  *p++ = colormap_r(tmp);
+		  *p++ = colormap_g(tmp);
+		  *p++ = colormap_b(tmp);
+	  }
 
-        cout << "audio signal FFT begin2.. \n";
-        fftw_execute (p);
-        cout << "audio signal FFT begin3.. \n";
 
-  /* log10 and normalize */
-
-        for (int i = 0; i < NFFT / 4; i++)
-  	{
-  	  double val;
-  	  val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
-  	  if (val < pow (10.0, amin))
-  	    {
-  	      audio_signal_ffted[i] = 0.0;
-  	    }
-  	  else if (val > pow (10.0, amax))
-  	    {
-  	      audio_signal_ffted[i] = 1.0;
-  	    }
-  	  else
-  	    {
-  	      audio_signal_ffted[i] = (log10 (val) - amin) / (amax - amin);
-  	    }
-  	}
-    	cout << "on_draw: done fftw, etc. \n";
-
-  Gtk::Allocation allocation = get_allocation ();
-  const int width  = allocation.get_width ();
-  const int height = allocation.get_height (); /* eg. 50 */
-  const int rectangle_width  = width;
-  const int rectangle_height = height; /* eg. 50 */
-
-// rectangle box
-  cr->save ();
-  cr->set_source_rgba(0.0, 0.6, 0.2, 1.0);
-  cr->rectangle(0, 0, rectangle_width, rectangle_height);
-  cr->fill();
-  cr->stroke ();
-  cr->restore ();
-
-// frequency display
-  cr->save ();
-  draw_text(cr, rectangle_width, rectangle_height);
-//  cr->set_source_rgb(0.1, 0.7, 0.3);
-//  for(int i=0;i<10;i++) {
-//	  cr->move_to(10.0+31.0*i, 3.0);
-//	  cr->line_to(10.0+31.0*i,46.0);
-//      cr->stroke();
-//  }
-  cr->restore ();
-
-// S meter
-  double s_frac = 2.0 * (double) s_meter / 255.0;
-  if (s_frac > 1.0) { s_frac = 1.0; }
-  cr->save ();
-  cr->set_line_width (2);
-  cr->set_source_rgba (colormap_r(s_frac)/255.0, colormap_g(s_frac)/255.0, colormap_b(s_frac), 1.0);	// partially translucent
-  cr->rectangle(310,5,200*s_frac,40);
-  cr->fill_preserve ();
-  cr->set_source_rgb(0.0, 0.0, 0.0);
-  cr->stroke();
-  cr->restore ();
-
-// Waveform
-  cr->save ();
-  cr->set_source_rgb(0.9, 0.9, 0.2);
-  cr->move_to(520.0, audio_signal[0]/16384.0 * 24.0 + 25.0);
-  for(int i=0;i<200;i++) {
-	  cr->line_to(520+i, audio_signal[i]/16384.0 * 24.0 + 25.0);
-  }
-  cr->stroke();
-  cr->restore ();
-
-// Spectrum
-
-  cr->save ();
-  cr->set_source_rgb(0.2, 0.9, 0.9);
-  cr->move_to(780.0, 40.0*(1.0-audio_signal_ffted[0])+5.0);
-  for(int i=0;i<170;i++) {
-	  cr->line_to(780+i, 40.0*(1.0-audio_signal_ffted[i])+5.0);
-  }
-  cr->stroke();
-  cr->restore ();
-
+	  Gdk::Cairo::set_source_pixbuf(cr, m_image, 0,0);
+	  cr->paint();
+	  cr->stroke ();
 
   return true;
 }
 
-bool DrawingArea::on_timeout()
+bool Waterfall::on_timeout()
 {
 	static int icountw = 0, icountv = 0;
-	cout << "on_timeout: icountw = " << icountw++ << endl;
-	if(flag_togo1 == 0) {
+	cout << "Waterfall::on_timeout: icountw = " << icountw++ << endl;
+	if(flag_togo2 == 0) {
 		return true;
 	}
-	flag_togo1 = 0;
-	cout << "on_timeout: icountv = " << icountv++ << endl;
+	flag_togo2 = 0;
+	cout << "Waterfall::on_timeout: icountv = " << icountv++ << endl;
 
     // force our program to redraw the entire clock.
     Glib::RefPtr<Gdk::Window> win = get_window();
@@ -217,7 +165,7 @@ bool DrawingArea::on_timeout()
     return true;
 }
 
-void DrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr,
+void Waterfall::draw_text(const Cairo::RefPtr<Cairo::Context>& cr,
                        int rectangle_width, int rectangle_height)
 {
   Pango::FontDescription font;
@@ -242,7 +190,7 @@ void DrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context>& cr,
   cr->stroke();
 }
 
-bool DrawingArea::on_scroll_event(GdkEventScroll *event)
+bool Waterfall::on_scroll_event(GdkEventScroll *event)
 {
     double x, dy;
     x  = event->x;
