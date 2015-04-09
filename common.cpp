@@ -244,7 +244,7 @@ set_operating_mode (void)
   static unsigned char command1[4] = { 0x06, 0x03, 0x01, 0xfd };
 
   command1[1] = operating_mode;
-  command1[2] = dsp_filter;;
+  command1[2] = dsp_filter;
   send_command (command1);
   receive_fb ();
 }
@@ -829,49 +829,15 @@ myclock ()
 
 /* read operating mode, response in char[5]-char[6] */
 
-//  send_command (command3);
-//  res = myread (buf);
-//  if (res != 8)
-//    {
-//      fprintf (stderr, "operating mode response is wrong! \n");
-//    }
-//  operating_mode = buf[5];
-//  dsp_filter = buf[6];
-//  if (operating_mode == 0x03)
-//    {				/* CW */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][0]),
-//				    TRUE);
-//    }
-//  if (operating_mode == 0x07)Hi there!
-//    {				/* CW-R */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][1]),
-//				    TRUE);
-//    }
-//  if (operating_mode == 0x00)
-//    {				/* LSB */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][2]),
-//				    TRUE);
-//    }
-//  if (operating_mode == 0x01)
-//    {				/* USB */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[0][3]),
-//				    TRUE);
-//    }
-//  if (dsp_filter == 0x01)
-//    {				/* FIL1 */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][0]),
-//				    TRUE);
-//    }
-//  if (dsp_filter == 0x02)
-//    {				/* FIL2 */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][1]),
-//				    TRUE);
-//    }
-//  if (dsp_filter == 0x03)
-//    {				/* FIL3 */
-//      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button2dim[6][2]),
-//				    TRUE);
-//    }
+  send_command (command3);
+  res = myread (buf);
+  if (res != 8)
+    {
+      fprintf (stderr, "operating mode response is wrong! \n");
+    }
+  operating_mode = buf[5];
+  dsp_filter     = buf[6];
+
 
 /* freq response in char[8]-char[5] */
   cout << "myclock(): going to send_command() \n";

@@ -2,9 +2,11 @@
 #include <cairomm/context.h>
 #include <iostream>
 #include <string>
-
 #include "drawingarea.h"
 using namespace std;
+
+extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
+extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
 void myfunc (int);
 
 RadioButtons::RadioButtons ():
@@ -66,11 +68,6 @@ m_Box2 (Gtk::ORIENTATION_VERTICAL, 10)
 	}
       m_Box1.pack_start (m_BoxGroup[i]);
     }
-//  m_Box2.pack_start (m_Button_Quit);
-//  m_Button_Quit.set_can_default ();
-//  m_Button_Quit.grab_default ();
-//  m_Button_Quit.signal_clicked ().
-//    connect (sigc::mem_fun (*this, &RadioButtons::on_button_clicked_quit));
 
   m_Box1.set_border_width (10);
   m_Box2.set_border_width (10);
@@ -79,11 +76,49 @@ m_Box2 (Gtk::ORIENTATION_VERTICAL, 10)
   pack_start (m_Box_Top);
 
   show_all_children ();
+
+  Glib::signal_timeout().connect( sigc::mem_fun(*this, &RadioButtons::on_timeout), 500 );
+
 }
 
 
 RadioButtons::~RadioButtons ()
 {
+}
+
+bool RadioButtons::on_timeout()
+{
+	  if (operating_mode == 0x03)
+	    {				/* CW */
+		  m_RadioButton[0].set_active ();
+	    }
+	  if (operating_mode == 0x07)
+	    {				/* CW-R */
+		  m_RadioButton[1].set_active ();
+	    }
+	  if (operating_mode == 0x00)
+	    {				/* LSB */
+		  m_RadioButton[4].set_active ();
+	    }
+	  if (operating_mode == 0x01)
+	    {				/* USB */
+		  m_RadioButton[5].set_active ();
+	    }
+	  if (dsp_filter == 0x01)
+	    {				/* FIL1 */
+		  m_RadioButton[8].set_active ();
+	    }
+	  if (dsp_filter == 0x02)
+	    {				/* FIL2 */
+		  m_RadioButton[9].set_active ();
+	    }
+	  if (dsp_filter == 0x03)
+	    {				/* FIL3 */
+		  m_RadioButton[10].set_active ();
+	    }
+cout << "RadioButtons::on_timeout() operating_mode = " << operating_mode << ", dsp_filter = " << dsp_filter << endl;
+
+	return true;
 }
 
 void

@@ -5,6 +5,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/radiobutton.h>
 #include <gtkmm/separator.h>
+#include <gtkmm.h>
 
 class RadioButtons:public
   Gtk::Box
@@ -18,6 +19,7 @@ private:
   on_button_clicked_quit ();
   void
   on_button_clicked_all (gint data);
+  bool on_timeout();
   Gtk::Box
     m_Box_Top;
   Gtk::Box
@@ -34,8 +36,6 @@ private:
     m_HSeparator;
   Gtk::VSeparator
     m_VSeparator[100];
-//  Gtk::Button
-//    m_Button_Quit;
 };
 
 #endif //GTKMM_EXAMPLE_RADIOBUTTONS_H
