@@ -1,3 +1,4 @@
+#include "mydefine.h"
 #include "radiobuttons.h"
 #include "drawingarea.h"
 #include "Scales.h"
@@ -9,20 +10,6 @@
 #include <asoundlib.h>
 #include <fftw3.h>
 using namespace std;
-
-#define DEBUG
-#define NO_MARKER
-#define NFFT                    4096
-#define WINDOW_XSIZE            1320
-#define WINDOW_YSIZE             500
-#define AREA1_XSIZE               99
-#define AREA1_YSIZE               50
-#define WATERFALL_XSIZE          512
-#define WATERFALL_YSIZE          768
-#define WAVEFORM_LEN             128
-#define BAUDRATE                B19200
-#define TIMEOUT_VALUE           100
-#define END_OF_COMMAND          0xfd
 
 extern int fd;
 extern unsigned int rate;

@@ -1,3 +1,4 @@
+#include "mydefine.h"
 #include "drawingarea.h"
 #include <cairomm/context.h>
 #include <gdkmm/general.h> // set_source_pixbuf()
@@ -11,20 +12,6 @@
 #include <asoundlib.h>
 #include <fftw3.h>
 using namespace std;
-
-#define DEBUG
-#define NO_MARKER
-#define NFFT                    4096
-#define WINDOW_XSIZE            1320
-#define WINDOW_YSIZE             500
-#define AREA1_XSIZE               99
-#define AREA1_YSIZE               50
-#define WATERFALL_XSIZE          512
-#define WATERFALL_YSIZE          768
-#define WAVEFORM_LEN             128
-#define BAUDRATE                B19200
-#define TIMEOUT_VALUE           100
-#define END_OF_COMMAND          0xfd
 
 extern int fd;
 extern unsigned int rate;
@@ -66,7 +53,7 @@ extern fftw_plan p;
 DrawingArea::DrawingArea ()
 {
   std::cout << "DrawingArea constructor is called." << std::endl;
-  set_size_request (1200, 50); /* width is dummy, determined by radiobuttons */
+  set_size_request (1200, 170); /* width is dummy, determined by radiobuttons */
 
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &DrawingArea::on_timeout), 50 );
 
@@ -103,15 +90,12 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 	cout << "on_draw: returned from myclock() \n";
 
   /* audio signal FFT */
-        cout << "audio signal FFT begin1.. \n";
-        for (int i = 0; i < NFFT; i++)
+         for (int i = 0; i < NFFT; i++)
   	{
   	  in[i] = fft_window[i] * audio_signal[i];
   	}
 
-        cout << "audio signal FFT begin2.. \n";
         fftw_execute (p);
-        cout << "audio signal FFT begin3.. \n";
 
   /* log10 and normalize */
 
@@ -138,12 +122,26 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   const int width  = allocation.get_width ();
   const int height = allocation.get_height (); /* eg. 50 */
   const int rectangle_width  = width;
-  const int rectangle_height = height; /* eg. 50 */
+  const int rectangle_height = 50; /* eg. 50 */
 
-// rectangle box
+// rectangle box for frequency display, S-meter, waveform
   cr->save ();
   cr->set_source_rgba(0.0, 0.6, 0.2, 1.0);
-  cr->rectangle(0, 0, rectangle_width, rectangle_height);
+  cr->rectangle(0, 0, WATERFALL_XSIZE, rectangle_height);
+  cr->fill();
+  cr->stroke ();
+  cr->restore ();
+
+  cr->save ();
+  cr->set_source_rgba(0.0, 0.2, 0.6, 1.0);
+  cr->rectangle(0, 60, WATERFALL_XSIZE, rectangle_height);
+  cr->fill();
+  cr->stroke ();
+  cr->restore ();
+
+  cr->save ();
+  cr->set_source_rgba(0.2, 0.6, 0.6, 1.0);
+  cr->rectangle(0, 120, WATERFALL_XSIZE, rectangle_height);
   cr->fill();
   cr->stroke ();
   cr->restore ();
@@ -165,7 +163,7 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
   cr->save ();
   cr->set_line_width (2);
   cr->set_source_rgba (colormap_r(s_frac)/255.0, colormap_g(s_frac)/255.0, colormap_b(s_frac), 1.0);	// partially translucent
-  cr->rectangle(310,5,200*s_frac,40);
+  cr->rectangle(310,5,200*s_frac+20,40);
   cr->fill_preserve ();
   cr->set_source_rgb(0.0, 0.0, 0.0);
   cr->stroke();
@@ -174,9 +172,9 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 // Waveform
   cr->save ();
   cr->set_source_rgb(0.9, 0.9, 0.2);
-  cr->move_to(520.0, audio_signal[0]/16384.0 * 24.0 + 25.0);
-  for(int i=0;i<200;i++) {
-	  cr->line_to(520+i, audio_signal[i]/16384.0 * 24.0 + 25.0);
+  cr->move_to(0.0, audio_signal[0]/16384.0 * 24.0 + 25.0+ 60.0);
+  for(int i=0;i<WATERFALL_XSIZE;i++) {
+	  cr->line_to(i, audio_signal[i]/16384.0 * 24.0 + 25.0 + 60.0);
   }
   cr->stroke();
   cr->restore ();
@@ -185,9 +183,9 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 
   cr->save ();
   cr->set_source_rgb(0.2, 0.9, 0.9);
-  cr->move_to(780.0, 40.0*(1.0-audio_signal_ffted[0])+5.0);
-  for(int i=0;i<170;i++) {
-	  cr->line_to(780+i, 40.0*(1.0-audio_signal_ffted[i])+5.0);
+  cr->move_to(0.0, 40.0*(1.0-audio_signal_ffted[0])+5.0 + 120.0);
+  for(int i=0;i<WATERFALL_XSIZE;i++) {
+	  cr->line_to(i, 40.0*(1.0-audio_signal_ffted[i])+5.0 + 120.0);
   }
   cr->stroke();
   cr->restore ();

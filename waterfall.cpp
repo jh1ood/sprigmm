@@ -1,3 +1,4 @@
+#include "mydefine.h"
 #include "waterfall.h"
 #include <cairomm/context.h>
 #include <gdkmm/general.h> // set_source_pixbuf()
@@ -11,20 +12,6 @@
 #include <asoundlib.h>
 #include <fftw3.h>
 using namespace std;
-
-#define DEBUG
-#define NO_MARKER
-#define NFFT                    4096
-#define WINDOW_XSIZE            1320
-#define WINDOW_YSIZE             500
-#define AREA1_XSIZE               99
-#define AREA1_YSIZE               50
-#define WATERFALL_XSIZE          512
-#define WATERFALL_YSIZE          768
-#define WAVEFORM_LEN             128
-#define BAUDRATE                B19200
-#define TIMEOUT_VALUE           100
-#define END_OF_COMMAND          0xfd
 
 extern int fd;
 extern unsigned int rate;
@@ -54,7 +41,7 @@ extern snd_pcm_sw_params_t *swparams;
 extern int flag_togo1, flag_togo2;
 
 void set_freq (long int ifreq_in_hz);
-void myclock();
+//void myclock();
 int colormap_r(double);
 int colormap_g(double);
 int colormap_b(double);
@@ -66,33 +53,18 @@ extern fftw_plan p;
 Waterfall::Waterfall ()
 {
   std::cout << "Waterfall constructor is called." << std::endl;
-  set_size_request (1024, 384); /* width is dummy, determined by radiobuttons */
+  set_size_request (WATERFALL_XSIZE+WATERFALL_XOFFSET, WATERFALL_YSIZE+WATERFALL_YOFFSET);
+  m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, WATERFALL_XSIZE, WATERFALL_YSIZE);
 
-//  m_image = Gdk::Pixbuf::create_from_file("sprig_image.png");
-//  if(m_image) { cout << "m_image OK \n"; } else { cout << "m_image failed \n"; }
-
-  m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, 1024, 384);
-  cout << "m_image size is" << m_image->get_width() << ", " << m_image->get_height() << endl;
-
-  char* p;
+ guint8* p;
   p = m_image->get_pixels();
 
-  for(int j=0;j<2;j++) {
-  for(int i=0;i<1024*64;i++) {
+  for(int j=0;j<WATERFALL_YSIZE;j++) {
+    for(int i=0;i<WATERFALL_XSIZE;i++) {
 	  *p++ = i % 256;
+	  *p++ = j % 256;
 	  *p++ = 0;
-	  *p++ = 0;
-  }
-  for(int i=0;i<1024*64;i++) {
-	  *p++ = 0;
-	  *p++ = i % 256;
-	  *p++ = 0;
-  }
-  for(int i=0;i<1024*64;i++) {
-	  *p++ = 0;
-	  *p++ = 0;
-	  *p++ = i % 256;
-  }
+    }
   }
 
   Glib::signal_timeout().connect( sigc::mem_fun(*this, &Waterfall::on_timeout), 50 );
@@ -117,25 +89,25 @@ Waterfall::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 	static int icountx = 0;
 	cout << "Waterfall::on_draw: icountx = " << icountx++ << endl;
 
-    char* p;
-
+    guint8* p;
+    int rowstride = m_image->get_rowstride();
 // shift up pixbuf
-	  p = m_image->get_pixels();
-	  for(int i=0;i<384-1;i++) {
-		  for(int j=0;j<1024*3;j++) {
-			  *p = *(p+1024*3);
+	  for(int i=0;i<WATERFALL_YSIZE-1;i++) {
+		  p = m_image->get_pixels() + i* rowstride;
+		  for(int j=0;j<WATERFALL_XSIZE*3;j++) {
+			  *p = *(p+WATERFALL_XSIZE*3);
 			  p++;
 		  }
 	  }
 // write into the bottom line
-	  for(int i=0;i<1024;i++) {
+	  for(int i=0;i<WATERFALL_XSIZE;i++) {
 	    double tmp = audio_signal_ffted[i];
 	    *p++ = colormap_r(tmp);
 	    *p++ = colormap_g(tmp);
 	    *p++ = colormap_b(tmp);
 	  }
 
-	  Gdk::Cairo::set_source_pixbuf(cr, m_image, 0,0);
+	  Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,WATERFALL_YOFFSET);
 	  cr->paint();
 	  cr->stroke ();
 
@@ -213,6 +185,33 @@ bool Waterfall::on_scroll_event(GdkEventScroll *event)
     	ifreq_in_hz = ifreq_in_hz_new;
     }
     set_freq (ifreq_in_hz);
+
+    return true;
+}
+
+bool Waterfall::on_button_press_event( GdkEventButton* event )
+{
+    std::cout << "Watefall::on_button_press_event:  " << event->x << " : " << event->y << std::endl;
+    x_press = event->x;
+    y_press = event->y;
+    int pressed_freq = x_press * bin_size;
+
+    double freq_delta = pressed_freq - cw_pitch;
+    if (operating_mode == 0x03 || operating_mode == 0x00) {   /* CW or LSB*/
+      ifreq_in_hz -= freq_delta;
+    }
+    if (operating_mode == 0x07 || operating_mode == 0x01) {   /* CW-R or USB */
+      ifreq_in_hz += freq_delta;
+    }
+    set_freq (ifreq_in_hz);
+
+    std::cout << "Waterfall::on_button_press_event:  x_press = " << x_press
+    		  << ", pressed_freq = " << pressed_freq
+			  << ", cw_pitch = " << cw_pitch
+			  << ", freq_delta =" << freq_delta
+			  << ", new_freq = " << ifreq_in_hz
+			  << std::endl;
+
 
     return true;
 }
