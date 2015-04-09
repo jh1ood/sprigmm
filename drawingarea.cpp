@@ -9,46 +9,7 @@
 #include <stdio.h>
 #include <cairo.h>
 #include <glibmm/main.h>
-#include <asoundlib.h>
-#include <fftw3.h>
 using namespace std;
-
-extern int fd;
-extern unsigned int rate;
-extern unsigned int channels;	/* count of channels */
-extern int byte_per_sample;	/* 16 bit format */
-extern unsigned int buffer_time;	/* ring buffer length in us */
-extern unsigned int period_time;	/* period time in us */
-extern int resample;	/* disable resample */
-extern int period_event;	/* produce poll event after each period */
-extern double audio_signal[NFFT];
-extern double audio_signal_ffted[NFFT];
-extern double fft_window[NFFT];
-extern int cw_pitch;
-extern int iwater;
-extern int nsamples;
-extern double bin_size, waterfall_scale_x;
-extern double amax, amin;
-extern long int ifreq_in_hz;
-extern int s_meter;
-extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
-extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
-extern snd_pcm_sframes_t buffer_size;
-extern snd_pcm_sframes_t period_size;
-extern snd_pcm_t *handle;
-extern snd_pcm_hw_params_t *hwparams;
-extern snd_pcm_sw_params_t *swparams;
-extern int flag_togo1, flag_togo2;
-
-void set_freq (long int ifreq_in_hz);
-void myclock();
-int colormap_r(double);
-int colormap_g(double);
-int colormap_b(double);
-
-extern double *in;
-extern fftw_complex *out;
-extern fftw_plan p;
 
 DrawingArea::DrawingArea ()
 {
@@ -69,9 +30,9 @@ DrawingArea::DrawingArea ()
         fft_window[i] = 0.54 - 0.46 * cos (2.0 * M_PI * i / (double) NFFT);
   }
 
-  in  = malloc (sizeof (double) * NFFT);
-  out = (fftw_complex *) fftw_malloc (sizeof (fftw_complex) * (NFFT / 2 + 1));
-  p   = fftw_plan_dft_r2c_1d (NFFT, in, out, FFTW_MEASURE);
+  in  = (fftw_complex *) fftw_malloc (sizeof (fftw_complex) * NFFT);
+  out = (fftw_complex *) fftw_malloc (sizeof (fftw_complex) * NFFT);
+  p   = fftw_plan_dft_1d (NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
 }
 
@@ -90,9 +51,18 @@ DrawingArea::on_draw (const Cairo::RefPtr < Cairo::Context > &cr)
 	cout << "on_draw: returned from myclock() \n";
 
   /* audio signal FFT */
-         for (int i = 0; i < NFFT; i++)
+    for (int i = 0; i < NFFT; i++)
   	{
-  	  in[i] = fft_window[i] * audio_signal[i];
+      if(channels == 1) {
+     	 in[i][0] = fft_window[i] * audio_signal[i];
+     	 in[i][1] = 0.0;
+      } else if(channels == 2) {
+      	 in[i][0] = fft_window[i] * audio_signal[2*i];
+      	 in[i][1] = fft_window[i] * audio_signal[2*i+1];
+      } else {
+    	  cout << "channels = " << channels << ", but should be either 1 or 2. \n";
+    	  exit(1);
+      }
   	}
 
         fftw_execute (p);

@@ -1,3 +1,4 @@
+#include "mydefine.h"
 #include "radiobuttons.h"
 #include <cairomm/context.h>
 #include <iostream>
@@ -5,8 +6,6 @@
 #include "drawingarea.h"
 using namespace std;
 
-extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
-extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
 void myfunc (int);
 
 RadioButtons::RadioButtons ():

@@ -8,17 +8,12 @@
 #include <gtkmm/window.h>
 #include <asoundlib.h>
 #include <fftw3.h>
+using namespace std;
 
 int fd = -1;
 
-/* for IC-7410 */
-unsigned int rate = 32000;	/* stream rate */
-unsigned int channels = 1;	/* count of channels */
-
-/* for PC soundcard */
-//unsigned int rate = 48000;	/* stream rate */
-//unsigned int channels = 2;	/* count of channels */
-
+unsigned int rate;	/* stream rate */
+unsigned int channels;	/* count of channels */
 int byte_per_sample = 2;	/* 16 bit format */
 unsigned int buffer_time = 500000;	/* ring buffer length in us */
 unsigned int period_time = 128000;	/* period time in us */
@@ -41,8 +36,8 @@ snd_pcm_sframes_t period_size;
 snd_pcm_t *handle;
 snd_pcm_hw_params_t *hwparams;
 snd_pcm_sw_params_t *swparams;
-double *in;
-fftw_complex *out;
+double *in_real;
+fftw_complex *in, *out;
 fftw_plan p;
 int flag_togo1 = 0, flag_togo2 = 0;
 
@@ -52,17 +47,18 @@ void rig_init_sound  (char *);
 int
 main (int argc, char *argv[])
 {
-  if (argc != 3)
+  if (argc != 5)
     {
-      std::cout << "Usage example: " << argv[0] << " /dev/ttyUSB0 hw:2,0 \n";
-      std::
-	cout <<
-	" --> try % ls -l /dev/ttyUSB*, and % arecord -l to know these parameters.\n";
+      cout << "Usage example: " << argv[0] << " /dev/ttyUSB0 hw:2,0 32000 1 \n";
+      cout << "               " << argv[0] << " /dev/ttyUSB0 hw:0,0 48000 2 \n";
       return false;
     }
-  std::
-    cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2] <<
-    std::endl;
+   rate     = atoi(argv[3]);
+   channels = atoi(argv[4]);
+   cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
+	 << ", rate = " << rate << ", channels = " << channels
+	 << endl;
+
   rig_init_serial (argv[1]);
   rig_init_sound  (argv[2]);
 

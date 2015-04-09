@@ -13,42 +13,11 @@
 #include <fftw3.h>
 using namespace std;
 
-extern int fd;
-extern unsigned int rate;
-extern unsigned int channels;	/* count of channels */
-extern int byte_per_sample;	/* 16 bit format */
-extern unsigned int buffer_time;	/* ring buffer length in us */
-extern unsigned int period_time;	/* period time in us */
-extern int resample;	/* disable resample */
-extern int period_event;	/* produce poll event after each period */
-extern double audio_signal[NFFT];
-extern double audio_signal_ffted[NFFT];
-extern double fft_window[NFFT];
-extern int cw_pitch;
-extern int iwater;
-extern int nsamples;
-extern double bin_size, waterfall_scale_x;
-extern double amax, amin;
-extern long int ifreq_in_hz;
-extern int s_meter;
-extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
-extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
-extern snd_pcm_sframes_t buffer_size;
-extern snd_pcm_sframes_t period_size;
-extern snd_pcm_t *handle;
-extern snd_pcm_hw_params_t *hwparams;
-extern snd_pcm_sw_params_t *swparams;
-extern int flag_togo1, flag_togo2;
-
 void set_freq (long int ifreq_in_hz);
 //void myclock();
 int colormap_r(double);
 int colormap_g(double);
 int colormap_b(double);
-
-extern double *in;
-extern fftw_complex *out;
-extern fftw_plan p;
 
 Waterfall::Waterfall ()
 {
