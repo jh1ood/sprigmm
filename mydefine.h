@@ -17,7 +17,7 @@
 #define WATERFALL_XSIZE         1024
 #define WATERFALL_YSIZE          512
 #define WATERFALL_XOFFSET          0
-#define WATERFALL_YOFFSET         10
+#define WATERFALL_YOFFSET          0
 #define WAVEFORM_LEN             128
 #define BAUDRATE                B19200
 #define TIMEOUT_VALUE           100
@@ -32,7 +32,7 @@ extern unsigned int channels;	/* count of channels */
 extern int byte_per_sample;	/* 16 bit format */
 extern unsigned int buffer_time;	/* ring buffer length in us */
 extern unsigned int period_time;	/* period time in us */
-extern int resample;	/* disable resample */
+extern int resample;		/* disable resample */
 extern int period_event;	/* produce poll event after each period */
 extern double audio_signal[NFFT];
 extern double audio_signal_ffted[NFFT];
@@ -56,10 +56,10 @@ extern fftw_complex *out;
 extern fftw_plan p;
 extern int flag_togo1, flag_togo2;
 
-int send_command (unsigned char *partial_command);
-int receive_fb ();
-void myfunc (int);
-void set_freq (long int ifreq_in_hz);
+int send_command(unsigned char *partial_command);
+int receive_fb();
+void myfunc(int);
+void set_freq(long int ifreq_in_hz);
 void myclock();
 int colormap_r(double);
 int colormap_g(double);

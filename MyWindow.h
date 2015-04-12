@@ -13,24 +13,17 @@
 #include "Scales.h"
 #include <gtkmm/window.h>
 
-class MyWindow:public
-  Gtk::Window
-{
-public:
-  MyWindow ();
-  virtual ~
-  MyWindow ();
-private:
-  Gtk::Box
-    mybox;
-  RadioButtons
-    mybuttons;
-  Scales
-    myscales;
-  DrawingArea
-    myarea;
-  Waterfall
-    mywaterfall;
+class MyWindow:public Gtk::Window {
+  public:
+    MyWindow();
+    virtual ~ MyWindow();
+  private:
+    Gtk::Box mybox;
+    RadioButtons mybuttons;
+    Scales myscales;
+    DrawingArea myarea;
+    Waterfall mywaterfall;
+    Gtk::Window win3;
 };
 
-#endif /* MYWINDOW_H_ */
+#endif				/* MYWINDOW_H_ */

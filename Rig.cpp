@@ -2,6 +2,7 @@
 #include "radiobuttons.h"
 #include "drawingarea.h"
 #include "MyWindow.h"
+#include "MySubwindow1.h"
 #include "Scales.h"
 #include <iostream>
 #include <gtkmm/application.h>
@@ -12,13 +13,13 @@ using namespace std;
 
 int fd = -1;
 
-unsigned int rate;	/* stream rate */
-unsigned int channels;	/* count of channels */
+unsigned int rate;		/* stream rate */
+unsigned int channels;		/* count of channels */
 int byte_per_sample = 2;	/* 16 bit format */
 unsigned int buffer_time = 500000;	/* ring buffer length in us */
 unsigned int period_time = 128000;	/* period time in us */
-int resample = 0;	/* disable resample */
-int period_event = 0;	/* produce poll event after each period */
+int resample = 0;		/* disable resample */
+int period_event = 0;		/* produce poll event after each period */
 double audio_signal[NFFT];
 double audio_signal_ffted[NFFT];
 double fft_window[NFFT];
@@ -29,8 +30,8 @@ double bin_size, waterfall_scale_x;
 double amax = 14.0, amin = 7.0;
 long int ifreq_in_hz = 7026000;
 int s_meter;
-int operating_mode=3;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
-int dsp_filter=1;		/* FIL1=01, FIL2=02, FIL3=03 */
+int operating_mode = 3;		/* CW=03, CW-REV=07, LSB=00, USB=01 */
+int dsp_filter = 1;		/* FIL1=01, FIL2=02, FIL3=03 */
 snd_pcm_sframes_t buffer_size;
 snd_pcm_sframes_t period_size;
 snd_pcm_t *handle;
@@ -41,35 +42,35 @@ fftw_complex *in, *out;
 fftw_plan p;
 int flag_togo1 = 0, flag_togo2 = 0;
 
-void rig_init_serial (char *);
-void rig_init_sound  (char *);
+void rig_init_serial(char *);
+void rig_init_sound(char *);
 
-int
-main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-  if (argc != 5)
-    {
-      cout << "Usage example: " << argv[0] << " /dev/ttyUSB0 hw:2,0 32000 1 \n";
-      cout << "               " << argv[0] << " /dev/ttyUSB0 hw:0,0 48000 2 \n";
-      return false;
+    if (argc != 5) {
+	cout << "Usage example: " << argv[0] <<
+	    " /dev/ttyUSB0 hw:2,0 32000 1 \n";
+	cout << "               " << argv[0] <<
+	    " /dev/ttyUSB0 hw:0,0 48000 2 \n";
+	return false;
     }
-   rate     = atoi(argv[3]);
-   channels = atoi(argv[4]);
-   cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
-	 << ", rate = " << rate << ", channels = " << channels
-	 << endl;
+    rate = atoi(argv[3]);
+    channels = atoi(argv[4]);
+    cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
+	<< ", rate = " << rate << ", channels = " << channels << endl;
 
-  rig_init_serial (argv[1]);
-  rig_init_sound  (argv[2]);
+    rig_init_serial(argv[1]);
+    rig_init_sound(argv[2]);
 
-  argc = 1;			/* just for the next line */
-  Glib::RefPtr < Gtk::Application > app =
-    Gtk::Application::create (argc, argv, "org.gtkmm.example");
+    argc = 1;			/* just for the next line */
+    Glib::RefPtr < Gtk::Application > app =
+	Gtk::Application::create(argc, argv, "org.gtkmm.example");
 
-  MyWindow win;
-  win.set_title ("IC-7410 Rig Control Program (C++ version)");
-  win.set_default_size (50, 50);
-  win.set_border_width (5);
-  win.show_all_children ();
-  return app->run (win);
+    MyWindow win;
+    win.set_title("IC-7410 Rig Control Program (C++ version)");
+    win.set_default_size(50, 50);	/* dummy */
+    win.set_border_width(5);
+    win.show_all();
+
+    return app->run(win);
 }

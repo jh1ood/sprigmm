@@ -4,22 +4,20 @@
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/pixbuf.h>
 
-class DrawingArea:public
-  Gtk::DrawingArea
-{
-public:
-  DrawingArea ();
-  virtual ~
-  DrawingArea ();
+class DrawingArea:public Gtk::DrawingArea {
+  public:
+    DrawingArea();
+    virtual ~ DrawingArea();
 
-protected:
-  virtual bool on_draw (const Cairo::RefPtr < Cairo::Context > &cr);
-  bool on_scroll_event(GdkEventScroll *event);
-  bool on_timeout();
-  Glib::RefPtr<Gdk::Pixbuf> m_image;
+  protected:
+    virtual bool on_draw(const Cairo::RefPtr < Cairo::Context > &cr);
+    bool on_scroll_event(GdkEventScroll * event);
+    bool on_timeout();
+    Glib::RefPtr < Gdk::Pixbuf > m_image;
 
-private:
-  void draw_text     (const Cairo::RefPtr<Cairo::Context>& cr, int rectangle_width, int rectangle_height);
+  private:
+    void draw_text(const Cairo::RefPtr < Cairo::Context > &cr,
+		   int rectangle_width, int rectangle_height);
 };
 
-#endif // GTKMM_EXAMPLE_DRAWINGAREA_H
+#endif				// GTKMM_EXAMPLE_DRAWINGAREA_H

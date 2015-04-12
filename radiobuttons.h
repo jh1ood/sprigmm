@@ -6,36 +6,31 @@
 #include <gtkmm/radiobutton.h>
 #include <gtkmm/separator.h>
 #include <gtkmm.h>
+#include <map>
+#include <iostream>
+#include <string>
+using namespace std;
 
-class RadioButtons:public
-  Gtk::Box
-{
-public:
-  RadioButtons ();
-  virtual ~
-  RadioButtons ();
-private:
-  void
-  on_button_clicked_quit ();
-  void
-  on_button_clicked_all (gint data);
-  bool on_timeout();
-  Gtk::Box
-    m_Box_Top;
-  Gtk::Box
-    m_Box1;
-  Gtk::Box
-    m_Box2;
-  Gtk::Box
-    m_BoxGroup[100];
-  Gtk::RadioButton::Group
-    m_group[100];
-  Gtk::RadioButton
-    m_RadioButton[100];
-  Gtk::HSeparator
-    m_HSeparator;
-  Gtk::VSeparator
-    m_VSeparator[100];
+class RadioButtons:public Gtk::Box {
+  public:
+    RadioButtons();
+    virtual ~ RadioButtons();
+  private:
+    void
+     on_button_clicked_quit();
+    void
+//    on_button_clicked_all(gint data);
+    on_button_clicked_all(string label);
+    bool on_timeout();
+    Gtk::Box m_Box_Top;
+    Gtk::Box m_Box1;
+    Gtk::Box m_Box2;
+    Gtk::Box m_BoxGroup[100];
+    Gtk::RadioButton::Group m_group[100];
+    Gtk::RadioButton m_RadioButton[100];
+    Gtk::HSeparator m_HSeparator;
+    Gtk::VSeparator m_VSeparator[100];
+    std::map < string, int >map_from_label_to_index;
 };
 
-#endif //GTKMM_EXAMPLE_RADIOBUTTONS_H
+#endif				//GTKMM_EXAMPLE_RADIOBUTTONS_H

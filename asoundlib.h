@@ -68,4 +68,4 @@
 #include <alsa/seqmid.h>
 #include <alsa/seq_midi_event.h>
 
-#endif /* __ASOUNDLIB_H */
+#endif				/* __ASOUNDLIB_H */

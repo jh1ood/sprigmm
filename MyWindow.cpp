@@ -7,16 +7,22 @@
 
 #include "MyWindow.h"
 
-MyWindow::MyWindow ()
+MyWindow::MyWindow()
 {
-  mybox.set_orientation (Gtk::ORIENTATION_VERTICAL);
-  mybox.pack_start (myarea,      FALSE, FALSE, 0);
-  mybox.pack_start (mywaterfall, FALSE, FALSE, 0);
-  mybox.pack_start (mybuttons,   FALSE, FALSE, 0);
-  mybox.pack_start (myscales,    FALSE, FALSE, 0);
-  add (mybox);
+    mybox.set_orientation(Gtk::ORIENTATION_VERTICAL);
+    mybox.pack_start(myarea, FALSE, FALSE, 0);
+    mybox.pack_start(mywaterfall, FALSE, FALSE, 0);
+    mybox.pack_start(mybuttons, FALSE, FALSE, 0);
+    mybox.pack_start(myscales, FALSE, FALSE, 0);
+    add(mybox);
+
+    win3.set_title("from MyWindow");
+    win3.set_default_size(1024, 250);
+    win3.set_border_width(5);
+    win3.show_all();
+
 }
 
-MyWindow::~MyWindow ()
+MyWindow::~MyWindow()
 {
 }
