@@ -66,7 +66,6 @@ bool Waterfall::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     guint8 *p;
     int rowstride = m_image->get_rowstride();
 
-    if (true) {			/* true for shift down, false for shift up */
 // shift down pixbuf
 	for (int i = WATERFALL_YSIZE - 1; i > 0; i--) {
 	    p = m_image->get_pixels() + i * rowstride;
@@ -79,7 +78,9 @@ bool Waterfall::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
 // write into the top line
 	p = m_image->get_pixels();
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-	    double tmp = audio_signal_ffted[i];
+		int j = ((NFFT-(WATERFALL_XSIZE/2)) + i) % NFFT;
+	    double tmp = audio_signal_ffted[j];
+	    if(i == WATERFALL_XSIZE/2) tmp = 1.0;
 	    *p++ = colormap_r(tmp);
 	    *p++ = colormap_g(tmp);
 	    *p++ = colormap_b(tmp);
@@ -89,30 +90,6 @@ bool Waterfall::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
 				      WATERFALL_YOFFSET);
 	cr->paint();
 	cr->stroke();
-    } else {
-	// shift up pixbuf
-	for (int i = 0; i < WATERFALL_YSIZE - 1; i++) {
-	    p = m_image->get_pixels() + i * rowstride;
-	    for (int j = 0; j < WATERFALL_XSIZE * 3; j++) {
-		*p = *(p + WATERFALL_XSIZE * 3);
-		p++;
-	    }
-	}
-
-	// write into the bottom line
-	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-	    double tmp = audio_signal_ffted[i];
-	    *p++ = colormap_r(tmp);
-	    *p++ = colormap_g(tmp);
-	    *p++ = colormap_b(tmp);
-	}
-
-	Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,
-				      WATERFALL_YOFFSET);
-	cr->paint();
-	cr->stroke();
-
-    }
 
     return true;
 }

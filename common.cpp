@@ -254,8 +254,13 @@ static void async_callback(snd_async_handler_t * ahandler)
 			   0.25 * sin(2.0 * 3.14 * 750.0 * (double) i /
 				      rate));
 #endif
-
 	}
+    if(channels == 2) {
+      for(int i =0; i < NFFT; i+=2) {
+    	  audio_signal[i]   = samples[i] + 400.0;
+    	  audio_signal[i+1] = -0.32*samples[i] + 1.14*samples[i+1];
+      }
+    }
 
 	avail = snd_pcm_avail_update(handle);
     }

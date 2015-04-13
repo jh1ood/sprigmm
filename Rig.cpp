@@ -47,20 +47,24 @@ void rig_init_sound(char *);
 
 int main(int argc, char *argv[])
 {
-    if (argc != 5) {
+    if (argc == 5) {
+        cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
+    	<< ", rate = " << rate << ", channels = " << channels << endl;
+        rate = atoi    (argv[3]);
+        channels = atoi(argv[4]);
+    } else if (argc == 8) {
+    	exit(1);
+    } else {
 	cout << "Usage example: " << argv[0] <<
 	    " /dev/ttyUSB0 hw:2,0 32000 1 \n";
 	cout << "               " << argv[0] <<
-	    " /dev/ttyUSB0 hw:0,0 48000 2 \n";
+	    " /dev/ttyUSB0 hw:2,0 32000 1 hw:0,0 48000 2 \n";
 	return false;
     }
-    rate = atoi(argv[3]);
-    channels = atoi(argv[4]);
-    cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
-	<< ", rate = " << rate << ", channels = " << channels << endl;
 
     rig_init_serial(argv[1]);
-    rig_init_sound(argv[2]);
+    rig_init_sound (argv[2]);
+
 
     argc = 1;			/* just for the next line */
     Glib::RefPtr < Gtk::Application > app =

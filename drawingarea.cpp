@@ -139,6 +139,7 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     cr->restore();
 
 // Waveform
+    if(channels == 1) {
     cr->save();
     cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
     cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
@@ -147,13 +148,39 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     }
     cr->stroke();
     cr->restore();
+    } else if(channels == 2) {
+        cr->save();
+        cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
+        cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+        for (int i = 0; i < WATERFALL_XSIZE; i++) {
+    	cr->line_to(i, audio_signal[2*i] / 16384.0 * 24.0 + 25.0 + 60.0);
+        }
+        cr->stroke();
 
+        cr->set_source_rgba(0.9, 0.2, 0.9, 1.0);
+        cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+        for (int i = 0; i < WATERFALL_XSIZE; i++) {
+    	cr->line_to(i, audio_signal[2*i+1] / 16384.0 * 24.0 + 25.0 + 60.0);
+        }
+        cr->stroke();
+        cr->restore();
+    } else {
+    	cout << "Error in DrawingArea::on_draw: channels = " << channels << endl;
+    	exit(1);
+    }
+// waveform output
+    if(icountx == 30) {
+    	for(int i=0;i<NFFT;i+=2) {
+    		cout << "XXX" << i << " " << audio_signal[2*i] << " " << audio_signal[2*i+1] << endl;
+    	}
+    }
 // Spectrum
     cr->save();
     cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
-    cr->move_to(0.0, 40.0 * (1.0 - audio_signal_ffted[0]) + 5.0 + 120.0);
+    cr->move_to(0.0, 40.0 * (1.0 - audio_signal_ffted[NFFT-(WINDOW_XSIZE/2)]) + 5.0 + 120.0);
     for (int i = 0; i < WATERFALL_XSIZE; i++) {
-	cr->line_to(i, 40.0 * (1.0 - audio_signal_ffted[i]) + 5.0 + 120.0);
+	int j = ((NFFT-(WATERFALL_XSIZE/2)) + i) % NFFT;
+	cr->line_to(i, 40.0 * (1.0 - audio_signal_ffted[j]) + 5.0 + 120.0);
     }
     cr->stroke();
     cr->restore();
@@ -162,12 +189,8 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     cr->save();
     cr->set_source_rgba(1.0, 1.0, 1.0, 0.5);
     for (int i = 400; i <= 800; i += 200) {
-	cr->move_to(i / bin_size, 170.0);
-	if (i == 600) {
-	    cr->line_to(i / bin_size, 164.0);
-	} else {
-	    cr->line_to(i / bin_size, 167.0);
-	}
+	  cr->move_to(((WATERFALL_XSIZE/2)) + (i / bin_size), 170.0);
+      cr->line_to(((WATERFALL_XSIZE/2)) + (i / bin_size), 164.0);
     }
     cr->stroke();
     cr->restore();

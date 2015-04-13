@@ -9,7 +9,7 @@
 
 #define DEBUG
 #define NO_MARKER
-#define NFFT                    4096
+#define NFFT                    2048
 #define WINDOW_XSIZE            1320
 #define WINDOW_YSIZE             500
 #define AREA1_XSIZE               99
