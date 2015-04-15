@@ -16,7 +16,8 @@ m_Box2(Gtk::ORIENTATION_VERTICAL, 10)
 {
     vector < vector < string >> label {
 	{
-	"CW", "CW-R", "RTTY", "RTTY-R", "LSB", "USB", "AM", "FM"}, {
+//	"CW", "CW-R", "RTTY", "RTTY-R", "LSB", "USB", "AM", "FM"}, {
+	"CW", "CW-R", "LSB", "USB"}, {
 	"DSP FIL 1", "DSP FIL 2", "DSP FIL 3"}, {
 	"DSP SHARP", "DSP SOFT"}, {
 	"IF FIL 1", "IF FIL 2", "IF FIL 3"}, {

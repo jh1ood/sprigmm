@@ -255,10 +255,16 @@ static void async_callback(snd_async_handler_t * ahandler)
 				      rate));
 #endif
 	}
-    if(channels == 2) {
+    if(channels == 2) { /* for my Soft66LC4 only */
       for(int i =0; i < NFFT; i+=2) {
-    	  audio_signal[i]   = samples[i] + 400.0;
-    	  audio_signal[i+1] = -0.32*samples[i] + 1.14*samples[i+1];
+ 		  double i1 = samples[i  ] + (-246.618); /* DC offset */
+    	  double q1 = samples[i+1] + (-222.262);
+    	  double i2 = i1;
+    	  double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
+    	  double i3 = q2; /* swap IQ */
+    	  double q3 = i2;
+    	  audio_signal[i]   = i3;
+    	  audio_signal[i+1] = q3;
       }
     }
 

@@ -10,11 +10,11 @@
 #define DEBUG
 #define NO_MARKER
 #define NFFT                    2048
-#define WINDOW_XSIZE            1320
+#define WINDOW_XSIZE            1920
 #define WINDOW_YSIZE             500
 #define AREA1_XSIZE               99
 #define AREA1_YSIZE               50
-#define WATERFALL_XSIZE         1024
+#define WATERFALL_XSIZE         1900
 #define WATERFALL_YSIZE          512
 #define WATERFALL_XOFFSET          0
 #define WATERFALL_YOFFSET          0

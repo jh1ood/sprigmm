@@ -72,6 +72,12 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
 
     /* log10 and normalize */
 
+    if(channels == 1) {
+    	amax = 14.0; amin = 7.0;
+    } else if(channels == 2) {
+    	amax = 12.0; amin = 7.0;
+    }
+
     for (int i = 0; i < NFFT; i++) {
 	double val;
 	val = out[i][0] * out[i][0] + out[i][1] * out[i][1];

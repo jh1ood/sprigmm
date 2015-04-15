@@ -4,6 +4,7 @@
 #include "MyWindow.h"
 #include "MySubwindow1.h"
 #include "Scales.h"
+#include "Sound.h"
 #include <iostream>
 #include <gtkmm/application.h>
 #include <gtkmm/window.h>
@@ -47,20 +48,22 @@ void rig_init_sound(char *);
 
 int main(int argc, char *argv[])
 {
+
     if (argc == 5) {
-        cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
-    	<< ", rate = " << rate << ", channels = " << channels << endl;
-        rate = atoi    (argv[3]);
-        channels = atoi(argv[4]);
+        Sound ic7410 {argv[2], argv[3], argv[4]};
     } else if (argc == 8) {
-    	exit(1);
+        Sound ic7410 {argv[2], argv[3], argv[4]};
+        Sound soft66 {argv[5], argv[6], argv[7]};
     } else {
-	cout << "Usage example: " << argv[0] <<
-	    " /dev/ttyUSB0 hw:2,0 32000 1 \n";
-	cout << "               " << argv[0] <<
-	    " /dev/ttyUSB0 hw:2,0 32000 1 hw:0,0 48000 2 \n";
-	return false;
+    	cout << "Usage (IC-7410 only)      : " << argv[0] << " /dev/ttyUSB0 hw:2,0 32000 1 \n";
+    	cout << "Usage (IC-7410 and Soft66): " << argv[0] << " /dev/ttyUSB0 hw:2,0 32000 1 hw:0,0 48000 2 \n";
+    	return false;
     }
+
+    rate = atoi    (argv[3]);
+    channels = atoi(argv[4]);
+    cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
+	<< ", rate = " << rate << ", channels = " << channels << endl;
 
     rig_init_serial(argv[1]);
     rig_init_sound (argv[2]);
