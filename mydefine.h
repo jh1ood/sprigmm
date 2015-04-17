@@ -34,6 +34,7 @@ extern unsigned int buffer_time;	/* ring buffer length in us */
 extern unsigned int period_time;	/* period time in us */
 extern int resample;		/* disable resample */
 extern int period_event;	/* produce poll event after each period */
+extern signed short samples[9999];
 extern double audio_signal[NFFT];
 extern double audio_signal_ffted[NFFT];
 extern double fft_window[NFFT];
@@ -54,7 +55,7 @@ extern snd_pcm_sw_params_t *swparams;
 extern fftw_complex *in;
 extern fftw_complex *out;
 extern fftw_plan p;
-extern int flag_togo1, flag_togo2;
+extern int flag_togo1, flag_togo2, flag_togo3, flag_togo4;
 
 int send_command(unsigned char *partial_command);
 int receive_fb();

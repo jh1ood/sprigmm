@@ -16,7 +16,7 @@ m_Box2(Gtk::ORIENTATION_VERTICAL, 10)
 {
     vector < vector < string >> label {
 	{
-//	"CW", "CW-R", "RTTY", "RTTY-R", "LSB", "USB", "AM", "FM"}, {
+//      "CW", "CW-R", "RTTY", "RTTY-R", "LSB", "USB", "AM", "FM"}, {
 	"CW", "CW-R", "LSB", "USB"}, {
 	"DSP FIL 1", "DSP FIL 2", "DSP FIL 3"}, {
 	"DSP SHARP", "DSP SOFT"}, {
@@ -36,7 +36,7 @@ m_Box2(Gtk::ORIENTATION_VERTICAL, 10)
 	}
 	for (unsigned int j = 0; j < label.at(i).size(); j++) {
 	    m_RadioButton[index].set_label(label[i][j]);
-	    map_from_label_to_index[label[i][j]] = index; /* map */
+	    map_from_label_to_index[label[i][j]] = index;	/* map */
 	    if (j == 0) {
 		m_RadioButton[index].set_active();
 		m_group[i] = m_RadioButton[index].get_group();
@@ -45,8 +45,13 @@ m_Box2(Gtk::ORIENTATION_VERTICAL, 10)
 	    }
 	    m_BoxGroup[i].pack_start(m_RadioButton[index], FALSE, FALSE,
 				     0);
-//	    m_RadioButton[index].signal_clicked().connect(sigc::bind < gint >   (mem_fun(*this,&RadioButtons::on_button_clicked_all), index));
-	    m_RadioButton[index].signal_clicked().connect(sigc::bind < string > (mem_fun(*this,&RadioButtons::on_button_clicked_all), label[i][j]));
+//          m_RadioButton[index].signal_clicked().connect(sigc::bind < gint >   (mem_fun(*this,&RadioButtons::on_button_clicked_all), index));
+	    m_RadioButton[index].signal_clicked().connect(sigc::bind <
+							  string >
+							  (mem_fun
+							   (*this,
+							    &RadioButtons::on_button_clicked_all),
+							   label[i][j]));
 	    index++;
 	}
 	m_Box1.pack_start(m_BoxGroup[i]);
@@ -60,9 +65,8 @@ m_Box2(Gtk::ORIENTATION_VERTICAL, 10)
 
     show_all_children();
 
-    Glib::signal_timeout().connect(sigc::
-				   mem_fun(*this,
-					   &RadioButtons::on_timeout),
+    Glib::signal_timeout().connect(sigc::mem_fun(*this,
+						 &RadioButtons::on_timeout),
 				   500);
 
 }
@@ -108,7 +112,7 @@ void RadioButtons::on_button_clicked_quit()
 //void RadioButtons::on_button_clicked_all(int index)
 void RadioButtons::on_button_clicked_all(string label)
 {
-//    static vector < unsigned char >command1x = { 0x06, 0x03, 0x01 };	/* OP MODE & FIL SET */
+//    static vector < unsigned char >command1x = { 0x06, 0x03, 0x01 };  /* OP MODE & FIL SET */
     static vector < unsigned char >command46x = { 0x16, 0x55, 0x00 };	/* IF FIL1/2/3 */
     static vector < unsigned char >command19x = { 0x16, 0x56, 0x00 };	/* DSP SHARP/SOFT */
     static vector < unsigned char >command49x = { 0x16, 0x02, 0x00 };	/* PRE-AMP OFF/1/2 */
@@ -121,82 +125,87 @@ void RadioButtons::on_button_clicked_all(string label)
 
     if (m_RadioButton[index].get_active()) {
 	cout << "RadioButtons::on_button_clicked_all(): index = " << index
-	     << ", label = " << label << endl;
+	    << ", label = " << label << endl;
     }
 
-	if(0) {
-	} else if(label == "CW") {
-		operating_mode = 0x03;
-		set_operating_modex();
-		return;
-    } else if(label == "CW-R") {
-		operating_mode = 0x07;
-		set_operating_modex();
-		return;
-    } else if(label == "RTTY") {
-		operating_mode = 0x04;
-		set_operating_modex();
-		return;
-    } else if(label == "RTTY-R") {
-		operating_mode = 0x08;
-		set_operating_modex();
-		return;
-    } else if(label == "LSB") {
-		operating_mode = 0x00;
-		set_operating_modex();
-		return;
-    } else if(label == "USB") {
-		operating_mode = 0x01;
-		set_operating_modex();
-		return;
-    } else if(label == "AM") {
-		operating_mode = 0x02;
-		set_operating_modex();
-		return;
-    } else if(label == "FM") {
-		operating_mode = 0x05;
-		set_operating_modex();
-		return;
-    } else if(label == "DSP FIL 1" || label == "DSP FIL 2" || label == "DSP FIL 3") {
-		dsp_filter = index - map_from_label_to_index["DSP FIL 1"] + 0x01; /* start from 0x01 */
-		set_operating_modex();
-		return;
-    } else if(label == "DSP SHARP" || label == "DSP SOFT") {
-	    command19x[2] = index - map_from_label_to_index["DSP SHARP"];
-	    send_commandx(command19x);
-	    receive_fb();
-		return;
-		return;
-    } else if(label == "IF FIL 1" || label == "IF FIL 2" || label == "IF FIL 3") {
-	    command46x[2] = index - map_from_label_to_index["IF FIL 1"];
-	    send_commandx(command46x);
-	    receive_fb();
-	    return;
-    } else if(label == "PRE-AMP OFF" || label == "PRE-AMP 1" || label == "PRE-AMP 2") {
-	    command49x[2] = index - map_from_label_to_index["PRE-AMP OFF"];;
-	    send_commandx(command49x);
-	    receive_fb();
-	    return;
-    } else if(label == "ATT OFF" || label == "ATT 20dB") {
-	    command12x[1] = (index - map_from_label_to_index["ATT OFF"]) * 0x20; /* need 0x20 */
-	    send_commandx(command12x);
-	    receive_fb();
-	    return;
-    } else if(label == "AGC FAST" || label == "AGC MID" || label == "AGC SLOW") {
-	    command16x[2] = (index - map_from_label_to_index["AGC FAST"]) + 0x01;	/* start from 0x01 */
-	    send_commandx(command16x);
-	    receive_fb();
-	    return;
-    } else if(label == "ANT 1" || label == "ANT 2") {
-	    command14x[1] = index - map_from_label_to_index["ANT 1"];
-	    send_commandx(command14x);
-	    receive_fb();
-	    return;
-    } else if(label == "BKIN OFF" || label == "BKIN SEMI" || label == "BKIN FULL") {
-	    command43x[2] = index - map_from_label_to_index["BKIN OFF"];
-	    send_commandx(command43x);
-	    receive_fb();
-	    return;
+    if (0) {
+    } else if (label == "CW") {
+	operating_mode = 0x03;
+	set_operating_modex();
+	return;
+    } else if (label == "CW-R") {
+	operating_mode = 0x07;
+	set_operating_modex();
+	return;
+    } else if (label == "RTTY") {
+	operating_mode = 0x04;
+	set_operating_modex();
+	return;
+    } else if (label == "RTTY-R") {
+	operating_mode = 0x08;
+	set_operating_modex();
+	return;
+    } else if (label == "LSB") {
+	operating_mode = 0x00;
+	set_operating_modex();
+	return;
+    } else if (label == "USB") {
+	operating_mode = 0x01;
+	set_operating_modex();
+	return;
+    } else if (label == "AM") {
+	operating_mode = 0x02;
+	set_operating_modex();
+	return;
+    } else if (label == "FM") {
+	operating_mode = 0x05;
+	set_operating_modex();
+	return;
+    } else if (label == "DSP FIL 1" || label == "DSP FIL 2"
+	       || label == "DSP FIL 3") {
+	dsp_filter = index - map_from_label_to_index["DSP FIL 1"] + 0x01;	/* start from 0x01 */
+	set_operating_modex();
+	return;
+    } else if (label == "DSP SHARP" || label == "DSP SOFT") {
+	command19x[2] = index - map_from_label_to_index["DSP SHARP"];
+	send_commandx(command19x);
+	receive_fb();
+	return;
+	return;
+    } else if (label == "IF FIL 1" || label == "IF FIL 2"
+	       || label == "IF FIL 3") {
+	command46x[2] = index - map_from_label_to_index["IF FIL 1"];
+	send_commandx(command46x);
+	receive_fb();
+	return;
+    } else if (label == "PRE-AMP OFF" || label == "PRE-AMP 1"
+	       || label == "PRE-AMP 2") {
+	command49x[2] = index - map_from_label_to_index["PRE-AMP OFF"];;
+	send_commandx(command49x);
+	receive_fb();
+	return;
+    } else if (label == "ATT OFF" || label == "ATT 20dB") {
+	command12x[1] = (index - map_from_label_to_index["ATT OFF"]) * 0x20;	/* need 0x20 */
+	send_commandx(command12x);
+	receive_fb();
+	return;
+    } else if (label == "AGC FAST" || label == "AGC MID"
+	       || label == "AGC SLOW") {
+	command16x[2] = (index - map_from_label_to_index["AGC FAST"]) + 0x01;	/* start from 0x01 */
+	send_commandx(command16x);
+	receive_fb();
+	return;
+    } else if (label == "ANT 1" || label == "ANT 2") {
+	command14x[1] = index - map_from_label_to_index["ANT 1"];
+	send_commandx(command14x);
+	receive_fb();
+	return;
+    } else if (label == "BKIN OFF" || label == "BKIN SEMI"
+	       || label == "BKIN FULL") {
+	command43x[2] = index - map_from_label_to_index["BKIN OFF"];
+	send_commandx(command43x);
+	receive_fb();
+	return;
     }
 
 }

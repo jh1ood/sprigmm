@@ -21,6 +21,7 @@ unsigned int buffer_time = 500000;	/* ring buffer length in us */
 unsigned int period_time = 128000;	/* period time in us */
 int resample = 0;		/* disable resample */
 int period_event = 0;		/* produce poll event after each period */
+signed short samples[9999];
 double audio_signal[NFFT];
 double audio_signal_ffted[NFFT];
 double fft_window[NFFT];
@@ -41,33 +42,40 @@ snd_pcm_sw_params_t *swparams;
 double *in_real;
 fftw_complex *in, *out;
 fftw_plan p;
-int flag_togo1 = 0, flag_togo2 = 0;
+int flag_togo1 = 0, flag_togo2 = 0, flag_togo3 = 0, flag_togo4 = 0;
 
 void rig_init_serial(char *);
-void rig_init_sound(char *);
+//void rig_init_sound(char *);
+
+Sound *mysound1;
+Sound *mysound2;
 
 int main(int argc, char *argv[])
 {
-
     if (argc == 5) {
-        Sound ic7410 {argv[2], argv[3], argv[4]};
+    	mysound1 = new Sound{argv[2], argv[3], argv[4]};
     } else if (argc == 8) {
-        Sound ic7410 {argv[2], argv[3], argv[4]};
-        Sound soft66 {argv[5], argv[6], argv[7]};
+        mysound1 = new Sound{argv[2], argv[3], argv[4]};
+        mysound2 = new Sound{argv[5], argv[6], argv[7]};
     } else {
-    	cout << "Usage (IC-7410 only)      : " << argv[0] << " /dev/ttyUSB0 hw:2,0 32000 1 \n";
-    	cout << "Usage (IC-7410 and Soft66): " << argv[0] << " /dev/ttyUSB0 hw:2,0 32000 1 hw:0,0 48000 2 \n";
-    	return false;
+	cout << "Usage (IC-7410 only)      : " << argv[0] <<
+	    " /dev/ttyUSB0 hw:2,0 32000 1 \n";
+	cout << "Usage (IC-7410 and Soft66): " << argv[0] <<
+	    " /dev/ttyUSB0 hw:2,0 32000 1 hw:0,0 48000 2 \n";
+	return false;
     }
 
-    rate = atoi    (argv[3]);
-    channels = atoi(argv[4]);
-    cout << "serial_port = " << argv[1] << ", sound_device = " << argv[2]
-	<< ", rate = " << rate << ", channels = " << channels << endl;
+    cout << "main: serial_port = " << argv[1] << ", sound_device = " <<
+	argv[2]
+	<< ", rate = " << argv[3] << ", channels = " << argv[4] << endl;
 
     rig_init_serial(argv[1]);
-    rig_init_sound (argv[2]);
+    rate = atoi(argv[3]);
+    channels = atoi(argv[4]);
+//      rig_init_sound (argv[2]);
 
+//    while (1) {;
+//    }
 
     argc = 1;			/* just for the next line */
     Glib::RefPtr < Gtk::Application > app =
@@ -78,6 +86,5 @@ int main(int argc, char *argv[])
     win.set_default_size(50, 50);	/* dummy */
     win.set_border_width(5);
     win.show_all();
-
     return app->run(win);
 }

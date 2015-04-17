@@ -206,8 +206,14 @@ void set_operating_modex(void)
     receive_fb();
 }
 
+struct async_private_data {
+    signed short *xsamples;
+    snd_pcm_sframes_t xperiod_size;
+    int dummy;
+};
 
-static void async_callback(snd_async_handler_t * ahandler)
+
+void async_callback(snd_async_handler_t * ahandler)
 {
     static int icount = 0;
     cout << "async_callback() is called. icount = " << icount++ << "\n";
@@ -216,14 +222,16 @@ static void async_callback(snd_async_handler_t * ahandler)
     flag_togo2 = 1;		/* to activate Waterfall::on_draw() */
 
     snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
+
     signed short *samples =
 	snd_async_handler_get_callback_private(ahandler);
+
     snd_pcm_sframes_t avail;
     int err;
 
     avail = snd_pcm_avail_update(handle);
-    cout << "avail = " << avail << endl;
-    cout << "period_size = " << period_size << endl;
+    cout << "  avail = " << avail << endl;
+    cout << "  period_size = " << period_size << endl;
 
     while (avail >= period_size) {
 	err = snd_pcm_readi(handle, samples, period_size);
@@ -255,25 +263,25 @@ static void async_callback(snd_async_handler_t * ahandler)
 				      rate));
 #endif
 	}
-    if(channels == 2) { /* for my Soft66LC4 only */
-      for(int i =0; i < NFFT; i+=2) {
- 		  double i1 = samples[i  ] + (-246.618); /* DC offset */
-    	  double q1 = samples[i+1] + (-222.262);
-    	  double i2 = i1;
-    	  double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
-    	  double i3 = q2; /* swap IQ */
-    	  double q3 = i2;
-    	  audio_signal[i]   = i3;
-    	  audio_signal[i+1] = q3;
-      }
-    }
+	if (channels == 2) {	/* for my Soft66LC4 only */
+	    for (int i = 0; i < NFFT; i += 2) {
+		double i1 = samples[i] + (-246.618);	/* DC offset */
+		double q1 = samples[i + 1] + (-222.262);
+		double i2 = i1;
+		double q2 = -0.32258 * i1 + 1.1443 * q1;	/* gain and phase correction */
+		double i3 = q2;	/* swap IQ */
+		double q3 = i2;
+		audio_signal[i] = i3;
+		audio_signal[i + 1] = q3;
+	    }
+	}
 
 	avail = snd_pcm_avail_update(handle);
     }
     cout << "async_call back end.. \n";
 }
 
-static int async_loop(snd_pcm_t * handle, signed short *samples)
+int async_loop(snd_pcm_t * handle, signed short *samples)
 {
     snd_async_handler_t *ahandler;
     int err;
@@ -359,7 +367,7 @@ int colormap_b(double tmp)
     return (int) (255.0 * val);
 }
 
-static int set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
+int set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 {
     unsigned int rrate;
     snd_pcm_uframes_t size;
@@ -462,8 +470,8 @@ static int set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	return err;
     }
     period_size = size;
-    fprintf(stderr, "period_size = %8d, dir   = %d \n", (int) period_size,
-	    dir);
+    cout << "set_hwparams: period_size = " << period_size << ", dir = " <<
+	dir << endl;
 
     if (period_size < NFFT) {
 	fprintf(stderr,
@@ -483,7 +491,7 @@ static int set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
     return 0;
 }
 
-static int set_swparams(snd_pcm_t * handle, snd_pcm_sw_params_t * swparams)
+int set_swparams(snd_pcm_t * handle, snd_pcm_sw_params_t * swparams)
 {
     int err;
     std::cout << "set_swparams:    begin... \n";
@@ -577,14 +585,6 @@ int rig_init_sound(char *sound_device)
     nsamples = period_size * channels * byte_per_sample;
     fprintf(stderr, "nsamples = %d \n", nsamples);
 
-//static  signed short *samples;
-//  samples = malloc (nsamples);
-
-    static signed short samples[99999];
-    if (samples == NULL) {
-	fprintf(stderr, "No enough memory\n");
-	exit(EXIT_FAILURE);
-    }
     cout << "going to async_loop() from rig_init_sound() \n";
     err = async_loop(handle, samples);
     cout << "returned from async_loop \n";

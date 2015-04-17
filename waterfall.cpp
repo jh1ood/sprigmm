@@ -67,29 +67,30 @@ bool Waterfall::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     int rowstride = m_image->get_rowstride();
 
 // shift down pixbuf
-	for (int i = WATERFALL_YSIZE - 1; i > 0; i--) {
-	    p = m_image->get_pixels() + i * rowstride;
-	    for (int j = 0; j < WATERFALL_XSIZE * 3; j++) {
-		*p = *(p - WATERFALL_XSIZE * 3);
-		p++;
-	    }
+    for (int i = WATERFALL_YSIZE - 1; i > 0; i--) {
+	p = m_image->get_pixels() + i * rowstride;
+	for (int j = 0; j < WATERFALL_XSIZE * 3; j++) {
+	    *p = *(p - WATERFALL_XSIZE * 3);
+	    p++;
 	}
+    }
 
 // write into the top line
-	p = m_image->get_pixels();
-	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		int j = ((NFFT-(WATERFALL_XSIZE/2)) + i) % NFFT;
-	    double tmp = audio_signal_ffted[j];
-	    if(i == WATERFALL_XSIZE/2) tmp = 1.0;
-	    *p++ = colormap_r(tmp);
-	    *p++ = colormap_g(tmp);
-	    *p++ = colormap_b(tmp);
-	}
+    p = m_image->get_pixels();
+    for (int i = 0; i < WATERFALL_XSIZE; i++) {
+	int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
+	double tmp = audio_signal_ffted[j];
+	if (i == WATERFALL_XSIZE / 2)
+	    tmp = 1.0;
+	*p++ = colormap_r(tmp);
+	*p++ = colormap_g(tmp);
+	*p++ = colormap_b(tmp);
+    }
 
-	Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,
-				      WATERFALL_YOFFSET);
-	cr->paint();
-	cr->stroke();
+    Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,
+				  WATERFALL_YOFFSET);
+    cr->paint();
+    cr->stroke();
 
     return true;
 }
@@ -170,8 +171,7 @@ bool Waterfall::on_scroll_event(GdkEventScroll * event)
 
 bool Waterfall::on_button_press_event(GdkEventButton * event)
 {
-    std::
-	cout << "Watefall::on_button_press_event:  " << event->x << " : "
+    std::cout << "Watefall::on_button_press_event:  " << event->x << " : "
 	<< event->y << std::endl;
     x_press = event->x;
     y_press = event->y;

@@ -16,9 +16,9 @@ DrawingArea::DrawingArea()
     std::cout << "DrawingArea constructor is called." << std::endl;
     set_size_request(1200, 170);	/* width is dummy, determined by radiobuttons */
 
-    Glib::signal_timeout().connect(sigc::
-				   mem_fun(*this,
-					   &DrawingArea::on_timeout), 50);
+    Glib::signal_timeout().connect(sigc::mem_fun(*this,
+						 &DrawingArea::on_timeout),
+				   50);
 
 #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
     //Connect the signal handler if it isn't already a virtual method override:
@@ -72,10 +72,12 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
 
     /* log10 and normalize */
 
-    if(channels == 1) {
-    	amax = 14.0; amin = 7.0;
-    } else if(channels == 2) {
-    	amax = 12.0; amin = 7.0;
+    if (channels == 1) {
+	amax = 14.0;
+	amin = 7.0;
+    } else if (channels == 2) {
+	amax = 12.0;
+	amin = 7.0;
     }
 
     for (int i = 0; i < NFFT; i++) {
@@ -145,47 +147,57 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     cr->restore();
 
 // Waveform
-    if(channels == 1) {
-    cr->save();
-    cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
-    cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
-    for (int i = 0; i < WATERFALL_XSIZE; i++) {
-	cr->line_to(i, audio_signal[i] / 16384.0 * 24.0 + 25.0 + 60.0);
-    }
-    cr->stroke();
-    cr->restore();
-    } else if(channels == 2) {
-        cr->save();
-        cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
-        cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
-        for (int i = 0; i < WATERFALL_XSIZE; i++) {
-    	cr->line_to(i, audio_signal[2*i] / 16384.0 * 24.0 + 25.0 + 60.0);
-        }
-        cr->stroke();
+    if (channels == 1) {
+	cr->save();
+	cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
+	cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+	for (int i = 0; i < WATERFALL_XSIZE; i++) {
+	    cr->line_to(i, audio_signal[i] / 16384.0 * 24.0 + 25.0 + 60.0);
+	}
+	cr->stroke();
+	cr->restore();
+    } else if (channels == 2) {
+	cr->save();
+	cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
+	cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+	for (int i = 0; i < WATERFALL_XSIZE; i++) {
+	    cr->line_to(i,
+			audio_signal[2 * i] / 16384.0 * 24.0 + 25.0 +
+			60.0);
+	}
+	cr->stroke();
 
-        cr->set_source_rgba(0.9, 0.2, 0.9, 1.0);
-        cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
-        for (int i = 0; i < WATERFALL_XSIZE; i++) {
-    	cr->line_to(i, audio_signal[2*i+1] / 16384.0 * 24.0 + 25.0 + 60.0);
-        }
-        cr->stroke();
-        cr->restore();
+	cr->set_source_rgba(0.9, 0.2, 0.9, 1.0);
+	cr->move_to(0.0, audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+	for (int i = 0; i < WATERFALL_XSIZE; i++) {
+	    cr->line_to(i,
+			audio_signal[2 * i + 1] / 16384.0 * 24.0 + 25.0 +
+			60.0);
+	}
+	cr->stroke();
+	cr->restore();
     } else {
-    	cout << "Error in DrawingArea::on_draw: channels = " << channels << endl;
-    	exit(1);
+	cout << "Error in DrawingArea::on_draw: channels = " << channels <<
+	    endl;
+	exit(1);
     }
 // waveform output
-    if(icountx == 30) {
-    	for(int i=0;i<NFFT;i+=2) {
-    		cout << "XXX" << i << " " << audio_signal[2*i] << " " << audio_signal[2*i+1] << endl;
-    	}
+    if (icountx == 30) {
+	for (int i = 0; i < NFFT; i += 2) {
+	    cout << "XXX" << i << " " << audio_signal[2 *
+						      i] << " " <<
+		audio_signal[2 * i + 1] << endl;
+	}
     }
 // Spectrum
     cr->save();
     cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
-    cr->move_to(0.0, 40.0 * (1.0 - audio_signal_ffted[NFFT-(WINDOW_XSIZE/2)]) + 5.0 + 120.0);
+    cr->move_to(0.0,
+		40.0 * (1.0 -
+			audio_signal_ffted[NFFT - (WINDOW_XSIZE / 2)]) +
+		5.0 + 120.0);
     for (int i = 0; i < WATERFALL_XSIZE; i++) {
-	int j = ((NFFT-(WATERFALL_XSIZE/2)) + i) % NFFT;
+	int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
 	cr->line_to(i, 40.0 * (1.0 - audio_signal_ffted[j]) + 5.0 + 120.0);
     }
     cr->stroke();
@@ -195,8 +207,8 @@ bool DrawingArea::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     cr->save();
     cr->set_source_rgba(1.0, 1.0, 1.0, 0.5);
     for (int i = 400; i <= 800; i += 200) {
-	  cr->move_to(((WATERFALL_XSIZE/2)) + (i / bin_size), 170.0);
-      cr->line_to(((WATERFALL_XSIZE/2)) + (i / bin_size), 164.0);
+	cr->move_to(((WATERFALL_XSIZE / 2)) + (i / bin_size), 170.0);
+	cr->line_to(((WATERFALL_XSIZE / 2)) + (i / bin_size), 164.0);
     }
     cr->stroke();
     cr->restore();
