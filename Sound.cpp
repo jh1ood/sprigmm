@@ -67,7 +67,7 @@ Sound::Sound(char *s, const char *r, const char *c)
 
     nsamples = period_size * channels * byte_per_sample;
     cout << "Sound::Sound: nsamples = " << nsamples << endl;
-    cout << "Sound::Sound: samples = " << samples << endl;
+    cout << "Sound::Sound: samples  = " << samples  << endl;
 
     if (0) {
     } else if (channels == 1) {
@@ -89,6 +89,10 @@ Sound::Sound(char *s, const char *r, const char *c)
 	    exit(EXIT_FAILURE);
 	}
     }
+
+    in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
+    out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
+    p = fftw_plan_dft_1d(NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
     cout << "Sound::Sound: end.. \n";
     //      err = snd_async_add_pcm_handler(&ahandler, handle, asound_async_callback  , samples); /* callback */
@@ -153,7 +157,7 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler)
 	}
 
 	for (int i = 0; i < NFFT; i++) {	/* NFFT=period_size */
-	    ::audio_signal[i] = samples[i];
+	    audio_signal[i] = samples[i];
 #ifdef MARKER
 	    audio_signal[i] +=
 		16384.0 * (0.25 *

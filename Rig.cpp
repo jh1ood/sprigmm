@@ -49,6 +49,7 @@ void rig_init_serial(char *);
 
 Sound *mysound1;
 Sound *mysound2;
+MyWindow *win1;
 
 int main(int argc, char *argv[])
 {
@@ -69,22 +70,18 @@ int main(int argc, char *argv[])
 	argv[2]
 	<< ", rate = " << argv[3] << ", channels = " << argv[4] << endl;
 
-    rig_init_serial(argv[1]);
+//    rig_init_serial(argv[1]);
     rate = atoi(argv[3]);
     channels = atoi(argv[4]);
-//      rig_init_sound (argv[2]);
-
-//    while (1) {;
-//    }
 
     argc = 1;			/* just for the next line */
     Glib::RefPtr < Gtk::Application > app =
 	Gtk::Application::create(argc, argv, "org.gtkmm.example");
 
-    MyWindow win;
-    win.set_title("IC-7410 Rig Control Program (C++ version)");
-    win.set_default_size(50, 50);	/* dummy */
-    win.set_border_width(5);
-    win.show_all();
-    return app->run(win);
+    win1 = new MyWindow;
+    win1->set_title("IC-7410 Rig Control Program (C++ version)");
+    win1->set_default_size(50, 50);	/* dummy */
+    win1->set_border_width(5);
+    win1->show_all();
+    return app->run(*win1);
 }

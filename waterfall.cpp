@@ -1,5 +1,7 @@
 #include "mydefine.h"
 #include "waterfall.h"
+#include "Sound.h"
+#include "MyWindow.h"
 #include <cairomm/context.h>
 #include <gdkmm/general.h>	// set_source_pixbuf()
 #include <glibmm/fileutils.h>
@@ -17,6 +19,10 @@ void set_freq(long int ifreq_in_hz);
 int colormap_r(double);
 int colormap_g(double);
 int colormap_b(double);
+
+extern Sound *mysound1;
+extern Sound *mysound2;
+extern MyWindow *win1;
 
 Waterfall::Waterfall()
 {
@@ -79,9 +85,26 @@ bool Waterfall::on_draw(const Cairo::RefPtr < Cairo::Context > &cr)
     p = m_image->get_pixels();
     for (int i = 0; i < WATERFALL_XSIZE; i++) {
 	int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
-	double tmp = audio_signal_ffted[j];
-	if (i == WATERFALL_XSIZE / 2)
+
+	double tmp = mysound1->audio_signal_ffted[j];
+
+	if (i == WATERFALL_XSIZE / 2) {
 	    tmp = 1.0;
+	}
+	*p++ = colormap_r(tmp);
+	*p++ = colormap_g(tmp);
+	*p++ = colormap_b(tmp);
+    }
+    // write into another line
+    p = m_image->get_pixels() + rowstride * (WATERFALL_YSIZE / 2);
+    for (int i = 0; i < WATERFALL_XSIZE; i++) {
+	int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
+
+	double tmp = mysound2->audio_signal_ffted[j];
+
+	if (i == WATERFALL_XSIZE / 2) {
+	    tmp = 1.0;
+	}
 	*p++ = colormap_r(tmp);
 	*p++ = colormap_g(tmp);
 	*p++ = colormap_b(tmp);

@@ -11,6 +11,7 @@
 #define NFFT 2048
 
 #include <asoundlib.h>
+#include <fftw3.h>
 #include <string>
 using namespace std;
 
@@ -48,6 +49,8 @@ class Sound {
     double audio_signal[99999];
     double audio_signal_ffted[99999];
     double fft_window[99999];
+    fftw_complex *in, *out;
+    fftw_plan p;
 
     int cw_pitch = 600;
     int iwater = 0;

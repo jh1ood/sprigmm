@@ -22,8 +22,9 @@ class MyWindow:public Gtk::Window {
     RadioButtons mybuttons;
     Scales myscales;
     DrawingArea myarea;
-    Waterfall mywaterfall;
-    Gtk::Window win3;
+    Waterfall mywaterfall1;
+//    Waterfall mywaterfall2;
+//    Gtk::Window win3;
 };
 
 #endif				/* MYWINDOW_H_ */
