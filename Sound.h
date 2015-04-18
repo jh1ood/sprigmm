@@ -54,10 +54,6 @@ class Sound {
 
     int cw_pitch = 600;
     int iwater = 0;
-//    int flag_togo1 = 0;
-//    int flag_togo2 = 0;
-//    int flag_togo3 = 0;
-//    int flag_togo4 = 0;
 };
 
 #endif				/* SOUND_H_ */

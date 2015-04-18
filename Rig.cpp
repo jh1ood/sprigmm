@@ -9,7 +9,6 @@
 #include <gtkmm/application.h>
 #include <gtkmm/window.h>
 #include <asoundlib.h>
-#include <fftw3.h>
 using namespace std;
 
 int fd = -1;
@@ -66,12 +65,10 @@ int main(int argc, char *argv[])
 	return false;
     }
 
-    cout << "main: serial_port = " << argv[1] << ", sound_device = " <<
-	argv[2]
-	<< ", rate = " << argv[3] << ", channels = " << argv[4] << endl;
+    cout << "main: serial_port = " << argv[1] << endl;
 
-//    rig_init_serial(argv[1]);
-    rate = atoi(argv[3]);
+    rig_init_serial(argv[1]);
+    rate     = atoi(argv[3]);
     channels = atoi(argv[4]);
 
     argc = 1;			/* just for the next line */
