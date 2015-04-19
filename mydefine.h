@@ -42,7 +42,7 @@ extern int period_event;	/* produce poll event after each period */
 extern int cw_pitch;
 extern int iwater;
 extern int nsamples;
-extern double bin_size, waterfall_scale_x;
+//extern double bin_size, waterfall_scale_x;
 extern double amax, amin;
 extern long int ifreq_in_hz;
 extern int s_meter;

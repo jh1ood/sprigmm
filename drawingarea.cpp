@@ -16,7 +16,7 @@ extern Sound *mysound2;
 
 DrawingArea::DrawingArea() {
 	std::cout << "DrawingArea constructor is called." << std::endl;
-	set_size_request(1200, 170); /* width is dummy, determined by radiobuttons */
+	set_size_request(1200, 240); /* width is dummy, determined by radiobuttons */
 
 	Glib::signal_timeout().connect(
 			sigc::mem_fun(*this, &DrawingArea::on_timeout), 50);
@@ -53,46 +53,6 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	myclock(); /* to get inf from IC-7410 */
 	cout << "on_draw: returned from myclock() \n";
 
-//	/* audio signal FFT */
-//	for (int i = 0; i < NFFT; i++) {
-//		if (channels == 1) {
-//			in[i][0] = fft_window[i] * audio_signal[i];
-//			in[i][1] = 0.0;
-//		} else if (channels == 2) {
-//			in[i][0] = fft_window[i] * audio_signal[2 * i];
-//			in[i][1] = fft_window[i] * audio_signal[2 * i + 1];
-//		} else {
-//			cout << "channels = " << channels
-//					<< ", but should be either 1 or 2. \n";
-//			exit(1);
-//		}
-//	}
-//
-//	fftw_execute(p);
-//
-//	/* log10 and normalize */
-//
-//	if (channels == 1) {
-//		amax = 14.0;
-//		amin = 7.0;
-//	} else if (channels == 2) {
-//		amax = 12.0;
-//		amin = 7.0;
-//	}
-//
-//	for (int i = 0; i < NFFT; i++) {
-//		double val;
-//		val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
-//		if (val < pow(10.0, amin)) {
-//			audio_signal_ffted[i] = 0.0;
-//		} else if (val > pow(10.0, amax)) {
-//			audio_signal_ffted[i] = 1.0;
-//		} else {
-//			audio_signal_ffted[i] = (log10(val) - amin) / (amax - amin);
-//		}
-//	}
-//	cout << "on_draw: done fftw, etc. \n";
-
 	Gtk::Allocation allocation = get_allocation();
 	const int width = allocation.get_width();
 	const int height = allocation.get_height(); /* eg. 50 */
@@ -108,7 +68,7 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->restore();
 
 	cr->save();
-	cr->set_source_rgba(0.0, 0.2, 0.6, 1.0);
+	cr->set_source_rgba(0.2, 0.6, 0.6, 1.0);
 	cr->rectangle(0, 60, WATERFALL_XSIZE, rectangle_height);
 	cr->fill();
 	cr->stroke();
@@ -117,6 +77,13 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->save();
 	cr->set_source_rgba(0.2, 0.6, 0.6, 1.0);
 	cr->rectangle(0, 120, WATERFALL_XSIZE, rectangle_height);
+	cr->fill();
+	cr->stroke();
+	cr->restore();
+
+	cr->save();
+	cr->set_source_rgba(0.2, 0.1, 0.6, 1.0);
+	cr->rectangle(0, 180, WATERFALL_XSIZE, rectangle_height);
 	cr->fill();
 	cr->stroke();
 	cr->restore();
@@ -147,9 +114,7 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->stroke();
 	cr->restore();
 
-return true;
-
-// Waveform
+// Waveform for IC-7410
 		cr->save();
 		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
 		cr->move_to(0.0,
@@ -161,42 +126,56 @@ return true;
 		cr->stroke();
 		cr->restore();
 
+// Waveform for Soft66LC4
 		cr->save();
 		cr->set_source_rgba(0.7, 0.9, 0.9, 1.0);
-		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 120.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
-			cr->line_to(i, mysound2->audio_signal[2 * i] / 16384.0 * 24.0 + 25.0 + 60.0);
+			cr->line_to(i, mysound2->audio_signal[2 * i] / 16384.0 * 24.0 + 25.0 + 120.0);
 		}
 		cr->stroke();
 
 		cr->set_source_rgba(0.9, 0.2, 0.9, 1.0);
-		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 120.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
 			cr->line_to(i,
-					mysound2->audio_signal[2 * i + 1] / 16384.0 * 24.0 + 25.0 + 60.0);
+					mysound2->audio_signal[2 * i + 1] / 16384.0 * 24.0 + 25.0 + 120.0);
 		}
 		cr->stroke();
 		cr->restore();
 
-// Spectrum
+// Spectrum for IC-7410
 	cr->save();
 	cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
 	cr->move_to(0.0,
 			40.0 * (1.0 - mysound1->audio_signal_ffted[NFFT - (WINDOW_XSIZE / 2)]) + 5.0
-					+ 120.0);
+					+ 180.0);
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
 		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
-		cr->line_to(i, 40.0 * (1.0 - mysound1->audio_signal_ffted[j]) + 5.0 + 120.0);
+		cr->line_to(i, 40.0 * (1.0 - mysound1->audio_signal_ffted[j]) + 5.0 + 180.0);
 	}
 	cr->stroke();
 	cr->restore();
+
+// Spectrum for Soft66LC4
+		cr->save();
+		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
+		cr->move_to(0.0,
+				40.0 * (1.0 - mysound2->audio_signal_ffted[NFFT - (WINDOW_XSIZE / 2)]) + 5.0
+						+ 180.0);
+		for (int i = 0; i < WATERFALL_XSIZE; i++) {
+			int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
+			cr->line_to(i, 40.0 * (1.0 - mysound2->audio_signal_ffted[j]) + 5.0 + 180.0);
+		}
+		cr->stroke();
+		cr->restore();
 
 // frequency marker
 	cr->save();
 	cr->set_source_rgba(1.0, 1.0, 1.0, 0.5);
 	for (int i = 400; i <= 800; i += 200) {
-		cr->move_to(((WATERFALL_XSIZE / 2)) + (i / bin_size), 170.0);
-		cr->line_to(((WATERFALL_XSIZE / 2)) + (i / bin_size), 164.0);
+		cr->move_to(((WATERFALL_XSIZE / 2)) + (i / mysound1->bin_size), 180.0);
+		cr->line_to(((WATERFALL_XSIZE / 2)) + (i / mysound1->bin_size), 230.0);
 	}
 	cr->stroke();
 	cr->restore();
