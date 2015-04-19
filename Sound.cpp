@@ -64,7 +64,7 @@ Sound::Sound(char *s, const char *r, const char *c) {
 
 	nsamples = period_size * channels * byte_per_sample;
 	cout << "Sound::Sound: nsamples = " << nsamples << endl;
-	cout << "Sound::Sound: samples = " << samples << endl;
+	cout << "Sound::Sound: samples  = " << samples << endl;
 
 	if (0) {
 	} else if (channels == 1) {
@@ -118,16 +118,17 @@ int colormap_r(double);
 int colormap_g(double);
 
 void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
-	static int icount = 0;
-	cout << "asound_async_callback: channels = " << channels << ", icount = "
-			<< icount++ << endl;
+	static int icount1 = 0, icount2 = 0;
 
-	if (channels == 1) {
-		flag_togo1 = 1; /* to activate DrawArea::on_draw() */
+	if (0) {
+	} else if (channels == 1) {
+		flag_togo1 = 1; /* to activate DrawArea::on_draw()  */
 		flag_togo2 = 1; /* to activate Waterfall::on_draw() */
+		cout << "asound_async_callback: icount1 = " << icount1++ << endl;
 	} else if (channels == 2) {
-		flag_togo3 = 1; /* to activate DrawArea::on_draw() */
+		flag_togo3 = 1; /* to activate DrawArea::on_draw()  */
 		flag_togo4 = 1; /* to activate Waterfall::on_draw() */
+		cout << "asound_async_callback: icount2 = " << icount2++ << endl;
 	}
 
 	snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
@@ -160,34 +161,52 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 		cout << "asound_async_callback: avail again = " << avail << endl;
 	}
 
-	for (int i = 0; i < NFFT; i++) { /* NFFT=period_size */
-		audio_signal[i] = samples[i];
-	}
-	if (channels == 2) { /* for my Soft66LC4 only */
-		for (int i = 0; i < NFFT; i += 2) {
-			double i1 = samples[i] + (-246.618); /* DC offset */
-			double q1 = samples[i + 1] + (-222.262);
+	audio_signal_max = -32768;
+	if (0) {
+	} else if (channels == 1) {
+		for (int i = 0; i < NFFT; i++) { /* NFFT=period_size */
+			audio_signal[i] = samples[i];
+			if (audio_signal_max < audio_signal[i])
+				audio_signal_max = audio_signal[i];
+		}
+	} else if (channels == 2) { /* for my Soft66LC4 only */
+		dc0 = 0.0;
+		dc1 = 0.0;
+		for (int i = 0; i < NFFT * 2; i += 2) {
+			dc0 += samples[i];
+			dc1 += samples[i + 1];
+		}
+		dc0 /= (double) NFFT;
+		dc1 /= (double) NFFT;
+		dc0 = 0.0; dc1 = 0.0;
+		for (int i = 0; i < NFFT * 2; i += 2) {
+			double i1 = samples[i]     - dc0; /* DC offset */
+			double q1 = samples[i + 1] - dc1;
 			double i2 = i1;
 			double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
 			double i3 = q2; /* swap IQ */
 			double q3 = i2;
 			audio_signal[i] = i3;
 			audio_signal[i + 1] = q3;
+			if (audio_signal_max < audio_signal[i])
+				audio_signal_max = audio_signal[i];
+			if (audio_signal_max < audio_signal[i+1])
+				audio_signal_max = audio_signal[i+1];
 		}
+		cout << "asound_async_callback: dc0 = " << dc0 << ", dc1 = " << dc1 << endl;
 	}
+	cout << "asound_async_callback: audio_signal_max = " << audio_signal_max
+			<< " for channels = " << channels << endl;
 
 	/* audio signal FFT */
 	for (int i = 0; i < NFFT; i++) {
-		if (channels == 1) {
+		if (0) {
+		} else if (channels == 1) {
 			in[i][0] = fft_window[i] * audio_signal[i];
 			in[i][1] = 0.0;
 		} else if (channels == 2) {
 			in[i][0] = fft_window[i] * audio_signal[2 * i];
 			in[i][1] = fft_window[i] * audio_signal[2 * i + 1];
-		} else {
-			cout << "channels = " << channels
-					<< ", but should be either 1 or 2. \n";
-			exit(1);
 		}
 	}
 

@@ -23,7 +23,7 @@ class MyWindow:public Gtk::Window {
     Scales myscales;
     DrawingArea myarea;
     Waterfall mywaterfall;
-    Gtk::Window win3;
+//    Gtk::Window win3;
 };
 
 #endif				/* MYWINDOW_H_ */

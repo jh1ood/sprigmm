@@ -21,10 +21,6 @@ unsigned int buffer_time = 500000;	/* ring buffer length in us */
 unsigned int period_time = 128000;	/* period time in us */
 int resample = 0;		/* disable resample */
 int period_event = 0;		/* produce poll event after each period */
-//signed short samples[9999];
-//double audio_signal[NFFT];
-//double audio_signal_ffted[NFFT];
-//double fft_window[NFFT];
 int cw_pitch = 600;
 int iwater = 0;
 int nsamples;
@@ -45,7 +41,6 @@ fftw_plan p;
 int flag_togo1 = 0, flag_togo2 = 0, flag_togo3 = 0, flag_togo4 = 0;
 
 void rig_init_serial(char *);
-//void rig_init_sound(char *);
 
 Sound *mysound1;
 Sound *mysound2;

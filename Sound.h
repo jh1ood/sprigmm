@@ -47,6 +47,9 @@ class Sound {
     int nfft = 2048;
     double bin_size;
     signed short samples[99999];
+    signed short audio_signal_max;
+    double dc0;
+    double dc1;
     double audio_signal[99999];
     double audio_signal_ffted[99999];
     double fft_window[99999];
