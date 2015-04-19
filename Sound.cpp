@@ -9,6 +9,7 @@
 #include <fftw3.h>
 #include <iostream>
 #include <string>
+#include <cmath>
 using namespace std;
 
 //void async_callback(snd_async_handler_t * ahandler);
@@ -44,20 +45,26 @@ Sound::Sound(char *s, const char *r, const char *c) {
 
 	if ((err = snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_CAPTURE, 0))
 			< 0) {
+		cout << "Sound::Sound: snd_pcm_open() error. " << snd_strerror(err)
+				<< endl;
 		exit(EXIT_FAILURE);
 	}
 
 	if ((err = asound_set_hwparams(handle, hwparams)) < 0) {
+		cout << "Sound::Sound: setting of hwparams failed. "
+				<< snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	if ((err = asound_set_swparams(handle, swparams)) < 0) {
+		cout << "Sound::Sound: setting of swparams failed. "
+				<< snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	nsamples = period_size * channels * byte_per_sample;
 	cout << "Sound::Sound: nsamples = " << nsamples << endl;
-	cout << "Sound::Sound: samples  = " << samples << endl;
+	cout << "Sound::Sound: samples = " << samples << endl;
 
 	if (0) {
 	} else if (channels == 1) {
@@ -69,14 +76,21 @@ Sound::Sound(char *s, const char *r, const char *c) {
 	}
 
 	if (err < 0) {
+		cout << "Sound::Sound: Unable to register async handler. \n";
 		exit(EXIT_FAILURE);
 	}
 
 	if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
 		err = snd_pcm_start(handle);
 		if (err < 0) {
+			cout << "Sound::Sound: Start error: " << snd_strerror(err) << endl;
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	bin_size = rate / (double) NFFT;
+	for (int i = 0; i < NFFT; i++) {
+		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) NFFT);
 	}
 
 	in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
@@ -84,14 +98,15 @@ Sound::Sound(char *s, const char *r, const char *c) {
 	p = fftw_plan_dft_1d(NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
 	cout << "Sound::Sound: end.. \n";
+
 }
 
 Sound::~Sound() {
 }
 
-extern fftw_complex *in;
-extern fftw_complex *out;
-extern fftw_plan p;
+//extern fftw_complex *in;
+//extern fftw_complex *out;
+//extern fftw_plan p;
 extern int flag_togo1, flag_togo2, flag_togo3, flag_togo4;
 
 int send_command(unsigned char *partial_command);
@@ -107,8 +122,7 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 	cout << "asound_async_callback: channels = " << channels << ", icount = "
 			<< icount++ << endl;
 
-	if (0) {
-	} else if (channels == 1) {
+	if (channels == 1) {
 		flag_togo1 = 1; /* to activate DrawArea::on_draw() */
 		flag_togo2 = 1; /* to activate Waterfall::on_draw() */
 	} else if (channels == 2) {
@@ -133,32 +147,75 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 		cout << "asound_async_callback: err         = " << err << endl;
 
 		if (err < 0) {
+			fprintf(stderr, "Write error: %s\n", snd_strerror(err));
 			exit(EXIT_FAILURE);
 		}
 		if (err != period_size) {
+			fprintf(stderr, "Write error: written %i expected %li\n", err,
+					period_size);
 			exit(EXIT_FAILURE);
 		}
 
-		if (0) {
-		} else if (channels == 1) {
-			for (int i = 0; i < NFFT; i++) { /* NFFT=period_size */
-				audio_signal[i] = samples[i];
-			}
-		} else if (channels == 2) {
-			for (int i = 0; i < NFFT; i += 2) {
-				double i1 = samples[i] + (-246.618); /* DC offset */
-				double q1 = samples[i + 1] + (-222.262);
-				double i2 = i1;
-				double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
-				double i3 = q2; /* swap IQ */
-				double q3 = i2;
-				audio_signal[i] = i3;
-				audio_signal[i + 1] = q3;
-			}
-		}
-
 		avail = snd_pcm_avail_update(handle);
+		cout << "asound_async_callback: avail again = " << avail << endl;
 	}
+
+	for (int i = 0; i < NFFT; i++) { /* NFFT=period_size */
+		audio_signal[i] = samples[i];
+	}
+	if (channels == 2) { /* for my Soft66LC4 only */
+		for (int i = 0; i < NFFT; i += 2) {
+			double i1 = samples[i] + (-246.618); /* DC offset */
+			double q1 = samples[i + 1] + (-222.262);
+			double i2 = i1;
+			double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
+			double i3 = q2; /* swap IQ */
+			double q3 = i2;
+			audio_signal[i] = i3;
+			audio_signal[i + 1] = q3;
+		}
+	}
+
+	/* audio signal FFT */
+	for (int i = 0; i < NFFT; i++) {
+		if (channels == 1) {
+			in[i][0] = fft_window[i] * audio_signal[i];
+			in[i][1] = 0.0;
+		} else if (channels == 2) {
+			in[i][0] = fft_window[i] * audio_signal[2 * i];
+			in[i][1] = fft_window[i] * audio_signal[2 * i + 1];
+		} else {
+			cout << "channels = " << channels
+					<< ", but should be either 1 or 2. \n";
+			exit(1);
+		}
+	}
+
+	fftw_execute(p);
+
+	/* log10 and normalize */
+
+	if (channels == 1) {
+		amax = 14.0;
+		amin = 7.0;
+	} else if (channels == 2) {
+		amax = 12.0;
+		amin = 7.0;
+	}
+
+	for (int i = 0; i < NFFT; i++) {
+		double val;
+		val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
+		if (val < pow(10.0, amin)) {
+			audio_signal_ffted[i] = 0.0;
+		} else if (val > pow(10.0, amax)) {
+			audio_signal_ffted[i] = 1.0;
+		} else {
+			audio_signal_ffted[i] = (log10(val) - amin) / (amax - amin);
+		}
+	}
+	cout << "asound_async_callback: done fftw, etc. \n";
+
 	cout << "asound_async_callback: end.." << endl;
 }
 

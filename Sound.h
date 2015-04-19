@@ -10,8 +10,8 @@
 
 #define NFFT 2048
 
-#include <asoundlib.h>
 #include <fftw3.h>
+#include <asoundlib.h>
 #include <string>
 using namespace std;
 
@@ -45,15 +45,21 @@ class Sound {
     int period_event = 0;	/* produce poll event after each period */
 
     int nfft = 2048;
+    double bin_size;
     signed short samples[99999];
     double audio_signal[99999];
     double audio_signal_ffted[99999];
     double fft_window[99999];
     fftw_complex *in, *out;
     fftw_plan p;
+    double amax, amin;
 
     int cw_pitch = 600;
     int iwater = 0;
+//    int flag_togo1 = 0;
+//    int flag_togo2 = 0;
+//    int flag_togo3 = 0;
+//    int flag_togo4 = 0;
 };
 
 #endif				/* SOUND_H_ */

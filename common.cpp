@@ -213,97 +213,97 @@ struct async_private_data {
 };
 
 
-void async_callback(snd_async_handler_t * ahandler)
-{
-    static int icount = 0;
-    cout << "async_callback() is called. icount = " << icount++ << "\n";
-
-    flag_togo1 = 1;		/* to activate DrawArea::on_draw() */
-    flag_togo2 = 1;		/* to activate Waterfall::on_draw() */
-
-    snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
-
-    signed short *samples =
-	snd_async_handler_get_callback_private(ahandler);
-
-    snd_pcm_sframes_t avail;
-    int err;
-
-    avail = snd_pcm_avail_update(handle);
-    cout << "  avail = " << avail << endl;
-    cout << "  period_size = " << period_size << endl;
-
-    while (avail >= period_size) {
-	err = snd_pcm_readi(handle, samples, period_size);
-
-	if (err < 0) {
-	    fprintf(stderr, "Write error: %s\n", snd_strerror(err));
-	    exit(EXIT_FAILURE);
-	}
-	if (err != period_size) {
-	    fprintf(stderr, "Write error: written %i expected %li\n", err,
-		    period_size);
-	    exit(EXIT_FAILURE);
-	}
-
-	for (int i = 0; i < NFFT; i++) {	/* NFFT=period_size */
-	    audio_signal[i] = samples[i];
-#ifdef MARKER
-	    audio_signal[i] +=
-		16384.0 * (0.25 *
-			   sin(2.0 * 3.14 * 600.0 * (double) i / rate)
-			   +
-			   0.25 * sin(2.0 * 3.14 * 500.0 * (double) i /
-				      rate)
-			   +
-			   0.25 * sin(2.0 * 3.14 * 450.0 * (double) i /
-				      rate)
-			   +
-			   0.25 * sin(2.0 * 3.14 * 750.0 * (double) i /
-				      rate));
-#endif
-	}
-	if (channels == 2) {	/* for my Soft66LC4 only */
-	    for (int i = 0; i < NFFT; i += 2) {
-		double i1 = samples[i] + (-246.618);	/* DC offset */
-		double q1 = samples[i + 1] + (-222.262);
-		double i2 = i1;
-		double q2 = -0.32258 * i1 + 1.1443 * q1;	/* gain and phase correction */
-		double i3 = q2;	/* swap IQ */
-		double q3 = i2;
-		audio_signal[i] = i3;
-		audio_signal[i + 1] = q3;
-	    }
-	}
-
-	avail = snd_pcm_avail_update(handle);
-    }
-    cout << "async_call back end.. \n";
-}
-
-int async_loop(snd_pcm_t * handle, signed short *samples)
-{
-    snd_async_handler_t *ahandler;
-    int err;
-    cout << "async_loop begin.. \n";
-    err =
-	snd_async_add_pcm_handler(&ahandler, handle, async_callback,
-				  samples);
-    if (err < 0) {
-	fprintf(stderr, "Unable to register async handler\n");
-	exit(EXIT_FAILURE);
-    }
-
-    if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
-	err = snd_pcm_start(handle);
-	if (err < 0) {
-	    fprintf(stderr, "Start error: %s\n", snd_strerror(err));
-	    exit(EXIT_FAILURE);
-	}
-    }
-    cout << "async_loop end.. \n";
-    return 0;
-}
+//void async_callback(snd_async_handler_t * ahandler)
+//{
+//    static int icount = 0;
+//    cout << "async_callback() is called. icount = " << icount++ << "\n";
+//
+//    flag_togo1 = 1;		/* to activate DrawArea::on_draw() */
+//    flag_togo2 = 1;		/* to activate Waterfall::on_draw() */
+//
+//    snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
+//
+//    signed short *samples =
+//	snd_async_handler_get_callback_private(ahandler);
+//
+//    snd_pcm_sframes_t avail;
+//    int err;
+//
+//    avail = snd_pcm_avail_update(handle);
+//    cout << "  avail = " << avail << endl;
+//    cout << "  period_size = " << period_size << endl;
+//
+//    while (avail >= period_size) {
+//	err = snd_pcm_readi(handle, samples, period_size);
+//
+//	if (err < 0) {
+//	    fprintf(stderr, "Write error: %s\n", snd_strerror(err));
+//	    exit(EXIT_FAILURE);
+//	}
+//	if (err != period_size) {
+//	    fprintf(stderr, "Write error: written %i expected %li\n", err,
+//		    period_size);
+//	    exit(EXIT_FAILURE);
+//	}
+//
+//	for (int i = 0; i < NFFT; i++) {	/* NFFT=period_size */
+//	    audio_signal[i] = samples[i];
+//#ifdef MARKER
+//	    audio_signal[i] +=
+//		16384.0 * (0.25 *
+//			   sin(2.0 * 3.14 * 600.0 * (double) i / rate)
+//			   +
+//			   0.25 * sin(2.0 * 3.14 * 500.0 * (double) i /
+//				      rate)
+//			   +
+//			   0.25 * sin(2.0 * 3.14 * 450.0 * (double) i /
+//				      rate)
+//			   +
+//			   0.25 * sin(2.0 * 3.14 * 750.0 * (double) i /
+//				      rate));
+//#endif
+//	}
+//	if (channels == 2) {	/* for my Soft66LC4 only */
+//	    for (int i = 0; i < NFFT; i += 2) {
+//		double i1 = samples[i] + (-246.618);	/* DC offset */
+//		double q1 = samples[i + 1] + (-222.262);
+//		double i2 = i1;
+//		double q2 = -0.32258 * i1 + 1.1443 * q1;	/* gain and phase correction */
+//		double i3 = q2;	/* swap IQ */
+//		double q3 = i2;
+//		audio_signal[i] = i3;
+//		audio_signal[i + 1] = q3;
+//	    }
+//	}
+//
+//	avail = snd_pcm_avail_update(handle);
+//    }
+//    cout << "async_call back end.. \n";
+//}
+//
+//int async_loop(snd_pcm_t * handle, signed short *samples)
+//{
+//    snd_async_handler_t *ahandler;
+//    int err;
+//    cout << "async_loop begin.. \n";
+//    err =
+//	snd_async_add_pcm_handler(&ahandler, handle, async_callback,
+//				  samples);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to register async handler\n");
+//	exit(EXIT_FAILURE);
+//    }
+//
+//    if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
+//	err = snd_pcm_start(handle);
+//	if (err < 0) {
+//	    fprintf(stderr, "Start error: %s\n", snd_strerror(err));
+//	    exit(EXIT_FAILURE);
+//	}
+//    }
+//    cout << "async_loop end.. \n";
+//    return 0;
+//}
 
 void set_freq(long int ifreq_in_hz)
 {
@@ -367,230 +367,230 @@ int colormap_b(double tmp)
     return (int) (255.0 * val);
 }
 
-int set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
-{
-    unsigned int rrate;
-    snd_pcm_uframes_t size;
-    int err, dir;
-    std::cout << "set_hwparams:    begin... \n";
+//int set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
+//{
+//    unsigned int rrate;
+//    snd_pcm_uframes_t size;
+//    int err, dir;
+//    std::cout << "set_hwparams:    begin... \n";
+//
+//    /* choose all parameters */
+//    err = snd_pcm_hw_params_any(handle, params);
+//    if (err < 0) {
+//	fprintf(stderr,
+//		"Broken configuration for playback: no configurations available: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* set hardware resampling disabled */
+//    err = snd_pcm_hw_params_set_rate_resample(handle, params, resample);
+//    if (err < 0) {
+//	fprintf(stderr, "Resampling setup failed for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* set the interleaved read/write format */
+//    err =
+//	snd_pcm_hw_params_set_access(handle, params,
+//				     SND_PCM_ACCESS_RW_INTERLEAVED);
+//    if (err < 0) {
+//	fprintf(stderr, "Access type not available for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* set the sample format */
+//    err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
+//    if (err < 0) {
+//	fprintf(stderr, "Sample format not available for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* set the count of channels */
+//    err = snd_pcm_hw_params_set_channels(handle, params, channels);
+//    if (err < 0) {
+//	fprintf(stderr,
+//		"Channels count (%i) not available for playbacks: %s\n",
+//		channels, snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* set the stream rate */
+//    rrate = rate;
+//    err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
+//    if (err < 0) {
+//	fprintf(stderr, "Rate %iHz not available for playback: %s\n", rate,
+//		snd_strerror(err));
+//	return err;
+//    }
+//    if (rrate != rate) {
+//	fprintf(stderr, "Rate doesn't match (requested %iHz, get %iHz)\n",
+//		rate, err);
+//	return -EINVAL;
+//    }
+//
+//    /* set the buffer time */
+//    err =
+//	snd_pcm_hw_params_set_buffer_time_near(handle, params,
+//					       &buffer_time, &dir);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to set buffer time %i for playback: %s\n",
+//		buffer_time, snd_strerror(err));
+//	return err;
+//    }
+//    fprintf(stderr, "buffer_time = %8d, dir   = %d \n", buffer_time, dir);
+//
+//    err = snd_pcm_hw_params_get_buffer_size(params, &size);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to get buffer size for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//    buffer_size = size;
+//    fprintf(stderr, "buffer_size = %8d             \n", (int) buffer_size);
+//
+//    /* set the period time */
+//    err =
+//	snd_pcm_hw_params_set_period_time_near(handle, params,
+//					       &period_time, &dir);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to set period time %i for playback: %s\n",
+//		period_time, snd_strerror(err));
+//	return err;
+//    }
+//    fprintf(stderr, "period_time = %8d, dir   = %d \n", period_time, dir);
+//
+//    err = snd_pcm_hw_params_get_period_size(params, &size, &dir);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to get period size for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//    period_size = size;
+//    cout << "set_hwparams: period_size = " << period_size << ", dir = " <<
+//	dir << endl;
+//
+//    if (period_size < NFFT) {
+//	fprintf(stderr,
+//		"error: period_size = %8d, but less than NFFT  = %d \n",
+//		(int) period_size, NFFT);
+//	exit(1);
+//    }
+//
+//    /* write the parameters to device */
+//    err = snd_pcm_hw_params(handle, params);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to set hw params for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    return 0;
+//}
 
-    /* choose all parameters */
-    err = snd_pcm_hw_params_any(handle, params);
-    if (err < 0) {
-	fprintf(stderr,
-		"Broken configuration for playback: no configurations available: %s\n",
-		snd_strerror(err));
-	return err;
-    }
+//int set_swparams(snd_pcm_t * handle, snd_pcm_sw_params_t * swparams)
+//{
+//    int err;
+//    std::cout << "set_swparams:    begin... \n";
+//
+//    /* get the current swparams */
+//    err = snd_pcm_sw_params_current(handle, swparams);
+//    if (err < 0) {
+//	fprintf(stderr,
+//		"Unable to determine current swparams for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* start the transfer when the buffer is almost full: */
+//    /* (buffer_size / avail_min) * avail_min */
+//    err =
+//	snd_pcm_sw_params_set_start_threshold(handle, swparams,
+//					      (buffer_size / period_size) *
+//					      period_size);
+//    if (err < 0) {
+//	fprintf(stderr,
+//		"Unable to set start threshold mode for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* allow the transfer when at least period_size samples can be processed */
+//    /* or disable this mechanism when period event is enabled (aka interrupt like style processing) */
+//    err =
+//	snd_pcm_sw_params_set_avail_min(handle, swparams,
+//					period_event ? buffer_size :
+//					period_size);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to set avail min for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//
+//    /* enable period events when requested */
+//    if (period_event) {
+//	err = snd_pcm_sw_params_set_period_event(handle, swparams, 1);
+//	if (err < 0) {
+//	    fprintf(stderr, "Unable to set period event: %s\n",
+//		    snd_strerror(err));
+//	    return err;
+//	}
+//    }
+//
+//    /* write the parameters to the playback device */
+//    err = snd_pcm_sw_params(handle, swparams);
+//    if (err < 0) {
+//	fprintf(stderr, "Unable to set sw params for playback: %s\n",
+//		snd_strerror(err));
+//	return err;
+//    }
+//    return 0;
+//}
 
-    /* set hardware resampling disabled */
-    err = snd_pcm_hw_params_set_rate_resample(handle, params, resample);
-    if (err < 0) {
-	fprintf(stderr, "Resampling setup failed for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    /* set the interleaved read/write format */
-    err =
-	snd_pcm_hw_params_set_access(handle, params,
-				     SND_PCM_ACCESS_RW_INTERLEAVED);
-    if (err < 0) {
-	fprintf(stderr, "Access type not available for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    /* set the sample format */
-    err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
-    if (err < 0) {
-	fprintf(stderr, "Sample format not available for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    /* set the count of channels */
-    err = snd_pcm_hw_params_set_channels(handle, params, channels);
-    if (err < 0) {
-	fprintf(stderr,
-		"Channels count (%i) not available for playbacks: %s\n",
-		channels, snd_strerror(err));
-	return err;
-    }
-
-    /* set the stream rate */
-    rrate = rate;
-    err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
-    if (err < 0) {
-	fprintf(stderr, "Rate %iHz not available for playback: %s\n", rate,
-		snd_strerror(err));
-	return err;
-    }
-    if (rrate != rate) {
-	fprintf(stderr, "Rate doesn't match (requested %iHz, get %iHz)\n",
-		rate, err);
-	return -EINVAL;
-    }
-
-    /* set the buffer time */
-    err =
-	snd_pcm_hw_params_set_buffer_time_near(handle, params,
-					       &buffer_time, &dir);
-    if (err < 0) {
-	fprintf(stderr, "Unable to set buffer time %i for playback: %s\n",
-		buffer_time, snd_strerror(err));
-	return err;
-    }
-    fprintf(stderr, "buffer_time = %8d, dir   = %d \n", buffer_time, dir);
-
-    err = snd_pcm_hw_params_get_buffer_size(params, &size);
-    if (err < 0) {
-	fprintf(stderr, "Unable to get buffer size for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-    buffer_size = size;
-    fprintf(stderr, "buffer_size = %8d             \n", (int) buffer_size);
-
-    /* set the period time */
-    err =
-	snd_pcm_hw_params_set_period_time_near(handle, params,
-					       &period_time, &dir);
-    if (err < 0) {
-	fprintf(stderr, "Unable to set period time %i for playback: %s\n",
-		period_time, snd_strerror(err));
-	return err;
-    }
-    fprintf(stderr, "period_time = %8d, dir   = %d \n", period_time, dir);
-
-    err = snd_pcm_hw_params_get_period_size(params, &size, &dir);
-    if (err < 0) {
-	fprintf(stderr, "Unable to get period size for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-    period_size = size;
-    cout << "set_hwparams: period_size = " << period_size << ", dir = " <<
-	dir << endl;
-
-    if (period_size < NFFT) {
-	fprintf(stderr,
-		"error: period_size = %8d, but less than NFFT  = %d \n",
-		(int) period_size, NFFT);
-	exit(1);
-    }
-
-    /* write the parameters to device */
-    err = snd_pcm_hw_params(handle, params);
-    if (err < 0) {
-	fprintf(stderr, "Unable to set hw params for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    return 0;
-}
-
-int set_swparams(snd_pcm_t * handle, snd_pcm_sw_params_t * swparams)
-{
-    int err;
-    std::cout << "set_swparams:    begin... \n";
-
-    /* get the current swparams */
-    err = snd_pcm_sw_params_current(handle, swparams);
-    if (err < 0) {
-	fprintf(stderr,
-		"Unable to determine current swparams for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    /* start the transfer when the buffer is almost full: */
-    /* (buffer_size / avail_min) * avail_min */
-    err =
-	snd_pcm_sw_params_set_start_threshold(handle, swparams,
-					      (buffer_size / period_size) *
-					      period_size);
-    if (err < 0) {
-	fprintf(stderr,
-		"Unable to set start threshold mode for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    /* allow the transfer when at least period_size samples can be processed */
-    /* or disable this mechanism when period event is enabled (aka interrupt like style processing) */
-    err =
-	snd_pcm_sw_params_set_avail_min(handle, swparams,
-					period_event ? buffer_size :
-					period_size);
-    if (err < 0) {
-	fprintf(stderr, "Unable to set avail min for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-
-    /* enable period events when requested */
-    if (period_event) {
-	err = snd_pcm_sw_params_set_period_event(handle, swparams, 1);
-	if (err < 0) {
-	    fprintf(stderr, "Unable to set period event: %s\n",
-		    snd_strerror(err));
-	    return err;
-	}
-    }
-
-    /* write the parameters to the playback device */
-    err = snd_pcm_sw_params(handle, swparams);
-    if (err < 0) {
-	fprintf(stderr, "Unable to set sw params for playback: %s\n",
-		snd_strerror(err));
-	return err;
-    }
-    return 0;
-}
-
-int rig_init_sound(char *sound_device)
-{
-
-    int err = 0;
-
-    std::cout << "rig_init_sound(): begin ... \n";
-    std::cout << "rig_init_sound(): rate = " << rate << ", channels = " <<
-	channels << endl;
-
-    snd_pcm_hw_params_alloca(&hwparams);
-    snd_pcm_sw_params_alloca(&swparams);
-
-    if ((err =
-	 snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_CAPTURE,
-		      0)) < 0) {
-	cout << "rig_init_sound(): snd_pcm_open() error. " <<
-	    snd_strerror(err) << endl;
-	exit(1);
-    }
-
-    if ((err = set_hwparams(handle, hwparams)) < 0) {
-	fprintf(stderr, "Setting of hwparams failed: %s\n",
-		snd_strerror(err));
-	exit(EXIT_FAILURE);
-    }
-
-    if ((err = set_swparams(handle, swparams)) < 0) {
-	fprintf(stderr, "Setting of swparams failed: %s\n",
-		snd_strerror(err));
-	exit(EXIT_FAILURE);
-    }
-
-    nsamples = period_size * channels * byte_per_sample;
-    fprintf(stderr, "nsamples = %d \n", nsamples);
-
-    cout << "going to async_loop() from rig_init_sound() \n";
-    err = async_loop(handle, samples);
-    cout << "returned from async_loop \n";
-
-    return 0;
-}
+//int rig_init_sound(char *sound_device)
+//{
+//
+//    int err = 0;
+//
+//    std::cout << "rig_init_sound(): begin ... \n";
+//    std::cout << "rig_init_sound(): rate = " << rate << ", channels = " <<
+//	channels << endl;
+//
+//    snd_pcm_hw_params_alloca(&hwparams);
+//    snd_pcm_sw_params_alloca(&swparams);
+//
+//    if ((err =
+//	 snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_CAPTURE,
+//		      0)) < 0) {
+//	cout << "rig_init_sound(): snd_pcm_open() error. " <<
+//	    snd_strerror(err) << endl;
+//	exit(1);
+//    }
+//
+//    if ((err = set_hwparams(handle, hwparams)) < 0) {
+//	fprintf(stderr, "Setting of hwparams failed: %s\n",
+//		snd_strerror(err));
+//	exit(EXIT_FAILURE);
+//    }
+//
+//    if ((err = set_swparams(handle, swparams)) < 0) {
+//	fprintf(stderr, "Setting of swparams failed: %s\n",
+//		snd_strerror(err));
+//	exit(EXIT_FAILURE);
+//    }
+//
+//    nsamples = period_size * channels * byte_per_sample;
+//    fprintf(stderr, "nsamples = %d \n", nsamples);
+//
+//    cout << "going to async_loop() from rig_init_sound() \n";
+//    err = async_loop(handle, samples);
+//    cout << "returned from async_loop \n";
+//
+//    return 0;
+//}
 
 void set_cw_speed(int wpm)
 {

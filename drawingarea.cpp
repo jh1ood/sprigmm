@@ -1,6 +1,5 @@
 #include "mydefine.h"
 #include "drawingarea.h"
-#include "MyWindow.h"
 #include "Sound.h"
 #include <cairomm/context.h>
 #include <gdkmm/general.h>	// set_source_pixbuf()
@@ -12,10 +11,8 @@
 #include <cairo.h>
 #include <glibmm/main.h>
 using namespace std;
-
 extern Sound *mysound1;
 extern Sound *mysound2;
-extern MyWindow *win1;
 
 DrawingArea::DrawingArea() {
 	std::cout << "DrawingArea constructor is called." << std::endl;
@@ -34,14 +31,14 @@ DrawingArea::DrawingArea() {
 			Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK
 					| Gdk::SMOOTH_SCROLL_MASK);
 
-	bin_size = rate / (double) NFFT;
-	for (int i = 0; i < NFFT; i++) {
-		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) NFFT);
-	}
-
-	in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
-	out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
-	p = fftw_plan_dft_1d(NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
+//	bin_size = rate / (double) NFFT;
+//	for (int i = 0; i < NFFT; i++) {
+//		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) NFFT);
+//	}
+//
+//	in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
+//	out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
+//	p = fftw_plan_dft_1d(NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
 }
 
@@ -56,57 +53,45 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	myclock(); /* to get inf from IC-7410 */
 	cout << "on_draw: returned from myclock() \n";
 
-	/* audio signal FFT */
-	for (int i = 0; i < NFFT; i++) {
-		mysound1->in[i][0] = fft_window[i] * mysound1->audio_signal[i];
-		mysound1->in[i][1] = 0.0;
-		mysound2->in[i][0] = fft_window[i] * mysound2->audio_signal[2 * i];
-		mysound2->in[i][1] = fft_window[i] * mysound2->audio_signal[2 * i + 1];
-	}
-	if (channels != 1 && channels != 2) {
-		cout << "channels = " << channels
-				<< ", but should be either 1 or 2. \n";
-		exit(1);
-	}
-
-	fftw_execute(mysound1->p);
-	fftw_execute(mysound2->p);
-
-	/* log10 and normalize */
-
-	amax = 14.0;
-	amin =  7.0;
-	for (int i = 0; i < NFFT; i++) {
-		double val;
-		val = mysound1->out[i][0] * mysound1->out[i][0]
-				+ mysound1->out[i][1] * mysound1->out[i][1];
-		if (val < pow(10.0, amin)) {
-			mysound1->audio_signal_ffted[i] = 0.0;
-		} else if (val > pow(10.0, amax)) {
-			mysound1->audio_signal_ffted[i] = 1.0;
-		} else {
-			mysound1->audio_signal_ffted[i] = (log10(val) - amin)
-					/ (amax - amin);
-		}
-	}
-	cout << "on_draw: done fftw, etc. \n";
-
-	amax = 10.0;
-	amin =  8.0;
-	for (int i = 0; i < NFFT; i++) {
-		double val;
-		val = mysound2->out[i][0] * mysound2->out[i][0]
-				+ mysound2->out[i][1] * mysound2->out[i][1];
-		if (val < pow(10.0, amin)) {
-			mysound2->audio_signal_ffted[i] = 0.0;
-		} else if (val > pow(10.0, amax)) {
-			mysound2->audio_signal_ffted[i] = 1.0;
-		} else {
-			mysound2->audio_signal_ffted[i] = (log10(val) - amin)
-					/ (amax - amin);
-		}
-	}
-	cout << "on_draw: done fftw, etc. \n";
+//	/* audio signal FFT */
+//	for (int i = 0; i < NFFT; i++) {
+//		if (channels == 1) {
+//			in[i][0] = fft_window[i] * audio_signal[i];
+//			in[i][1] = 0.0;
+//		} else if (channels == 2) {
+//			in[i][0] = fft_window[i] * audio_signal[2 * i];
+//			in[i][1] = fft_window[i] * audio_signal[2 * i + 1];
+//		} else {
+//			cout << "channels = " << channels
+//					<< ", but should be either 1 or 2. \n";
+//			exit(1);
+//		}
+//	}
+//
+//	fftw_execute(p);
+//
+//	/* log10 and normalize */
+//
+//	if (channels == 1) {
+//		amax = 14.0;
+//		amin = 7.0;
+//	} else if (channels == 2) {
+//		amax = 12.0;
+//		amin = 7.0;
+//	}
+//
+//	for (int i = 0; i < NFFT; i++) {
+//		double val;
+//		val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
+//		if (val < pow(10.0, amin)) {
+//			audio_signal_ffted[i] = 0.0;
+//		} else if (val > pow(10.0, amax)) {
+//			audio_signal_ffted[i] = 1.0;
+//		} else {
+//			audio_signal_ffted[i] = (log10(val) - amin) / (amax - amin);
+//		}
+//	}
+//	cout << "on_draw: done fftw, etc. \n";
 
 	Gtk::Allocation allocation = get_allocation();
 	const int width = allocation.get_width();
@@ -156,29 +141,42 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->set_line_width(2);
 	cr->set_source_rgba(colormap_r(s_frac) / 255.0, colormap_g(s_frac) / 255.0,
 			colormap_b(s_frac), 1.0);	// partially translucent
-	cr->rectangle(310, 5, 200 * s_frac + 20, 40);
+	cr->rectangle(400, 5, 200 * s_frac + 20, 40);
 	cr->fill_preserve();
 	cr->set_source_rgb(0.0, 0.0, 0.0);
 	cr->stroke();
 	cr->restore();
 
+return true;
+
 // Waveform
-	if (channels == 1) {
 		cr->save();
 		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
-		cr->move_to(0.0, mysound1->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+		cr->move_to(0.0,
+				mysound1->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
-			cr->line_to(i, mysound1->audio_signal[i] / 16384.0 * 24.0 + 25.0 + 60.0);
+			cr->line_to(i,
+					mysound1->audio_signal[i] / 16384.0 * 24.0 + 25.0 + 60.0);
 		}
 		cr->stroke();
 		cr->restore();
-	} else if (channels == 2) {
-		;
-	} else {
-		cout << "Error in DrawingArea::on_draw: channels = " << channels
-				<< endl;
-		exit(1);
-	}
+
+		cr->save();
+		cr->set_source_rgba(0.7, 0.9, 0.9, 1.0);
+		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+		for (int i = 0; i < WATERFALL_XSIZE; i++) {
+			cr->line_to(i, mysound2->audio_signal[2 * i] / 16384.0 * 24.0 + 25.0 + 60.0);
+		}
+		cr->stroke();
+
+		cr->set_source_rgba(0.9, 0.2, 0.9, 1.0);
+		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+		for (int i = 0; i < WATERFALL_XSIZE; i++) {
+			cr->line_to(i,
+					mysound2->audio_signal[2 * i + 1] / 16384.0 * 24.0 + 25.0 + 60.0);
+		}
+		cr->stroke();
+		cr->restore();
 
 // Spectrum
 	cr->save();
@@ -189,18 +187,6 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
 		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
 		cr->line_to(i, 40.0 * (1.0 - mysound1->audio_signal_ffted[j]) + 5.0 + 120.0);
-	}
-	cr->stroke();
-	cr->restore();
-
-	cr->save();
-	cr->set_source_rgba(0.7, 0.9, 0.4, 1.0);
-	cr->move_to(0.0,
-			40.0 * (1.0 - mysound2->audio_signal_ffted[NFFT - (WINDOW_XSIZE / 2)]) + 5.0
-					+ 120.0);
-	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
-		cr->line_to(i, 40.0 * (1.0 - mysound2->audio_signal_ffted[j]) + 5.0 + 120.0);
 	}
 	cr->stroke();
 	cr->restore();
@@ -246,7 +232,7 @@ void DrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context> &cr,
 	font.set_size(40 * 1000); /* unit = 1/1000 point */
 
 	char string[128];
-	sprintf(string, "%9.3f", (double) ifreq_in_hz / 1000.0);
+	sprintf(string, "%9.3fkHz", (double) ifreq_in_hz / 1000.0);
 	Glib::RefPtr<Pango::Layout> layout = create_pango_layout(string);
 
 	layout->set_font_description(font);
