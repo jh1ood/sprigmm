@@ -10,6 +10,8 @@
 #include <gtkmm/window.h>
 #include <asoundlib.h>
 #include <fftw3.h>
+#include <stdio.h>
+#include <stdlib.h>
 using namespace std;
 
 int fd = -1;
@@ -52,6 +54,7 @@ int main(int argc, char *argv[])
     } else if (argc == 8) {
         mysound1 = new Sound{argv[2], argv[3], argv[4]};
         mysound2 = new Sound{argv[5], argv[6], argv[7]};
+        system("/usr/local/bin/soft66-control -t 7020000");
     } else {
 	cout << "Usage (IC-7410 only)      : " << argv[0] <<
 	    " /dev/ttyUSB0 hw:2,0 32000 1 \n";

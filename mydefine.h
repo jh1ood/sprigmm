@@ -24,8 +24,8 @@
 #define END_OF_COMMAND          0xfd
 
 #include <asoundlib.h>
+#include <gtkmm.h>
 #include <fftw3.h>
-
 
 extern int fd;
 extern unsigned int rate;

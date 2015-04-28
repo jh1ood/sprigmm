@@ -274,7 +274,13 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle,
 	}
 
 	/* set the sample format */
-	err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
+	if(channels == 10) {
+		err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S32_LE);
+
+	} else {
+		err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
+	}
+
 	if (err < 0) {
 		cout
 				<< "Sound::asound_set_hwparams: Sample format not available for playback."
@@ -352,18 +358,18 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle,
 	cout << "Sound::asound_set_hwparams: period_size = " << period_size
 			<< ", dir = " << dir << endl;
 
-	if (period_size < NFFT * channels) {
-		cout << "Sound::asound_set_hwparams: period_size = " << period_size
-				<< ", but less than NFFT (" << NFFT << ") times channels ("
-				<< channels << endl;
-		exit(1);
-	}
+//	if (period_size < NFFT * channels) {
+//		cout << "Sound::asound_set_hwparams: period_size = " << period_sizekk
+//				<< ", but less than NFFT (" << NFFT << ") times channels ("
+//				<< channels << ")." << endl;
+//		exit(1);
+//	}
 
 	/* write the parameters to device */
 	err = snd_pcm_hw_params(handle, params);
 	if (err < 0) {
 		cout
-				<< "Sound:: asound_set_hwparams: Unable to set hw params for playback: "
+				<< "Sound::asound_set_hwparams: Unable to set hw params for playback: "
 				<< snd_strerror(err) << endl;
 		return err;
 	}
