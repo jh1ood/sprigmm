@@ -17,7 +17,7 @@ using namespace std;
 //void asound_async_callback(snd_async_handler_t * ahandler);
 //void asound_async_callback2(snd_async_handler_t * ahandler);
 
-extern double audio_signal[NFFT];
+//extern double audio_signal[NFFT];
 
 extern Sound *mysound1;
 extern Sound *mysound2;
@@ -104,18 +104,7 @@ Sound::Sound(char *s, const char *r, const char *c) {
 Sound::~Sound() {
 }
 
-//extern fftw_complex *in;
-//extern fftw_complex *out;
-//extern fftw_plan p;
 extern int flag_togo1, flag_togo2, flag_togo3, flag_togo4;
-
-int send_command(unsigned char *partial_command);
-int receive_fb();
-void myfunc(int);
-void set_freq(long int ifreq_in_hz);
-void myclock();
-int colormap_r(double);
-int colormap_g(double);
 
 void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 	static int icount1 = 0, icount2 = 0;
@@ -178,7 +167,7 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 		}
 		dc0 /= (double) NFFT;
 		dc1 /= (double) NFFT;
-		dc0 = 0.0; dc1 = 0.0;
+		dc0 = 0.0; dc1 = 0.0; /* ignore DC offset cancellation */
 		for (int i = 0; i < NFFT * 2; i += 2) {
 			double i1 = samples[i]     - dc0; /* DC offset */
 			double q1 = samples[i + 1] - dc1;

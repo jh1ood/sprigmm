@@ -3,6 +3,7 @@
 #include <cairomm/context.h>
 #include <iostream>
 #include <string>
+#include <vector>
 #include "drawingarea.h"
 using namespace std;
 

@@ -80,8 +80,16 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
 		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
 		double tmp = mysound1->audio_signal_ffted[j];
-		if (i == WATERFALL_XSIZE / 2)
+
+		if( ( (operating_mode == 0x03 || operating_mode == 0x00) && i > (WATERFALL_XSIZE/2) )
+	     || ( (operating_mode == 0x07 || operating_mode == 0x01) && i < (WATERFALL_XSIZE/2) ) ) {
+			tmp = 0.0;
+		}
+
+		if (i == WATERFALL_XSIZE / 2) {
 			tmp = 1.0;
+		}
+
 		*p++ = colormap_r(tmp);
 		*p++ = colormap_g(tmp);
 		*p++ = colormap_b(tmp);
@@ -101,6 +109,25 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		*p++ = colormap_r(tmp);
 		*p++ = colormap_g(tmp);
 		*p++ = colormap_b(tmp);
+	}
+	Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,
+	WATERFALL_YOFFSET);
+	cr->paint();
+	cr->stroke();
+
+	// write white between the gap
+	p = m_image->get_pixels() + rowstride * (WATERFALL_YSIZE / 2 - 10);
+	for (int i = 0; i < WATERFALL_XSIZE; i++) {
+		int ifreq = 7020160 + ( i - (WATERFALL_XSIZE/2)) * mysound2->bin_size;
+		if( abs(ifreq-ifreq_in_hz) < 200) {
+			*p++ = 128;
+			*p++ = 128;
+			*p++ = 128;
+		} else {
+			*p++ = 255;
+			*p++ = 255;
+			*p++ = 255;
+		}
 	}
 	Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,
 	WATERFALL_YOFFSET);
@@ -159,7 +186,7 @@ bool Waterfall::on_scroll_event(GdkEventScroll * event) {
 	dy = event->delta_y;
 	int digit_pos;
 	digit_pos = (x - 10.0) / 31.0;
-	cout << "digit_pos = " << digit_pos << endl;
+	cout << "Waterfall::on_scroll_event(): digit_pos = " << digit_pos << endl;
 
 	int frequency_delta = 0.0;
 	if (digit_pos >= 0 && digit_pos <= 4) {
@@ -182,25 +209,18 @@ bool Waterfall::on_scroll_event(GdkEventScroll * event) {
 }
 
 bool Waterfall::on_button_press_event(GdkEventButton * event) {
-	std::cout << "Watefall::on_button_press_event:  " << event->x << " : "
-			<< event->y << std::endl;
+
 	x_press = event->x;
 	y_press = event->y;
-	int pressed_freq = x_press * mysound1->bin_size;
+	if (y_press >= WATERFALL_YSIZE/2) { /* Soft66LC4 area */
+		ifreq_in_hz = jfreq_in_hz + (x_press - (WATERFALL_XSIZE/2) ) * mysound2->bin_size;
+		set_freq(ifreq_in_hz);
 
-	double freq_delta = pressed_freq - cw_pitch;
-	if (operating_mode == 0x03 || operating_mode == 0x00) { /* CW or LSB */
-		ifreq_in_hz -= freq_delta;
+		std::cout << "Waterfall::on_button_press_event:  x_press = " << x_press
+				<< ", y_press = "     << y_press
+				<< ", cw_pitch = "    << cw_pitch
+				<< ", ifreq_in_hz = " << ifreq_in_hz << std::endl;
 	}
-	if (operating_mode == 0x07 || operating_mode == 0x01) { /* CW-R or USB */
-		ifreq_in_hz += freq_delta;
-	}
-	set_freq(ifreq_in_hz);
-
-	std::cout << "Waterfall::on_button_press_event:  x_press = " << x_press
-			<< ", pressed_freq = " << pressed_freq << ", cw_pitch = "
-			<< cw_pitch << ", freq_delta =" << freq_delta << ", new_freq = "
-			<< ifreq_in_hz << std::endl;
 
 	return true;
 }

@@ -28,7 +28,8 @@ int iwater = 0;
 int nsamples;
 double bin_size, waterfall_scale_x;
 double amax = 14.0, amin = 7.0;
-long int ifreq_in_hz = 7026000;
+int ifreq_in_hz = 7026000;
+int jfreq_in_hz = 7020000;
 int s_meter;
 int operating_mode = 3;		/* CW=03, CW-REV=07, LSB=00, USB=01 */
 int dsp_filter = 1;		/* FIL1=01, FIL2=02, FIL3=03 */
@@ -54,7 +55,11 @@ int main(int argc, char *argv[])
     } else if (argc == 8) {
         mysound1 = new Sound{argv[2], argv[3], argv[4]};
         mysound2 = new Sound{argv[5], argv[6], argv[7]};
-        system("/usr/local/bin/soft66-control -t 7020000");
+    	char string[128];
+    	sprintf(string, "/usr/local/bin/soft66-control -t %8d",  jfreq_in_hz);
+    	cout << "main(): string = " << string << endl;
+    	system(string);
+//        system("/usr/local/bin/soft66-control -t 7020000");
     } else {
 	cout << "Usage (IC-7410 only)      : " << argv[0] <<
 	    " /dev/ttyUSB0 hw:2,0 32000 1 \n";

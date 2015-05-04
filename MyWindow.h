@@ -7,6 +7,7 @@
 
 #ifndef MYWINDOW_H_
 #define MYWINDOW_H_
+#include "mydefine.h"
 #include "radiobuttons.h"
 #include "drawingarea.h"
 #include "waterfall.h"
@@ -26,7 +27,6 @@ class MyWindow:public Gtk::Dialog {
     Scales myscales;
     DrawingArea myarea;
     Waterfall mywaterfall;
-//    Gtk::Window win3;
 };
 
 #endif				/* MYWINDOW_H_ */

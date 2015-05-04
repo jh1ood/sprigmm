@@ -215,8 +215,35 @@ struct async_private_data {
 
 void set_freq(long int ifreq_in_hz)
 {
-	fprintf(stderr, "freq set to %12.3f [kHz] \n",
-			(double) ifreq_in_hz / 1000.0);
+	//	fprintf(stderr, "freq set to %12.3f [kHz] \n",
+	//			(double) ifreq_in_hz / 1000.0);
+
+	if(0) {
+	} else if(ifreq_in_hz >= 7000000 && ifreq_in_hz <= 7200000) {
+		jfreq_in_hz = 7000000 + 20000;
+	} else if(ifreq_in_hz >= 10100000 && ifreq_in_hz <= 10150000) {
+		jfreq_in_hz = 10100000 + 20000;
+	} else if(ifreq_in_hz >= 14000000 && ifreq_in_hz <= 14350000) {
+		jfreq_in_hz = 14000000 + 20000;
+	} else if(ifreq_in_hz >= 18068000 && ifreq_in_hz <= 18168000) {
+		jfreq_in_hz = 18068000 + 20000;
+	} else if(ifreq_in_hz >= 21000000 && ifreq_in_hz <= 21450000) {
+		jfreq_in_hz = 21000000 + 20000;
+	} else if(ifreq_in_hz >= 24890000 && ifreq_in_hz <= 24990000) {
+		jfreq_in_hz = 24890000 + 20000;
+	} else if(ifreq_in_hz >= 28000000 && ifreq_in_hz <= 29700000) {
+		jfreq_in_hz = 28000000 + 20000;
+	} else if(ifreq_in_hz >= 50000000 && ifreq_in_hz <= 54000000) {
+		jfreq_in_hz = 54000000 + 20000;
+	}
+
+	cout << "set_freq(): ifreq_in_hz = " << ifreq_in_hz << ", jfreq_in_hz = " << jfreq_in_hz << endl;
+
+	char string[128];
+	sprintf(string, "/usr/local/bin/soft66-control -t %8d",  jfreq_in_hz);
+	cout << "main(): string = " << string << endl;
+	system(string);
+
 	static unsigned char command1[7] =
 	{ 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfd };
 	long int ifreq_wrk;
@@ -328,14 +355,14 @@ void myclock()
 
 	/* read operating mode, response in char[5]-char[6] */
 
-//	send_command(command3);
-//	res = myread(buf);
-//	if (res != 8) {
-//		fprintf(stderr, "operating mode response is wrong! \n");
-//	}
-//	operating_mode = buf[5];
-//	dsp_filter = buf[6];
-//	cout << "myclock: operating_mode = " << operating_mode << ", dsp_filter = " << dsp_filter << endl;
+	send_command(command3);
+	res = myread(buf);
+	if (res != 8) {
+		fprintf(stderr, "operating mode response is wrong! \n");
+	}
+	operating_mode = buf[5];
+	dsp_filter = buf[6];
+	cout << "myclock: operating_mode = " << operating_mode << ", dsp_filter = " << dsp_filter << endl;
 
 	/* freq response in char[8]-char[5] */
 	cout << "myclock(): going to send_command() \n";

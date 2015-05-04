@@ -31,15 +31,6 @@ DrawingArea::DrawingArea() {
 			Gdk::BUTTON_PRESS_MASK | Gdk::SCROLL_MASK
 					| Gdk::SMOOTH_SCROLL_MASK);
 
-//	bin_size = rate / (double) NFFT;
-//	for (int i = 0; i < NFFT; i++) {
-//		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) NFFT);
-//	}
-//
-//	in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
-//	out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
-//	p = fftw_plan_dft_1d(NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
-
 }
 
 DrawingArea::~DrawingArea() {
@@ -55,7 +46,7 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	Gtk::Allocation allocation = get_allocation();
 	const int width = allocation.get_width();
-	const int height = allocation.get_height(); /* eg. 50 */
+//	const int height = allocation.get_height(); /* eg. 50 */
 	const int rectangle_width = width;
 	const int rectangle_height = 50; /* eg. 50 */
 
@@ -176,6 +167,8 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	for (int i = 400; i <= 800; i += 200) {
 		cr->move_to(((WATERFALL_XSIZE / 2)) + (i / mysound1->bin_size), 230.0);
 		cr->line_to(((WATERFALL_XSIZE / 2)) + (i / mysound1->bin_size), 240.0);
+		cr->move_to(((WATERFALL_XSIZE / 2)) - (i / mysound1->bin_size), 230.0);
+		cr->line_to(((WATERFALL_XSIZE / 2)) - (i / mysound1->bin_size), 240.0);
 	}
 	cr->stroke();
 	cr->restore();
@@ -209,21 +202,21 @@ void DrawingArea::draw_text(const Cairo::RefPtr<Cairo::Context> &cr,
 	font.set_family("Monospace");
 	font.set_weight(Pango::WEIGHT_BOLD);
 	font.set_size(40 * 1000); /* unit = 1/1000 point */
-
-	char string[128];
-	sprintf(string, "%9.3fkHz", (double) ifreq_in_hz / 1000.0);
-	Glib::RefPtr<Pango::Layout> layout = create_pango_layout(string);
-
-	layout->set_font_description(font);
-
 	int text_width;
 	int text_height;
 
+	char string[128];
+	sprintf(string, "%9.3fkHz                                   %9.3fkHz",
+			(double) ifreq_in_hz / 1000.0, (double) jfreq_in_hz / 1000.0);
+	Glib::RefPtr<Pango::Layout> layout = create_pango_layout(string);
+
+	layout->set_font_description(font);
 	layout->get_pixel_size(text_width, text_height);
 	cr->move_to(10, (rectangle_height - text_height) / 2);
 	cr->set_source_rgb(1.0, 1.0, 1.0);
 	layout->show_in_cairo_context(cr);
 	cr->stroke();
+
 }
 
 bool DrawingArea::on_scroll_event(GdkEventScroll * event) {

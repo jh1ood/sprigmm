@@ -44,7 +44,8 @@ extern int iwater;
 extern int nsamples;
 //extern double bin_size, waterfall_scale_x;
 extern double amax, amin;
-extern long int ifreq_in_hz;
+extern int ifreq_in_hz;
+extern int jfreq_in_hz;
 extern int s_meter;
 extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
 extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
