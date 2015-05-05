@@ -1,4 +1,3 @@
-/* Rig.cpp */
 #include "mydefine.h"
 #include "radiobuttons.h"
 #include "drawingarea.h"

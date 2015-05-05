@@ -12,13 +12,6 @@
 #include <cmath>
 using namespace std;
 
-//void async_callback(snd_async_handler_t * ahandler);
-//int async_loop(snd_pcm_t * handle, signed short *samples);
-//void asound_async_callback(snd_async_handler_t * ahandler);
-//void asound_async_callback2(snd_async_handler_t * ahandler);
-
-//extern double audio_signal[NFFT];
-
 extern Sound *mysound1;
 extern Sound *mysound2;
 
@@ -33,8 +26,8 @@ void asound_callback2_wrapper(snd_async_handler_t * ahandler) {
 Sound::Sound(char *s, const char *r, const char *c) {
 
 	sound_device = s;
-	rate = atoi(r);
-	channels = atoi(c);
+	rate         = atoi(r);
+	channels     = atoi(c);
 
 	cout << "Sound::Sound: sound_device = " << sound_device << ", rate = "
 			<< rate << ", channels = " << channels << endl;
@@ -46,7 +39,7 @@ Sound::Sound(char *s, const char *r, const char *c) {
 	if ((err = snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_CAPTURE, 0))
 			< 0) {
 		cout << "Sound::Sound: snd_pcm_open() error. " << snd_strerror(err)
-				<< endl;
+						<< endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -64,7 +57,6 @@ Sound::Sound(char *s, const char *r, const char *c) {
 
 	nsamples = period_size * channels * byte_per_sample;
 	cout << "Sound::Sound: nsamples = " << nsamples << endl;
-	cout << "Sound::Sound: samples  = " << samples << endl;
 
 	if (0) {
 	} else if (channels == 1) {
@@ -88,17 +80,21 @@ Sound::Sound(char *s, const char *r, const char *c) {
 		}
 	}
 
-	bin_size = rate / (double) NFFT;
-	for (int i = 0; i < NFFT; i++) {
-		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) NFFT);
+	if (0) {
+	} else if (channels == 1) {
+		nfft = 8192;
+	} else if (channels == 2) {
+		nfft = 2048;
 	}
 
-	in = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
-	out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * NFFT);
-	p = fftw_plan_dft_1d(NFFT, in, out, FFTW_FORWARD, FFTW_MEASURE);
+	bin_size = rate / (double) nfft;
+	for (int i = 0; i < nfft; i++) {
+		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) nfft);
+	}
 
-	cout << "Sound::Sound: end.. \n";
-
+	in  = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft);
+	out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft);
+	p = fftw_plan_dft_1d(nfft, in, out, FFTW_FORWARD, FFTW_MEASURE);
 }
 
 Sound::~Sound() {
@@ -121,118 +117,114 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 	}
 
 	snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
-	signed short *samples = snd_async_handler_get_callback_private(ahandler);
+	signed short *samples = (signed short*) snd_async_handler_get_callback_private(ahandler);
 
 	cout << "asound_async_callback: samples     = " << samples << endl;
-
-	snd_pcm_sframes_t avail;
-	int err;
 
 	avail = snd_pcm_avail_update(handle);
 	cout << "asound_async_callback: avail       = " << avail << endl;
 	cout << "asound_async_callback: period_size = " << period_size << endl;
 
-	while (avail >= period_size) {
-		err = snd_pcm_readi(handle, samples, period_size);
-		cout << "asound_async_callback: err         = " << err << endl;
+	while (avail >= (snd_pcm_sframes_t) period_size) {
+		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
+		cout << "asound_async_callback: frames_actually_read = " << frames_actually_read << endl;
 
-		if (err < 0) {
-			fprintf(stderr, "Write error: %s\n", snd_strerror(err));
+		if (frames_actually_read < 0) {
+			cout << "asound_async_callback: snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
 			exit(EXIT_FAILURE);
 		}
-		if (err != period_size) {
-			fprintf(stderr, "Write error: written %i expected %li\n", err,
-					period_size);
+		if (frames_actually_read != (int) period_size) {
+			cout << "asound_async_callback: frames_actually_read (" << frames_actually_read
+				 << ") does not match the period_size (" << period_size << endl;
 			exit(EXIT_FAILURE);
 		}
+
+		/*** begin audio signal processing ***/
+		audio_signal_max = -32768;
+		if (0) {
+		} else if (channels == 1) {
+			for (int i = 0; i < nfft; i++) {
+				audio_signal[i] = samples[i];
+				if (audio_signal_max < audio_signal[i])
+					audio_signal_max = audio_signal[i];
+			}
+		} else if (channels == 2) { /* for my Soft66LC4 only */
+			dc0 = 0.0;
+			dc1 = 0.0;
+			for (int i = 0; i < nfft * 2; i += 2) {
+				dc0 += samples[i];
+				dc1 += samples[i + 1];
+			}
+			dc0 /= (double) nfft;
+			dc1 /= (double) nfft;
+//			dc0 = 0.0; dc1 = 0.0; /* ignore DC offset cancellation */
+			for (int i = 0; i < nfft * 2; i += 2) {
+				double i1 = samples[i]     - dc0; /* DC offset */
+				double q1 = samples[i + 1] - dc1;
+				double i2 = i1;
+				double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
+				double i3 = q2; /* swap IQ */
+				double q3 = i2;
+				audio_signal[i] = i3;
+				audio_signal[i + 1] = q3;
+				if (audio_signal_max < audio_signal[i])
+					audio_signal_max = audio_signal[i];
+				if (audio_signal_max < audio_signal[i+1])
+					audio_signal_max = audio_signal[i+1];
+			}
+			cout << "asound_async_callback: dc0 = " << dc0 << ", dc1 = " << dc1 << endl;
+		}
+		cout << "asound_async_callback: audio_signal_max = " << audio_signal_max
+				<< " for channels = " << channels << endl;
+
+		/* audio signal FFT */
+		for (int i = 0; i < nfft; i++) {
+			if (0) {
+			} else if (channels == 1) {
+				in[i][0] = fft_window[i] * audio_signal[i];
+				in[i][1] = 0.0;
+			} else if (channels == 2) {
+				in[i][0] = fft_window[i] * audio_signal[2 * i];
+				in[i][1] = fft_window[i] * audio_signal[2 * i + 1];
+			}
+		}
+
+		fftw_execute(p);
+
+		/* log10 and normalize */
+
+		if (channels == 1) {
+			amax = 14.0;
+			amin = 7.0;
+		} else if (channels == 2) {
+			amax = 12.0;
+			amin = 7.0;
+		}
+
+		for (int i = 0; i < nfft; i++) {
+			double val;
+			val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
+			if (val < pow(10.0, amin)) {
+				audio_signal_ffted[i] = 0.0;
+			} else if (val > pow(10.0, amax)) {
+				audio_signal_ffted[i] = 1.0;
+			} else {
+				audio_signal_ffted[i] = (log10(val) - amin) / (amax - amin);
+			}
+		}
+		/*** end audio signal processing */
 
 		avail = snd_pcm_avail_update(handle);
 		cout << "asound_async_callback: avail again = " << avail << endl;
 	}
 
-	audio_signal_max = -32768;
-	if (0) {
-	} else if (channels == 1) {
-		for (int i = 0; i < NFFT; i++) { /* NFFT=period_size */
-			audio_signal[i] = samples[i];
-			if (audio_signal_max < audio_signal[i])
-				audio_signal_max = audio_signal[i];
-		}
-	} else if (channels == 2) { /* for my Soft66LC4 only */
-		dc0 = 0.0;
-		dc1 = 0.0;
-		for (int i = 0; i < NFFT * 2; i += 2) {
-			dc0 += samples[i];
-			dc1 += samples[i + 1];
-		}
-		dc0 /= (double) NFFT;
-		dc1 /= (double) NFFT;
-		dc0 = 0.0; dc1 = 0.0; /* ignore DC offset cancellation */
-		for (int i = 0; i < NFFT * 2; i += 2) {
-			double i1 = samples[i]     - dc0; /* DC offset */
-			double q1 = samples[i + 1] - dc1;
-			double i2 = i1;
-			double q2 = -0.32258 * i1 + 1.1443 * q1; /* gain and phase correction */
-			double i3 = q2; /* swap IQ */
-			double q3 = i2;
-			audio_signal[i] = i3;
-			audio_signal[i + 1] = q3;
-			if (audio_signal_max < audio_signal[i])
-				audio_signal_max = audio_signal[i];
-			if (audio_signal_max < audio_signal[i+1])
-				audio_signal_max = audio_signal[i+1];
-		}
-		cout << "asound_async_callback: dc0 = " << dc0 << ", dc1 = " << dc1 << endl;
-	}
-	cout << "asound_async_callback: audio_signal_max = " << audio_signal_max
-			<< " for channels = " << channels << endl;
+/* the followings should be in the above while loop?? */
 
-	/* audio signal FFT */
-	for (int i = 0; i < NFFT; i++) {
-		if (0) {
-		} else if (channels == 1) {
-			in[i][0] = fft_window[i] * audio_signal[i];
-			in[i][1] = 0.0;
-		} else if (channels == 2) {
-			in[i][0] = fft_window[i] * audio_signal[2 * i];
-			in[i][1] = fft_window[i] * audio_signal[2 * i + 1];
-		}
-	}
-
-	fftw_execute(p);
-
-	/* log10 and normalize */
-
-	if (channels == 1) {
-		amax = 14.0;
-		amin = 7.0;
-	} else if (channels == 2) {
-		amax = 12.0;
-		amin = 7.0;
-	}
-
-	for (int i = 0; i < NFFT; i++) {
-		double val;
-		val = out[i][0] * out[i][0] + out[i][1] * out[i][1];
-		if (val < pow(10.0, amin)) {
-			audio_signal_ffted[i] = 0.0;
-		} else if (val > pow(10.0, amax)) {
-			audio_signal_ffted[i] = 1.0;
-		} else {
-			audio_signal_ffted[i] = (log10(val) - amin) / (amax - amin);
-		}
-	}
-	cout << "asound_async_callback: done fftw, etc. \n";
-
-	cout << "asound_async_callback: end.." << endl;
 }
 
-int Sound::asound_set_hwparams(snd_pcm_t * handle,
-		snd_pcm_hw_params_t * params) {
+int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params) {
 	unsigned int rrate;
-	snd_pcm_uframes_t size;
-	int err, dir;
-	cout << "Sound::asound_set_hwparams: begin... \n";
+	int err;
 
 	/* choose all parameters */
 	err = snd_pcm_hw_params_any(handle, params);
@@ -257,13 +249,13 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle,
 			SND_PCM_ACCESS_RW_INTERLEAVED);
 	if (err < 0) {
 		cout
-				<< "Sound::asound_set_hwparams: Access type not available for playback."
-				<< snd_strerror(err) << endl;
+		<< "Sound::asound_set_hwparams: Access type not available for playback."
+		<< snd_strerror(err) << endl;
 		return err;
 	}
 
 	/* set the sample format */
-	if(channels == 10) {
+	if(channels == 10) { /* for PrismSound Orpheus only */
 		err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S32_LE);
 
 	} else {
@@ -272,8 +264,8 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle,
 
 	if (err < 0) {
 		cout
-				<< "Sound::asound_set_hwparams: Sample format not available for playback."
-				<< snd_strerror(err) << endl;
+		<< "Sound::asound_set_hwparams: Sample format not available for playback."
+		<< snd_strerror(err) << endl;
 		return err;
 	}
 
@@ -301,58 +293,19 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle,
 		return -EINVAL;
 	}
 
-	/* set the buffer time */
-	err = snd_pcm_hw_params_set_buffer_time_near(handle, params, &buffer_time,
-			&dir);
+	/* set the buffer size */
+	err = snd_pcm_hw_params_set_buffer_size_near(handle, params, &buffer_size);
 	if (err < 0) {
-		cout << "Sound::asound_set_hwparams: Unable to set buffer time "
-				<< buffer_time << "i for playback: " << snd_strerror(err)
-				<< endl;
-		return err;
-	}
-	cout << "Sound::asound_set_hwparams: buffer_time = " << buffer_time
-			<< ", dir   = " << dir << endl;
-
-	err = snd_pcm_hw_params_get_buffer_size(params, &size);
-	if (err < 0) {
-		cout
-				<< "Sound::asound_set_hwparams: Unable to get buffer size for playback: "
-				<< snd_strerror(err) << endl;
-		return err;
-	}
-	buffer_size = size;
-	cout << "Sound::asound_set_hwparams: buffer_size = " << buffer_size << endl;
-
-	/* set the period time */
-	err = snd_pcm_hw_params_set_period_time_near(handle, params, &period_time,
-			&dir);
-	if (err < 0) {
-		cout << "Sound::asound_set_hwparams: Unable to set period time "
-				<< period_time << " for playback: " << snd_strerror(err)
-				<< endl;
-		return err;
-	}
-	cout << "Sound::asound_set_hwparams: period_time = " << period_time
-			<< " , dir   = " << dir << endl;
-
-	err = snd_pcm_hw_params_get_period_size(params, &size, &dir);
-	if (err < 0) {
-		cout
-				<< "Sound::asound_set_hwparams: Unable to get period size for playback: "
-				<< snd_strerror(err) << endl;
+		cout << "Sound::asound_set_hwparams: buffer size error = " << err << endl;
 		return err;
 	}
 
-	period_size = size;
-	cout << "Sound::asound_set_hwparams: period_size = " << period_size
-			<< ", dir = " << dir << endl;
-
-//	if (period_size < NFFT * channels) {
-//		cout << "Sound::asound_set_hwparams: period_size = " << period_sizekk
-//				<< ", but less than NFFT (" << NFFT << ") times channels ("
-//				<< channels << ")." << endl;
-//		exit(1);
-//	}
+	/* set the period size */
+	snd_pcm_hw_params_set_period_size_near(handle, params, &period_size, NULL);
+	if (err < 0) {
+		cout << "Sound::asound_set_hwparams: period size error = " << err << endl;
+		return err;
+	}
 
 	/* write the parameters to device */
 	err = snd_pcm_hw_params(handle, params);
@@ -380,10 +333,8 @@ int Sound::asound_set_swparams(snd_pcm_t * handle,
 		return err;
 	}
 
-	/* start the transfer when the buffer is almost full: */
-	/* (buffer_size / avail_min) * avail_min */
-	err = snd_pcm_sw_params_set_start_threshold(handle, swparams,
-			(buffer_size / period_size) * period_size);
+	/* start the transfer when the buffer is half full */
+	err = snd_pcm_sw_params_set_start_threshold(handle, swparams, buffer_size / 2);
 	if (err < 0) {
 		cout
 				<< "Sound::asound_set_swparams: Unable to set start threshold mode for playback: "
@@ -392,24 +343,12 @@ int Sound::asound_set_swparams(snd_pcm_t * handle,
 	}
 
 	/* allow the transfer when at least period_size samples can be processed */
-	/* or disable this mechanism when period event is enabled (aka interrupt like style processing) */
-	err = snd_pcm_sw_params_set_avail_min(handle, swparams,
-			period_event ? buffer_size : period_size);
+	err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size * 2);
 	if (err < 0) {
 		cout
 				<< "Sound::asound_set_swparams: Unable to set avail min for playback: "
 				<< snd_strerror(err) << endl;
 		return err;
-	}
-
-	/* enable period events when requested */
-	if (period_event) {
-		err = snd_pcm_sw_params_set_period_event(handle, swparams, 1);
-		if (err < 0) {
-			cout << "Sound::asound_set_swparams: UUnable to set period event: "
-					<< snd_strerror(err) << endl;
-			return err;
-		}
 	}
 
 	/* write the parameters to the playback device */

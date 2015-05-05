@@ -78,17 +78,16 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 // write into the top line for IC-7410
 	p = m_image->get_pixels();
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
-		double tmp = mysound1->audio_signal_ffted[j];
+		double tmp = mysound1->audio_signal_ffted[i];
 
-		if( ( (operating_mode == 0x03 || operating_mode == 0x00) && i > (WATERFALL_XSIZE/2) )
-	     || ( (operating_mode == 0x07 || operating_mode == 0x01) && i < (WATERFALL_XSIZE/2) ) ) {
-			tmp = 0.0;
-		}
-
-		if (i == WATERFALL_XSIZE / 2) {
-			tmp = 1.0;
-		}
+//		if( ( (operating_mode == 0x03 || operating_mode == 0x00) && i > (WATERFALL_XSIZE/2) )
+//	     || ( (operating_mode == 0x07 || operating_mode == 0x01) && i < (WATERFALL_XSIZE/2) ) ) {
+//			tmp = 0.0;
+//		}
+//
+//		if (i == WATERFALL_XSIZE / 2) {
+//			tmp = 1.0;
+//		}
 
 		*p++ = colormap_r(tmp);
 		*p++ = colormap_g(tmp);
@@ -102,7 +101,7 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	// write into another line for Soft66LC4
 	p = m_image->get_pixels() + rowstride * (WATERFALL_YSIZE / 2);
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
+		int j = ((mysound2->nfft - (WATERFALL_XSIZE / 2)) + i) % mysound2->nfft;
 		double tmp = mysound2->audio_signal_ffted[j];
 		if (i == WATERFALL_XSIZE / 2)
 			tmp = 1.0;

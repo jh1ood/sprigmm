@@ -139,11 +139,10 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->save();
 	cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
 	cr->move_to(0.0,
-			40.0 * (1.0 - mysound1->audio_signal_ffted[NFFT - (WINDOW_XSIZE / 2)]) + 5.0
+			40.0 * (1.0 - mysound1->audio_signal_ffted[0]) + 5.0
 					+ 180.0);
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
-		cr->line_to(i, 40.0 * (1.0 - mysound1->audio_signal_ffted[j]) + 5.0 + 180.0);
+		cr->line_to(i, 40.0 * (1.0 - mysound1->audio_signal_ffted[i]) + 5.0 + 180.0);
 	}
 	cr->stroke();
 	cr->restore();
@@ -152,10 +151,10 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->save();
 		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
 		cr->move_to(0.0,
-				40.0 * (1.0 - mysound2->audio_signal_ffted[NFFT - (WINDOW_XSIZE / 2)]) + 5.0
+				40.0 * (1.0 - mysound2->audio_signal_ffted[mysound2->nfft - (WINDOW_XSIZE / 2)]) + 5.0
 						+ 180.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
-			int j = ((NFFT - (WATERFALL_XSIZE / 2)) + i) % NFFT;
+			int j = ((mysound2->nfft - (WATERFALL_XSIZE / 2)) + i) % mysound2->nfft;
 			cr->line_to(i, 40.0 * (1.0 - mysound2->audio_signal_ffted[j]) + 5.0 + 180.0);
 		}
 		cr->stroke();
