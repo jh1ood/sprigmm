@@ -60,9 +60,7 @@ RadioButtons::RadioButtons():
 
 	show_all_children();
 
-	Glib::signal_timeout().connect(sigc::mem_fun(*this,
-			&RadioButtons::on_timeout),
-			500);
+	Glib::signal_timeout().connect(sigc::mem_fun(*this, &RadioButtons::on_timeout), 100);
 
 }
 

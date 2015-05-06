@@ -177,14 +177,16 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 bool DrawingArea::on_timeout() {
 	static int icountw = 0, icountv = 0;
-	cout << "on_timeout: icountw = " << icountw++ << endl;
+	cout << "DrawingArea::on_timeout(): icountw (all entry         ) = " << icountw++ << endl;
 	if (flag_togo1 == 0) {
 		return true;
 	}
 	flag_togo1 = 0;
-	cout << "on_timeout: icountv = " << icountv++ << endl;
+	cout << "DrawingArea::on_timeout(): icountv (only if flag_togo1) = " << icountv
+		 << ", diff = " << icountw - icountv << endl;
+	icountv++;
 
-	// force our program to redraw the entire clock.
+	// force our program to redraw
 	Glib::RefPtr<Gdk::Window> win = get_window();
 	if (win) {
 		Gdk::Rectangle r(0, 0, get_allocation().get_width(),

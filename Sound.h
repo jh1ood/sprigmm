@@ -25,8 +25,8 @@ public:
 	int  asound_async_loop    (snd_pcm_t * handle, signed short *samples);
 	void asound_async_callback(snd_async_handler_t * ahandler);
 
-	snd_pcm_uframes_t   buffer_size = 64 * 1024;
-	snd_pcm_uframes_t   period_size = 16 * 1024;
+	snd_pcm_uframes_t   buffer_size;
+	snd_pcm_uframes_t   period_size;
 	snd_pcm_sframes_t   avail;
 	snd_pcm_sframes_t   frames_actually_read;
 	snd_pcm_t           *handle;
@@ -42,7 +42,7 @@ public:
 	int resample = 0;		/* disable resample */
 	int period_event = 0;	/* produce poll event after each period */
 
-	int    nfft = 2048;
+	int    nfft;
 	double bin_size;
 	signed short samples     [512000];
 	double audio_signal      [512000];

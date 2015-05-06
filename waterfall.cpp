@@ -80,6 +80,9 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
 		if(mysound1->bin_size * i < 3500.0) { /* less than 3.5kHz */
 			double tmp = mysound1->audio_signal_ffted[i];
+
+//			tmp = ( (icountx + i) % 256 ) / 256.0;
+
 			*p++ = colormap_r(tmp);
 			*p++ = colormap_g(tmp);
 			*p++ = colormap_b(tmp);
@@ -99,6 +102,9 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
 		int j = ((mysound2->nfft - (WATERFALL_XSIZE / 2)) + i) % mysound2->nfft;
 		double tmp = mysound2->audio_signal_ffted[j];
+
+//		tmp = ( (icountx + i) % 256 ) / 256.0;
+
 		if (i == WATERFALL_XSIZE / 2)
 			tmp = 1.0;
 		*p++ = colormap_r(tmp);

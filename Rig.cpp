@@ -16,8 +16,8 @@ using namespace std;
 
 int fd = -1;
 
-unsigned int rate;		/* stream rate */
-unsigned int channels;		/* count of channels */
+//unsigned int rate;		/* stream rate */
+//unsigned int channels;		/* count of channels */
 int byte_per_sample = 2;	/* 16 bit format */
 unsigned int buffer_time = 500000;	/* ring buffer length in us */
 unsigned int period_time = 128000;	/* period time in us */
@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
 	<< ", rate = " << argv[3] << ", channels = " << argv[4] << endl;
 
     rig_init_serial(argv[1]);
-    rate = atoi(argv[3]);
-    channels = atoi(argv[4]);
+//    rate = atoi(argv[3]);
+//    channels = atoi(argv[4]);
 
     argc = 1;			/* just for the next line */
     Glib::RefPtr < Gtk::Application > app =

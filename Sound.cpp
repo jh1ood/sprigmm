@@ -28,47 +28,71 @@ Sound::Sound(char *s, const char *r, const char *c) {
 	sound_device = s;
 	rate         = atoi(r);
 	channels     = atoi(c);
+	int err = 0;
 
 	cout << "Sound::Sound: sound_device = " << sound_device << ", rate = "
 			<< rate << ", channels = " << channels << endl;
-	int err = 0;
+
+	if (0) {
+	} else if (channels == 1) {
+		buffer_size = 64 * 1024;
+		period_size =  8 * 1024;
+		nfft =         4 * 1024;
+	} else if (channels == 2) {
+		buffer_size = 64 * 1024;
+		period_size =  4 * 1024;
+		nfft =         2 * 1024;
+	}
+
+	bin_size = rate / (double) nfft;
+
+	cout << "Sound::Sound: buffer_size = " << buffer_size
+		 << ", period_size = " << period_size
+		 << ", nfft = " << nfft
+		 << ", bin_size = " << bin_size
+		 << endl;
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
 
-	if ((err = snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_CAPTURE, 0))
-			< 0) {
-		cout << "Sound::Sound: snd_pcm_open() error. " << snd_strerror(err)
-						<< endl;
+	if ((err = snd_pcm_open(&handle, sound_device, SND_PCM_STREAM_CAPTURE, 0)) < 0) {
+		cout << "Sound::Sound: snd_pcm_open() error. " << snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	if ((err = asound_set_hwparams(handle, hwparams)) < 0) {
-		cout << "Sound::Sound: setting of hwparams failed. "
-				<< snd_strerror(err) << endl;
+		cout << "Sound::Sound: setting of hwparams failed. " << snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	if ((err = asound_set_swparams(handle, swparams)) < 0) {
-		cout << "Sound::Sound: setting of swparams failed. "
-				<< snd_strerror(err) << endl;
+		cout << "Sound::Sound: setting of swparams failed. " << snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
 
 	nsamples = period_size * channels * byte_per_sample;
-	cout << "Sound::Sound: nsamples = " << nsamples << endl;
+	cout << "Sound::Sound: nsamples = " << nsamples << " (" << period_size << " * " << channels << " * " << byte_per_sample
+			<< ")" << endl;
 
 	if (0) {
 	} else if (channels == 1) {
 		err = snd_async_add_pcm_handler(&ahandler, handle,
 				asound_callback1_wrapper, samples); /* callback */
+		cout << "Sound::Sound: returned from snd_async_add_pcm_handler for channels = " << channels << endl;
 	} else if (channels == 2) {
 		err = snd_async_add_pcm_handler(&ahandler, handle,
 				asound_callback2_wrapper, samples); /* callback */
+		cout << "Sound::Sound: returned from snd_async_add_pcm_handler for channels = " << channels << endl;
 	}
 
 	if (err < 0) {
-		cout << "Sound::Sound: Unable to register async handler. \n";
+		cout << "Sound::Sound: Unable to register async handler." << endl;
+		exit(EXIT_FAILURE);
+	}
+
+	err = snd_pcm_prepare(handle);
+	if (err < 0) {
+		cout << "Sound::Sound: snd_pcm_prepare error: " << err << endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -79,28 +103,24 @@ Sound::Sound(char *s, const char *r, const char *c) {
 			exit(EXIT_FAILURE);
 		}
 	}
-
-	if (0) {
-	} else if (channels == 1) {
-		buffer_size = 64 * 1024;
-		period_size = 16 * 1024;
-		nfft = 8192;
-	} else if (channels == 2) {
-		buffer_size = 64 * 1024;
-		period_size =  4 * 1024;
-		nfft = 2048;
-	}
-
-	bin_size = rate / (double) nfft;
-	cout << "Sound::Sound: nfft = " << nfft << ", bin_size = " << bin_size << endl;
-
+// segmentation fault around here?
+	cout << "Sound::Sound: FFT setup begin.. nfft = " << nfft << endl;
 	for (int i = 0; i < nfft; i++) {
 		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) nfft);
 	}
 
+	cout << "Sound::Sound: FFT setup begin.. malloc for in " << endl;
 	in  = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft);
+
+	cout << "Sound::Sound: FFT setup begin.. malloc for out" << endl;
 	out = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft);
-	p = fftw_plan_dft_1d(nfft, in, out, FFTW_FORWARD, FFTW_MEASURE);
+
+// FFTW_ESTIMATE, FFTW_MEASURE, FFTW_PATIENT, FFTW_EXHAUSTIVE
+
+	cout << "Sound::Sound: FFT setup begin.. planning " << endl;
+	p   = fftw_plan_dft_1d(nfft, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+
+	cout << "Sound::Sound: end.." << endl;
 }
 
 Sound::~Sound() {
@@ -111,41 +131,51 @@ extern int flag_togo1, flag_togo2, flag_togo3, flag_togo4;
 void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 	static int icount1 = 0, icount2 = 0;
 
+	string myid;
+	if (0) {
+	} else if (channels == 1) {
+		myid = "asound_async_callback(1): ";
+	} else if (channels == 2) {
+		myid = "asound_async_callback(2): ";
+	} else {
+		myid = "asound_async_callback(-): ";
+	}
+
 	if (0) {
 	} else if (channels == 1) {
 		flag_togo1 = 1; /* to activate DrawArea::on_draw()  */
 		flag_togo2 = 1; /* to activate Waterfall::on_draw() */
-		cout << "asound_async_callback: icount1 = " << icount1++ << endl;
+		cout << myid << "icount1 = " << icount1++ << endl;
 	} else if (channels == 2) {
 		flag_togo3 = 1; /* to activate DrawArea::on_draw()  */
 		flag_togo4 = 1; /* to activate Waterfall::on_draw() */
-		cout << "asound_async_callback: icount2 = " << icount2++ << endl;
+		cout << myid << "icount2 = " << icount2++ << endl;
 	}
 
 	snd_pcm_t    *handle  = snd_async_handler_get_pcm(ahandler);
 	signed short *samples = (signed short*) snd_async_handler_get_callback_private(ahandler);
 
 	avail = snd_pcm_avail_update(handle);
-	cout << "asound_async_callback: avail = " << avail << endl;
+	cout << myid << "avail = " << avail << endl;
 
 	if (avail == -EPIPE) {    /* under-run */
-    		cout << "asound_asysnc_callback: underrun occured, trying to recover now .." << endl;
+    		cout << myid << "underrun occured, trying to recover now .." << endl;
             int err = snd_pcm_prepare(handle);
             if (err < 0) {
-            	cout << "asound_asysnc_callback: can not recover from underrun: " << snd_strerror(err) << endl;
+            	cout << myid << "can not recover from underrun: " << snd_strerror(err) << endl;
             }
 	}
 
 	while (avail >= (snd_pcm_sframes_t) period_size) {
 		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
-		cout << "asound_async_callback: frames_actually_read = " << frames_actually_read << endl;
+		cout << myid << "frames_actually_read = " << frames_actually_read << endl;
 
 		if (frames_actually_read < 0) {
-			cout << "asound_async_callback: snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
+			cout << myid << "snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
 			exit(EXIT_FAILURE);
 		}
 		if (frames_actually_read != (int) period_size) {
-			cout << "asound_async_callback: frames_actually_read (" << frames_actually_read
+			cout << myid << "frames_actually_read (" << frames_actually_read
 				 << ") does not match the period_size (" << period_size << endl;
 			exit(EXIT_FAILURE);
 		}
@@ -168,7 +198,7 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 			}
 			dc0 /= (double) nfft;
 			dc1 /= (double) nfft;
-//			dc0 = 0.0; dc1 = 0.0; /* ignore DC offset cancellation */
+			dc0 = 0.0; dc1 = 0.0; /* ignore DC offset cancellation */
 			for (int i = 0; i < nfft * 2; i += 2) {
 				double i1 = samples[i]     - dc0; /* DC offset */
 				double q1 = samples[i + 1] - dc1;
@@ -183,9 +213,9 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 				if (audio_signal_max < audio_signal[i+1])
 					audio_signal_max = audio_signal[i+1];
 			}
-			cout << "asound_async_callback: dc0 = " << dc0 << ", dc1 = " << dc1 << endl;
+			cout << myid << "dc0 = " << dc0 << ", dc1 = " << dc1 << endl;
 		}
-		cout << "asound_async_callback: audio_signal_max = " << audio_signal_max
+		cout << myid << "audio_signal_max = " << audio_signal_max
 				<< " for channels = " << channels << endl;
 
 		/* audio signal FFT */
@@ -226,7 +256,7 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 		/*** end audio signal processing */
 
 		avail = snd_pcm_avail_update(handle);
-		cout << "asound_async_callback: avail again = " << avail << endl;
+		cout << myid << "avail again = " << avail << endl;
 	}
 
 /* the followings should be in the above while loop?? */
@@ -236,6 +266,7 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params) {
 	unsigned int rrate;
 	int err;
+	cout << "Sound::asound_set_hwparams: begin... \n";
 
 	/* choose all parameters */
 	err = snd_pcm_hw_params_any(handle, params);
@@ -354,7 +385,7 @@ int Sound::asound_set_swparams(snd_pcm_t * handle,
 	}
 
 	/* allow the transfer when at least period_size samples can be processed */
-	err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size * 2);
+	err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size);
 	if (err < 0) {
 		cout
 				<< "Sound::asound_set_swparams: Unable to set avail min for playback: "

@@ -20,12 +20,6 @@ MyWindow::MyWindow()
     mybox.pack_start(myscales, FALSE, FALSE, 0);
     myscrolledwindow.add(mybox);
     add(myscrolledwindow);
-
-//    win3.set_title("from MyWindow");
-//    win3.set_default_size(1024, 250);
-//    win3.set_border_width(5);
-//    win3.show_all();
-
 }
 
 MyWindow::~MyWindow()
