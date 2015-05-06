@@ -78,20 +78,16 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 // write into the top line for IC-7410
 	p = m_image->get_pixels();
 	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		double tmp = mysound1->audio_signal_ffted[i];
-
-//		if( ( (operating_mode == 0x03 || operating_mode == 0x00) && i > (WATERFALL_XSIZE/2) )
-//	     || ( (operating_mode == 0x07 || operating_mode == 0x01) && i < (WATERFALL_XSIZE/2) ) ) {
-//			tmp = 0.0;
-//		}
-//
-//		if (i == WATERFALL_XSIZE / 2) {
-//			tmp = 1.0;
-//		}
-
-		*p++ = colormap_r(tmp);
-		*p++ = colormap_g(tmp);
-		*p++ = colormap_b(tmp);
+		if(mysound1->bin_size * i < 3500.0) { /* less than 3.5kHz */
+			double tmp = mysound1->audio_signal_ffted[i];
+			*p++ = colormap_r(tmp);
+			*p++ = colormap_g(tmp);
+			*p++ = colormap_b(tmp);
+		} else {
+			*p++ = 255;
+			*p++ = 255;
+			*p++ = 255;
+		}
 	}
 	Gdk::Cairo::set_source_pixbuf(cr, m_image, WATERFALL_XOFFSET,
 	WATERFALL_YOFFSET);

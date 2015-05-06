@@ -164,10 +164,10 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->save();
 	cr->set_source_rgba(0.0, 0.0, 0.0, 1.0);
 	for (int i = 400; i <= 800; i += 200) {
-		cr->move_to(((WATERFALL_XSIZE / 2)) + (i / mysound1->bin_size), 230.0);
-		cr->line_to(((WATERFALL_XSIZE / 2)) + (i / mysound1->bin_size), 240.0);
-		cr->move_to(((WATERFALL_XSIZE / 2)) - (i / mysound1->bin_size), 230.0);
-		cr->line_to(((WATERFALL_XSIZE / 2)) - (i / mysound1->bin_size), 240.0);
+		cr->move_to( (i / mysound1->bin_size), 230.0);
+		cr->line_to( (i / mysound1->bin_size), 240.0);
+		cr->move_to( (i / mysound1->bin_size), 230.0);
+		cr->line_to( (i / mysound1->bin_size), 240.0);
 	}
 	cr->stroke();
 	cr->restore();

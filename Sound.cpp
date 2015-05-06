@@ -82,12 +82,18 @@ Sound::Sound(char *s, const char *r, const char *c) {
 
 	if (0) {
 	} else if (channels == 1) {
+		buffer_size = 64 * 1024;
+		period_size = 16 * 1024;
 		nfft = 8192;
 	} else if (channels == 2) {
+		buffer_size = 64 * 1024;
+		period_size =  4 * 1024;
 		nfft = 2048;
 	}
 
 	bin_size = rate / (double) nfft;
+	cout << "Sound::Sound: nfft = " << nfft << ", bin_size = " << bin_size << endl;
+
 	for (int i = 0; i < nfft; i++) {
 		fft_window[i] = 0.54 - 0.46 * cos(2.0 * M_PI * i / (double) nfft);
 	}
@@ -116,14 +122,19 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 		cout << "asound_async_callback: icount2 = " << icount2++ << endl;
 	}
 
-	snd_pcm_t *handle = snd_async_handler_get_pcm(ahandler);
+	snd_pcm_t    *handle  = snd_async_handler_get_pcm(ahandler);
 	signed short *samples = (signed short*) snd_async_handler_get_callback_private(ahandler);
 
-	cout << "asound_async_callback: samples     = " << samples << endl;
-
 	avail = snd_pcm_avail_update(handle);
-	cout << "asound_async_callback: avail       = " << avail << endl;
-	cout << "asound_async_callback: period_size = " << period_size << endl;
+	cout << "asound_async_callback: avail = " << avail << endl;
+
+	if (avail == -EPIPE) {    /* under-run */
+    		cout << "asound_asysnc_callback: underrun occured, trying to recover now .." << endl;
+            int err = snd_pcm_prepare(handle);
+            if (err < 0) {
+            	cout << "asound_asysnc_callback: can not recover from underrun: " << snd_strerror(err) << endl;
+            }
+	}
 
 	while (avail >= (snd_pcm_sframes_t) period_size) {
 		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
