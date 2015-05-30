@@ -11,12 +11,11 @@
 #include <cairo.h>
 #include <glibmm/main.h>
 using namespace std;
-extern Sound *mysound1;
-extern Sound *mysound2;
+extern Sound *mysound[];
 
 DrawingArea::DrawingArea() {
 	std::cout << "DrawingArea constructor is called." << std::endl;
-	set_size_request(1200, 240); /* width is dummy, determined by radiobuttons */
+	set_size_request(1200, 180); /* width is dummy, determined by radiobuttons */
 
 	Glib::signal_timeout().connect(
 			sigc::mem_fun(*this, &DrawingArea::on_timeout), 50);
@@ -72,12 +71,12 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->stroke();
 	cr->restore();
 
-	cr->save();
-	cr->set_source_rgba(0.2, 0.1, 0.6, 1.0);
-	cr->rectangle(0, 180, WATERFALL_XSIZE, rectangle_height);
-	cr->fill();
-	cr->stroke();
-	cr->restore();
+//	cr->save();
+//	cr->set_source_rgba(0.2, 0.1, 0.6, 1.0);
+//	cr->rectangle(0, 180, WATERFALL_XSIZE, rectangle_height);
+//	cr->fill();
+//	cr->stroke();
+//	cr->restore();
 
 // frequency display
 	cr->save();
@@ -109,10 +108,10 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->save();
 		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
 		cr->move_to(0.0,
-				mysound1->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
+				mysound[0]->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 60.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
 			cr->line_to(i,
-					mysound1->audio_signal[i] / 16384.0 * 24.0 + 25.0 + 60.0);
+					mysound[0]->audio_signal[i] / 16384.0 * 24.0 + 25.0 + 60.0);
 		}
 		cr->stroke();
 		cr->restore();
@@ -120,57 +119,57 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 // Waveform for Soft66LC4
 		cr->save();
 		cr->set_source_rgba(0.7, 0.9, 0.9, 1.0);
-		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 120.0);
+		cr->move_to(0.0, mysound[1]->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 120.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
-			cr->line_to(i, mysound2->audio_signal[2 * i] / 16384.0 * 24.0 + 25.0 + 120.0);
+			cr->line_to(i, mysound[1]->audio_signal[2 * i] / 16384.0 * 24.0 + 25.0 + 120.0);
 		}
 		cr->stroke();
 
 		cr->set_source_rgba(0.9, 0.2, 0.9, 1.0);
-		cr->move_to(0.0, mysound2->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 120.0);
+		cr->move_to(0.0, mysound[1]->audio_signal[0] / 16384.0 * 24.0 + 25.0 + 120.0);
 		for (int i = 0; i < WATERFALL_XSIZE; i++) {
 			cr->line_to(i,
-					mysound2->audio_signal[2 * i + 1] / 16384.0 * 24.0 + 25.0 + 120.0);
+					mysound[1]->audio_signal[2 * i + 1] / 16384.0 * 24.0 + 25.0 + 120.0);
 		}
 		cr->stroke();
 		cr->restore();
 
 // Spectrum for IC-7410
-	cr->save();
-	cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
-	cr->move_to(0.0,
-			40.0 * (1.0 - mysound1->audio_signal_ffted[0]) + 5.0
-					+ 180.0);
-	for (int i = 0; i < WATERFALL_XSIZE; i++) {
-		cr->line_to(i, 40.0 * (1.0 - mysound1->audio_signal_ffted[i]) + 5.0 + 180.0);
-	}
-	cr->stroke();
-	cr->restore();
+//	cr->save();
+//	cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
+//	cr->move_to(0.0,
+//			40.0 * (1.0 - mysound[0]->audio_signal_ffted[0]) + 5.0
+//					+ 180.0);
+//	for (int i = 0; i < WATERFALL_XSIZE; i++) {
+//		cr->line_to(i, 40.0 * (1.0 - mysound[0]->audio_signal_ffted[i]) + 5.0 + 180.0);
+//	}
+//	cr->stroke();
+//	cr->restore();
 
 // Spectrum for Soft66LC4
-		cr->save();
-		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
-		cr->move_to(0.0,
-				40.0 * (1.0 - mysound2->audio_signal_ffted[mysound2->nfft - (WINDOW_XSIZE / 2)]) + 5.0
-						+ 180.0);
-		for (int i = 0; i < WATERFALL_XSIZE; i++) {
-			int j = ((mysound2->nfft - (WATERFALL_XSIZE / 2)) + i) % mysound2->nfft;
-			cr->line_to(i, 40.0 * (1.0 - mysound2->audio_signal_ffted[j]) + 5.0 + 180.0);
-		}
-		cr->stroke();
-		cr->restore();
+//		cr->save();
+//		cr->set_source_rgba(0.9, 0.9, 0.2, 1.0);
+//		cr->move_to(0.0,
+//				40.0 * (1.0 - mysound2->audio_signal_ffted[mysound2->nfft - (WINDOW_XSIZE / 2)]) + 5.0
+//						+ 180.0);
+//		for (int i = 0; i < WATERFALL_XSIZE; i++) {
+//			int j = ((mysound2->nfft - (WATERFALL_XSIZE / 2)) + i) % mysound2->nfft;
+//			cr->line_to(i, 40.0 * (1.0 - mysound2->audio_signal_ffted[j]) + 5.0 + 180.0);
+//		}
+//		cr->stroke();
+//		cr->restore();
 
 // frequency marker
-	cr->save();
-	cr->set_source_rgba(0.0, 0.0, 0.0, 1.0);
-	for (int i = 400; i <= 800; i += 200) {
-		cr->move_to( (i / mysound1->bin_size), 230.0);
-		cr->line_to( (i / mysound1->bin_size), 240.0);
-		cr->move_to( (i / mysound1->bin_size), 230.0);
-		cr->line_to( (i / mysound1->bin_size), 240.0);
-	}
-	cr->stroke();
-	cr->restore();
+//	cr->save();
+//	cr->set_source_rgba(0.0, 0.0, 0.0, 1.0);
+//	for (int i = 400; i <= 800; i += 200) {
+//		cr->move_to( (i / mysound1->bin_size), 230.0);
+//		cr->line_to( (i / mysound1->bin_size), 240.0);
+//		cr->move_to( (i / mysound1->bin_size), 230.0);
+//		cr->line_to( (i / mysound1->bin_size), 240.0);
+//	}
+//	cr->stroke();
+//	cr->restore();
 
 	return true;
 }
@@ -178,11 +177,11 @@ bool DrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 bool DrawingArea::on_timeout() {
 	static int icountw = 0, icountv = 0;
 	cout << "DrawingArea::on_timeout(): icountw (all entry         ) = " << icountw++ << endl;
-	if (flag_togo1 == 0) {
-		return true;
-	}
-	flag_togo1 = 0;
-	cout << "DrawingArea::on_timeout(): icountv (only if flag_togo1) = " << icountv
+//	if (flag_togo3 == 0) { /* should check both flags */
+//		return true;
+//	}
+//	flag_togo3 = 0;
+	cout << "DrawingArea::on_timeout(): icountv (only if flag_togo3) = " << icountv
 		 << ", diff = " << icountw - icountv << endl;
 	icountv++;
 

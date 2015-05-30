@@ -26,7 +26,10 @@ class MyWindow:public Gtk::Dialog {
     RadioButtons mybuttons;
     Scales myscales;
     DrawingArea myarea;
-    Waterfall mywaterfall;
+public:
+    Waterfall  mywaterfall1;
+private:
+//    Waterfall2 mywaterfall2;
 };
 
 #endif				/* MYWINDOW_H_ */

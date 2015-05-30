@@ -7,7 +7,18 @@
 #include <iostream>
 #include <termios.h>
 #include <fcntl.h>
+#include <ctime>
 using namespace std;
+
+void cout_gettimeofday_diff(string myid, timeval t0, timeval t1) {
+	if (t1.tv_usec < t0.tv_usec) {
+		cout << myid << t1.tv_sec  - t0.tv_sec -1
+				              << "." << setfill('0') << setw(6) <<  1000000 + t1.tv_usec - t0.tv_usec << endl;
+	} else {
+		cout << myid << t1.tv_sec  - t0.tv_sec
+			                  << "." << setfill('0') << setw(6) <<            t1.tv_usec - t0.tv_usec << endl;
+	}
+}
 
 int rig_init_serial(char *serial_port)
 {
@@ -241,8 +252,8 @@ void set_freq(long int ifreq_in_hz)
 
 	char string[128];
 	sprintf(string, "/usr/local/bin/soft66-control -t %8d",  jfreq_in_hz);
-	cout << "main(): string = " << string << endl;
-	system(string);
+	cout << "set_freq(): right now nogo because xrun occures, string = " << string << endl;
+//	system(string);
 
 	static unsigned char command1[7] =
 	{ 0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfd };

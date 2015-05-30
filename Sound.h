@@ -8,8 +8,6 @@
 #ifndef SOUND_H_
 #define SOUND_H_
 
-#define NFFT 2048
-
 #include <fftw3.h>
 #include <asoundlib.h>
 #include <string>
@@ -17,13 +15,15 @@ using namespace std;
 
 class Sound {
 public:
-	Sound(char *, const char *, const char *);
+	Sound(char *, int);
 	virtual ~ Sound();
+	void asound_async_callback(snd_async_handler_t * ahandler); /* Note: pointer to a member function needs care. */
+	bool asound_myread();
+	void Sound_go();
+private:
 public:
-	int  asound_set_hwparams  (snd_pcm_t * handle, snd_pcm_hw_params_t * hwparams);
-	int  asound_set_swparams  (snd_pcm_t * handle, snd_pcm_sw_params_t * swparams);
-	int  asound_async_loop    (snd_pcm_t * handle, signed short *samples);
-	void asound_async_callback(snd_async_handler_t * ahandler);
+	int  asound_set_hwparams   (snd_pcm_t * handle, snd_pcm_hw_params_t * hwparams);
+	int  asound_set_swparams   (snd_pcm_t * handle, snd_pcm_sw_params_t * swparams);
 
 	snd_pcm_uframes_t   buffer_size;
 	snd_pcm_uframes_t   period_size;
@@ -34,30 +34,19 @@ public:
 	snd_pcm_sw_params_t *swparams;
 	snd_async_handler_t *ahandler;
 
-	char *sound_device;
+	char* sound_device;
 	unsigned int rate;
 	unsigned int channels;
 	int nsamples;
-	int byte_per_sample = 2;	/* 16 bit format */
-	int resample = 0;		/* disable resample */
-	int period_event = 0;	/* produce poll event after each period */
+	const int byte_per_sample = 2;	/* 16 bit format */
+	const int resample        = 0;	/* disable resample */
+	const int period_event    = 0;	/* produce poll event after each period */
 
-	int    nfft;
-	double bin_size;
-	signed short samples     [512000];
-	double audio_signal      [512000];
-	double audio_signal_ffted[512000];
-	double fft_window        [512000];
-	signed short audio_signal_max;
-	double dc0;
-	double dc1;
-	double amax, amin;
+//	signed short samples      [8192];
+//	double       audio_signal [8192];
+	signed short *samples;
+	double       *audio_signal;
 
-	fftw_complex *in, *out;
-	fftw_plan p;
-
-	int cw_pitch = 600;
-	int iwater = 0;
 };
 
 #endif				/* SOUND_H_ */
