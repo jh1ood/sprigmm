@@ -20,13 +20,12 @@ using namespace std;
 extern Sound *mysound[];
 extern struct timeval t0;
 
-void set_freq(long int ifreq_in_hz);
+void set_ic7410_freq(long int ifreq_in_hz);
 int colormap_r(double);
 int colormap_g(double);
 int colormap_b(double);
 
 Waterfall::Waterfall() {
-
 	std::cout << "Waterfall constructor is called." << std::endl;
 	string myid ="Waterfall::Waterfall: ";
 
@@ -38,24 +37,24 @@ Waterfall::Waterfall() {
 	nfft[0] = 4 * 1024; /* IC-7410 */
 	nfft[1] = 2 * 1024; /* Soft66LC4 */
 
-	for(int i=0;i<2;i++) {
-		bin_size[i] = (double) mysound[i]->rate / (double) nfft[i];
-		cout << myid << "i = " << i << ", nfft = " << nfft[i] << ", rate =" << mysound[i]->rate << ", bin_size = " << bin_size[i] << endl;
-		fft_window        [i] = new double [nfft[i]];
-		audio_signal_ffted[i] = new double [nfft[i]];
-		for (int j = 0; j < nfft[i]; j++) {
-			fft_window[i][j] = 0.54 - 0.46 * cos(2.0 * M_PI * j / (double) nfft[i]);
+	for(int sound_device=0;sound_device<2;sound_device++) {
+		bin_size[sound_device] = (double) mysound[sound_device]->rate / (double) nfft[sound_device];
+		cout << myid << "i = " << sound_device << ", nfft = " << nfft[sound_device] << ", rate =" << mysound[sound_device]->rate << ", bin_size = " << bin_size[sound_device] << endl;
+		fft_window        [sound_device] = new double [nfft[sound_device]];
+		audio_signal_ffted[sound_device] = new double [nfft[sound_device]];
+		for (int j = 0; j < nfft[sound_device]; j++) {
+			fft_window[sound_device][j] = 0.54 - 0.46 * cos(2.0 * M_PI * j / (double) nfft[sound_device]);
 		}
 		/* plan: FFTW_ESTIMATE, FFTW_MEASURE, FFTW_PATIENT, FFTW_EXHAUSTIVE */
 		if(0) {
-		} else if(i == 0) {
-			in_real = new double[nfft[i]];
-			out [i] = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * ( nfft[i]/2 + 1 )*2 );
-			plan[i] = fftw_plan_dft_r2c_1d(nfft[i], in_real, out[i], FFTW_MEASURE);
-		} else if(i == 1) {
-			in      = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft[i]);
-			out [i] = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft[i]);
-			plan[i] = fftw_plan_dft_1d    (nfft[i], in     , out[i], FFTW_FORWARD, FFTW_MEASURE);
+		} else if(sound_device == 0) {
+			in_real = new double[nfft[sound_device]];
+			out [sound_device] = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * ( nfft[sound_device]/2 + 1 )*2 );
+			plan[sound_device] = fftw_plan_dft_r2c_1d(nfft[sound_device], in_real, out[sound_device], FFTW_MEASURE);
+		} else if(sound_device == 1) {
+			in      = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft[sound_device]);
+			out [sound_device] = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft[sound_device]);
+			plan[sound_device] = fftw_plan_dft_1d    (nfft[sound_device], in     , out[sound_device], FFTW_FORWARD, FFTW_MEASURE);
 		}
 	}
 
@@ -97,7 +96,7 @@ Waterfall::Waterfall() {
 	}
 
 	cout << myid << "going to signal_timeout" << endl;
-	Glib::signal_timeout().connect(sigc::mem_fun(*this, &Waterfall::on_timeout), 160 );
+	Glib::signal_timeout().connect(sigc::mem_fun(*this, &Waterfall::on_timeout), 160 ); /**************/
 	cout << myid << "returned from signal_timeout" << endl;
 #ifndef GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
 	// actually, this ifndef part is not necessary.
@@ -212,7 +211,7 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			for (int j = 0; j < 5; j++) {
 				for (int i = 0; i < WATERFALL_XSIZE; i++) {
 					int tmp = 128 + 127 * ( ( (int) ( abs(i-WATERFALL_XSIZE/2) * bin_size[1] / 5000.0) ) % 2);
-					if( abs( (i-WATERFALL_XSIZE/2) * bin_size[1] + 7020000 - ifreq_in_hz) < 200.0) {
+					if( abs( (i-WATERFALL_XSIZE/2) * bin_size[1] + 7020000 - ic7410_freq_in_hz) < 200.0) {
 						tmp = 0;
 					}
 					*p++ = tmp;
@@ -228,6 +227,7 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->paint();
 	cr->stroke();
 
+	/* IC-7410 spectrum */
 	cr->save();
 	cr->set_source_rgba(0.2, 0.9, 0.9, 1.0);
 	cr->move_to  (0.0, 40.0 * (1.0 - audio_signal_ffted[0][0]) + 5.0 + 0.0);
@@ -237,11 +237,14 @@ bool Waterfall::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->stroke();
 	cr->restore();
 
-	int itone = cw_pitch / bin_size[0];
+	/* cw pitch marker */
 	cr->save();
 	cr->set_source_rgba(0.9, 0.9, 0.0, 0.8);
-	cr->move_to(itone, 50.0);
-	cr->line_to(itone, 40.0);
+	for(int ii=-1;ii<=+1;ii++) {
+		int itone = (cw_pitch + ii*100) / bin_size[0];
+		cr->move_to(itone, 50.0);
+		cr->line_to(itone, 40.0);
+	}
 	cr->stroke();
 	cr->restore();
 
@@ -292,18 +295,18 @@ bool Waterfall::on_button_press_event(GdkEventButton * event) {
 
 	if (y_press <= WATERFALL_YSIZE/2 + WATERFALL_ZSIZE) { /* IC-7410 area */
 		if(operating_mode == 3) { /* CW is LSB */
-			ifreq_in_hz -= x_press * bin_size[0] - cw_pitch;
+			ic7410_freq_in_hz -= x_press * bin_size[0] - cw_pitch;
 		} else if(operating_mode == 7) { /* CW-R is USB */
-			ifreq_in_hz += x_press * bin_size[0] - cw_pitch;
+			ic7410_freq_in_hz += x_press * bin_size[0] - cw_pitch;
 		} else {
 			;
 		}
-		set_freq(ifreq_in_hz);
+		set_ic7410_freq(ic7410_freq_in_hz);
 	}
 
 	if (y_press >= WATERFALL_YSIZE/2 + WATERFALL_ZSIZE) { /* Soft66LC4 area */
-		ifreq_in_hz = 7020000 + (x_press - (WATERFALL_XSIZE/2) ) * bin_size[1];
-		set_freq(ifreq_in_hz);
+		ic7410_freq_in_hz = 7020000 + (x_press - (WATERFALL_XSIZE/2) ) * bin_size[1];
+		set_ic7410_freq(ic7410_freq_in_hz);
 	}
 
 	return true;

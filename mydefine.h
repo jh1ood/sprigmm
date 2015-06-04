@@ -1,5 +1,5 @@
 /*
- * mydefine.h
+ * Mydefine.h
  *
  *  Created on: Apr 9, 2015
  *      Author: user1
@@ -15,8 +15,10 @@
 #define AREA1_XSIZE               99
 #define AREA1_YSIZE               50
 #define WATERFALL_XSIZE         2048
-#define WATERFALL_YSIZE          512
+#define WATERFALL0_XSIZE         480
+#define WATERFALL_YSIZE          256
 #define WATERFALL_ZSIZE           50
+#define WATERFALL_WSIZE           10
 #define WATERFALL_XOFFSET          0
 #define WATERFALL_YOFFSET          0
 #define WAVEFORM_LEN             128
@@ -40,17 +42,17 @@ extern int cw_pitch;
 extern int iwater;
 extern int nsamples;
 extern double amax, amin;
-extern int ifreq_in_hz;
-extern int jfreq_in_hz;
+extern int ic7410_freq_in_hz;
+extern int soft66_freq_in_hz;
 extern int s_meter;
 extern int operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
 extern int dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
-extern int flag_togo[3];	/* [0] is dummy */
 
 int send_command(unsigned char *partial_command);
 int receive_fb();
 void myfunc(int);
-void set_freq(long int ifreq_in_hz);
+int rig_init_serial(char *);
+void set_ic7410_freq(long int ifreq_in_hz);
 void myclock();
 int colormap_r(double);
 int colormap_g(double);

@@ -10,7 +10,10 @@
 #include "mydefine.h"
 #include "radiobuttons.h"
 #include "drawingarea.h"
+#include "DrawingArea0.h"
 #include "waterfall.h"
+#include "waterfall0.h"
+#include "waterfall1.h"
 #include "Scales.h"
 #include <gtkmm/window.h>
 #include <gtkmm/scrolledwindow.h>
@@ -22,12 +25,14 @@ class MyWindow:public Gtk::Dialog {
     virtual ~ MyWindow();
   private:
     Gtk::ScrolledWindow myscrolledwindow;
-    Gtk::Box mybox;
+    Gtk::Box     mybox0;
+    Gtk::Box     mybox1;
     RadioButtons mybuttons;
-    Scales myscales;
-    DrawingArea myarea;
-public:
-    Waterfall  mywaterfall1;
+    Scales       myscales;
+    DrawingArea  myarea;
+    DrawingArea0 myarea0;
+    Waterfall0   mywaterfall0;
+    Waterfall1   mywaterfall1;
 private:
 //    Waterfall2 mywaterfall2;
 };

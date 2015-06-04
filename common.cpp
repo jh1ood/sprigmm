@@ -224,35 +224,33 @@ struct async_private_data {
 	int dummy;
 };
 
-void set_freq(long int ifreq_in_hz)
+void set_ic7410_freq(long int ifreq_in_hz)
 {
-	//	fprintf(stderr, "freq set to %12.3f [kHz] \n",
-	//			(double) ifreq_in_hz / 1000.0);
 
-	if(0) {
-	} else if(ifreq_in_hz >= 7000000 && ifreq_in_hz <= 7200000) {
-		jfreq_in_hz = 7000000 + 20000;
-	} else if(ifreq_in_hz >= 10100000 && ifreq_in_hz <= 10150000) {
-		jfreq_in_hz = 10100000 + 20000;
-	} else if(ifreq_in_hz >= 14000000 && ifreq_in_hz <= 14350000) {
-		jfreq_in_hz = 14000000 + 20000;
-	} else if(ifreq_in_hz >= 18068000 && ifreq_in_hz <= 18168000) {
-		jfreq_in_hz = 18068000 + 20000;
-	} else if(ifreq_in_hz >= 21000000 && ifreq_in_hz <= 21450000) {
-		jfreq_in_hz = 21000000 + 20000;
-	} else if(ifreq_in_hz >= 24890000 && ifreq_in_hz <= 24990000) {
-		jfreq_in_hz = 24890000 + 20000;
-	} else if(ifreq_in_hz >= 28000000 && ifreq_in_hz <= 29700000) {
-		jfreq_in_hz = 28000000 + 20000;
-	} else if(ifreq_in_hz >= 50000000 && ifreq_in_hz <= 54000000) {
-		jfreq_in_hz = 54000000 + 20000;
-	}
-
-	cout << "set_freq(): ifreq_in_hz = " << ifreq_in_hz << ", jfreq_in_hz = " << jfreq_in_hz << endl;
-
-	char string[128];
-	sprintf(string, "/usr/local/bin/soft66-control -t %8d",  jfreq_in_hz);
-	cout << "set_freq(): right now nogo because xrun occures, string = " << string << endl;
+//	if(0) {
+//	} else if(ifreq_in_hz >= 7000000 && ifreq_in_hz <= 7200000) {
+//		jfreq_in_hz = 7000000 + 20000;
+//	} else if(ifreq_in_hz >= 10100000 && ifreq_in_hz <= 10150000) {
+//		jfreq_in_hz = 10100000 + 20000;
+//	} else if(ifreq_in_hz >= 14000000 && ifreq_in_hz <= 14350000) {
+//		jfreq_in_hz = 14000000 + 20000;
+//	} else if(ifreq_in_hz >= 18068000 && ifreq_in_hz <= 18168000) {
+//		jfreq_in_hz = 18068000 + 20000;
+//	} else if(ifreq_in_hz >= 21000000 && ifreq_in_hz <= 21450000) {
+//		jfreq_in_hz = 21000000 + 20000;
+//	} else if(ifreq_in_hz >= 24890000 && ifreq_in_hz <= 24990000) {
+//		jfreq_in_hz = 24890000 + 20000;
+//	} else if(ifreq_in_hz >= 28000000 && ifreq_in_hz <= 29700000) {
+//		jfreq_in_hz = 28000000 + 20000;
+//	} else if(ifreq_in_hz >= 50000000 && ifreq_in_hz <= 54000000) {
+//		jfreq_in_hz = 54000000 + 20000;
+//	}
+//
+//	cout << "set_freq(): ifreq_in_hz = " << ifreq_in_hz << ", jfreq_in_hz = " << jfreq_in_hz << endl;
+//
+//	char string[128];
+//	sprintf(string, "/usr/local/bin/soft66-control -t %8d",  jfreq_in_hz);
+//	cout << "set_freq(): right now nogo because xrun occures, string = " << string << endl;
 //	system(string);
 
 	static unsigned char command1[7] =
@@ -396,8 +394,8 @@ void myclock()
 		fprintf(stderr, "frequency response is wrong! \n");
 	}
 	sprintf(string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
-	ifreq_in_hz = atoi(string);
-	cout << "ifreq_in_hz = " << ifreq_in_hz << endl;
+	ic7410_freq_in_hz = atoi(string);
+	cout << "ifreq_in_hz = " << ic7410_freq_in_hz << endl;
 
 	/* S-meter response in char[6]-char[5] */
 

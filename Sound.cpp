@@ -17,7 +17,7 @@
 #include <iomanip>
 using namespace std;
 
-extern Sound *mysound[];
+//extern Sound *mysound[];
 extern struct timeval t0;
 
 void asound_async_callback0_wrapper(snd_async_handler_t * ahandler) {
@@ -163,8 +163,6 @@ void Sound::asound_async_callback(snd_async_handler_t * ahandler) {
 	} else if(channels == 2) {
 		myid = "Sound::asound_async_callback(2): ";
 	}
-
-//	flag_togo[channels] = 1;
 
 	cout << myid << "icount[" << channels << "] = " << icount[channels]++ << endl;
 
