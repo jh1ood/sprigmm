@@ -1,6 +1,7 @@
 #include "mydefine.h"
 #include "waterfall1.h"
 #include "Sound.h"
+#include "Usbsound.h"
 #include <cairomm/context.h>
 #include <gdkmm/general.h>	// set_source_pixbuf()
 #include <glibmm/fileutils.h>
@@ -17,7 +18,8 @@
 #include <ctime>
 
 using namespace std;
-extern Sound *mysound[];
+//extern Sound *mysound[];
+extern Usbsound *mysound[];
 extern struct timeval t0;
 
 void set_ic7410_freq(long int ifreq_in_hz);
@@ -78,7 +80,8 @@ Waterfall1::Waterfall1() {
 #endif				//GLIBMM_DEFAULT_SIGNAL_HANDLERS_ENABLED
 
 	add_events(	Gdk::BUTTON_PRESS_MASK );
-	mysound[1]->Sound_go(); /* start audio device */
+//	mysound[1]->Sound_go(); /* start audio device */
+	mysound[1]->Usbsound_go(); /* start audio device */
 
 	std::cout << "Waterfall1 constructor end.." << std::endl;
 

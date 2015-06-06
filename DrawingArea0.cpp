@@ -8,6 +8,7 @@
 #include "mydefine.h"
 #include "DrawingArea0.h"
 #include "Sound.h"
+#include "Usbsound.h"
 #include <cairomm/context.h>
 #include <gtkmm/drawingarea.h>
 #include <gdkmm/general.h>	// set_source_pixbuf()
@@ -26,7 +27,8 @@
 
 using namespace std;
 extern struct timeval t0;
-extern Sound *mysound[];
+//extern Sound *mysound[];
+extern Usbsound *mysound[];
 
 DrawingArea0::DrawingArea0() {
 	string myid ="DrawingArea0::DrawingArea0: ";

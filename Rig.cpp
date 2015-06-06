@@ -1,4 +1,7 @@
 #include "mydefine.h"
+#include "Usbsound.h"
+#include "Usbsoundmono.h"
+#include "Usbsoundiq.h"
 #include "radiobuttons.h"
 #include "drawingarea.h"
 #include "MyWindow.h"
@@ -25,11 +28,16 @@ int s_meter;
 int operating_mode = 3;		/* CW=03, CW-REV=07, LSB=00, USB=01 */
 int dsp_filter     = 1;		/* FIL1=01, FIL2=02, FIL3=03 */
 
-Sound  *mysound[2];	/* IC-7410, and Soft66LC4 */
+//Sound  *mysound[2];	/* IC-7410, and Soft66LC4 */
+Usbsound  *mysound[2];	/* IC-7410, and Soft66LC4 */
+//	Usbsound *test[2];
+
 struct timeval t0;
+
 
 int main(int argc, char *argv[])
 {
+
 	if (argc != 4) {
 		cout << "Usage example: " << argv[0] << " hw:2,0 hw:1,0 /dev/ttyUSB1" << endl;
 		cout << "Try % arecord -l, and % ls -l /dev/ttyUSB* for appropriate parameters." << endl;
@@ -39,8 +47,14 @@ int main(int argc, char *argv[])
 	gettimeofday(&t0, NULL);
 	cout << "main(): gettimeofday = " << t0.tv_sec << "." << setfill('0') << setw(6) <<  t0.tv_usec << endl;
 
-	mysound[0] = new Sound{argv[1], 1}; /* IC-7410   sound output */
-	mysound[1] = new Sound{argv[2], 2}; /* Soft66LC4 sound output */
+	mysound[0] = new Usbsound_mono{argv[1]};
+	mysound[1] = new Usbsound_iq  {argv[2]};
+//	mysound[0]->output();
+//	mysound[1]->output();
+
+//	mysound[0] = new Sound{argv[1], 1}; /* IC-7410   sound output */
+//	mysound[1] = new Sound{argv[2], 2}; /* Soft66LC4 sound output */
+
 	if( rig_init_serial(argv[3]) ) {	/* IC-7410 serial port for rig control */
 		cout << "main(): error in rig_init_serial(" << argv[3] << ")" << endl;
 		return 1;
