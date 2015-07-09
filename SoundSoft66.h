@@ -18,6 +18,7 @@ public:
 	SoundSoft66();
 	SoundSoft66(char* s);
 	int get_channels() const override { return 2; }
+	int asound_fftcopy() override;
 	virtual ~SoundSoft66();
 };
 

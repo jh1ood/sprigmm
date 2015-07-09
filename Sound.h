@@ -11,16 +11,16 @@
 #include "AlsaParams.h"
 #include <asoundlib.h>
 
-
 class Sound : public AlsaParams {
 public:
 	Sound();
 	virtual int get_channels() const = 0;
+	virtual int asound_fftcopy() = 0;
 	int asound_init();
 	int asound_go();
 	int asound_read();
-	int asound_set_hwparams   (snd_pcm_t * handle, snd_pcm_hw_params_t * hwparams);
-	int asound_set_swparams   (snd_pcm_t * handle, snd_pcm_sw_params_t * swparams);
+	int asound_set_hwparams();
+	int asound_set_swparams();
 	virtual ~Sound();
 private:
 	int count = 0;

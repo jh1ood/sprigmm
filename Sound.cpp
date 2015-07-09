@@ -14,7 +14,7 @@ Sound::Sound() {
 }
 
 Sound::~Sound() {
-	// TODO Auto-generated destructor stub
+	cout << "Sound::~Sound() begin.." << endl;
 }
 
 int Sound::asound_init() {
@@ -23,8 +23,7 @@ int Sound::asound_init() {
 	cout << "Sound::asound_init() begin.. \n"
 		 << "  channels = " << channels << endl;
 
-	samples            = new signed short[period_size * channels * 2];
-	audio_signal       = new double      [period_size * channels * 2];
+
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
 
@@ -33,12 +32,12 @@ int Sound::asound_init() {
 		exit(EXIT_FAILURE);
 	}
 
-	if ((err = asound_set_hwparams(handle, hwparams)) < 0) {
+	if ((err = asound_set_hwparams()) < 0) {
 		cout  << "setting of hwparams failed. " << snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
 
-	if ((err = asound_set_swparams(handle, swparams)) < 0) {
+	if ((err = asound_set_swparams()) < 0) {
 		cout  << "setting of swparams failed. " << snd_strerror(err) << endl;
 		exit(EXIT_FAILURE);
 	}
@@ -121,14 +120,14 @@ int Sound::asound_read() {
 	return loop_count;
 }
 
-int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params) {
+int Sound::asound_set_hwparams() {
 	unsigned int rrate;
 	int err;
 	cout << "Sound::asound_set_hwparams() begin... \n"
 	     << "  channels = " << channels << endl;
 
 	/* choose all parameters */
-	err = snd_pcm_hw_params_any(handle, params);
+	err = snd_pcm_hw_params_any(handle, hwparams);
 	if (err < 0) {
 		cout
 		<< "Sound::asound_set_hwparams: Broken configuration for playback: no configurations available."
@@ -137,7 +136,7 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	}
 
 	/* set hardware resampling disabled */
-	err = snd_pcm_hw_params_set_rate_resample(handle, params, resample);
+	err = snd_pcm_hw_params_set_rate_resample(handle, hwparams, resample);
 	if (err < 0) {
 		cout
 		<< "Sound::asound_set_hwparams: Resampling setup failed for playback."
@@ -146,7 +145,7 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	}
 
 	/* set the interleaved read/write format */
-	err = snd_pcm_hw_params_set_access(handle, params,
+	err = snd_pcm_hw_params_set_access(handle, hwparams,
 			SND_PCM_ACCESS_RW_INTERLEAVED);
 	if (err < 0) {
 		cout
@@ -156,7 +155,7 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	}
 
 	/* set the sample format */
-	err = snd_pcm_hw_params_set_format(handle, params, SND_PCM_FORMAT_S16);
+	err = snd_pcm_hw_params_set_format(handle, hwparams, SND_PCM_FORMAT_S16);
 
 	if (err < 0) {
 		cout
@@ -166,7 +165,7 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	}
 
 	/* set the count of channels */
-	err = snd_pcm_hw_params_set_channels(handle, params, channels);
+	err = snd_pcm_hw_params_set_channels(handle, hwparams, channels);
 	if (err < 0) {
 		cout << "Sound::asound_set_hwparams: channels = " << channels
 				<< " is not available." << snd_strerror(err)
@@ -176,7 +175,7 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 
 	/* set the stream rate */
 	rrate = rate;
-	err = snd_pcm_hw_params_set_rate_near(handle, params, &rrate, 0);
+	err = snd_pcm_hw_params_set_rate_near(handle, hwparams, &rrate, 0);
 	if (err < 0) {
 		cout << "Sound::asound_set_hwparams: Rate " << rate
 				<< " is not available for playbacks." << snd_strerror(err)
@@ -190,21 +189,21 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	}
 
 	/* set the buffer size */
-	err = snd_pcm_hw_params_set_buffer_size_near(handle, params, &buffer_size);
+	err = snd_pcm_hw_params_set_buffer_size_near(handle, hwparams, &buffer_size);
 	if (err < 0) {
 		cout << "Sound::asound_set_hwparams: buffer size error = " << err << endl;
 		return err;
 	}
 
 	/* set the period size */
-	snd_pcm_hw_params_set_period_size_near(handle, params, &period_size, NULL);
+	snd_pcm_hw_params_set_period_size_near(handle, hwparams, &period_size, NULL);
 	if (err < 0) {
 		cout << "Sound::asound_set_hwparams: period size error = " << err << endl;
 		return err;
 	}
 
 	/* write the parameters to device */
-	err = snd_pcm_hw_params(handle, params);
+	err = snd_pcm_hw_params(handle, hwparams);
 	if (err < 0) {
 		cout
 		<< "Sound::asound_set_hwparams: Unable to set hw params for playback: "
@@ -215,8 +214,7 @@ int Sound::asound_set_hwparams(snd_pcm_t * handle, snd_pcm_hw_params_t * params)
 	return 0;
 }
 
-int Sound::asound_set_swparams(snd_pcm_t * handle,
-		snd_pcm_sw_params_t * swparams) {
+int Sound::asound_set_swparams() {
 	int err;
 	cout << "Sound::asound_set_swparams() begin... \n"
 	     << "  channels = " << channels << endl;

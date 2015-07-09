@@ -16,6 +16,7 @@ public:
 	SoundIC7410();
 	SoundIC7410(char *s);
 	int get_channels() const override { return 1; }
+	int asound_fftcopy() override;
 	virtual ~SoundIC7410();
 };
 

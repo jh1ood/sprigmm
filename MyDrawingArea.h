@@ -23,10 +23,13 @@ public:
 private:
 	int count = 0;
 	int nch = 0;
-	int nsamples = 600;
-	int nfft = 800;
-	int ntime = 200;
+	int nsamples = 512;
+	int nfft = 1024;
+	int ntime = 128;
+	const int waterfall_x = 512;
+	const int waterfall_y = 128;
 	Sound* y = nullptr;
+	Glib::RefPtr < Gdk::Pixbuf > m_image;
 };
 
 #endif /* MYDRAWINGAREA_H_ */
