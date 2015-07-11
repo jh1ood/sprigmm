@@ -14,8 +14,14 @@
 class Sound : public AlsaParams {
 public:
 	Sound();
-	virtual int get_channels() const = 0;
-	virtual int asound_fftcopy() = 0;
+	virtual int get_channels   () const = 0;
+	virtual int get_nfft       () const = 0;
+	virtual int get_spectrum_x () const = 0;
+	virtual int get_spectrum_y () const = 0;
+	virtual int get_waterfall_x() const = 0;
+	virtual int get_waterfall_y() const = 0;
+	virtual int get_index(int, int, int) const = 0;
+	virtual int asound_fftcopy () = 0;
 	int asound_init();
 	int asound_go();
 	int asound_read();

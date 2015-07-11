@@ -23,7 +23,6 @@ int Sound::asound_init() {
 	cout << "Sound::asound_init() begin.. \n"
 		 << "  channels = " << channels << endl;
 
-
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
 
@@ -78,10 +77,10 @@ int Sound::asound_go() {
 
 int Sound::asound_read() {
 
-	cout << "Sound::asound_read(): count = " << count++ << ", channels = " << channels << endl;
+//	cout << "Sound::asound_read(): count = " << count++ << ", channels = " << channels << endl;
 
 	avail = snd_pcm_avail_update(handle);
-	cout << "Sound::asound_read(): " << "avail = " << avail << endl;
+//	cout << "Sound::asound_read(): " << "avail = " << avail << endl;
 
 	if (avail == -EPIPE) {    /* under-run */
 		cout << "Sound::asound_read(): " << "underrun occurred, trying to recover now .." << endl;
@@ -111,7 +110,6 @@ int Sound::asound_read() {
 		/* copy samples into audio_signal */
 		for (int i = 0; i < (int) (period_size * channels); i++) {
 			audio_signal[i] = samples[i];
-			if(i<5) cout << "Sound::asound_read(): audio_signal[" << i << "] = " << audio_signal[i] << endl;
 		}
 		avail = snd_pcm_avail_update(handle);
 		cout << "Sound::asound_read(): " << "in the while loop, avail = " << avail << endl;

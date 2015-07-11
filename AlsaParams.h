@@ -14,7 +14,6 @@
 struct AlsaParams  { // Advanced Linux Sound Architecture
 public:
 	double *audio_signal = nullptr;
-	double *audio_signal_ffted = nullptr;
 	double *in_real = nullptr;  /* for IC-7410 only */
 	fftw_complex *in; /* for Soft66LC4 only */
 	fftw_complex *out;
@@ -31,6 +30,10 @@ protected:
 	int nfft = 0;
 	double amax = 0.0;
 	double amin = 0.0;
+	int spectrum_x = 0;
+	int spectrum_y = 0;
+	int waterfall_x = 0;
+	int waterfall_y = 0;
 
 	snd_pcm_uframes_t   buffer_size = 0;
 	snd_pcm_uframes_t   period_size = 0;
