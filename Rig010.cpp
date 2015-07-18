@@ -1,7 +1,8 @@
 //============================================================================
-// Name        : Rig008.cpp
+// Name        : Rig010.cpp
 //============================================================================
 
+#include "Mydefine.h"
 #include "SoundIC7410.h"
 #include "SoundSoft66.h"
 #include "MyDrawingArea.h"
@@ -12,21 +13,19 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-	if (argc != 3) {
-		cout << "Usage example: " << argv[0] << " hw:2,0 hw:1,0 " << endl;
+
+	if (argc != 4) {
+		cout << "Usage example: " << argv[0] << " hw:2,0 hw:1,0 /dev/ttyUSB0" << endl;
 		return 1;
 	}
 
 	vector <Sound*> soundlist;
-	soundlist.push_back( new SoundIC7410{argv[1]} );
-	soundlist.push_back( new SoundSoft66{argv[2]} );
+	soundlist.push_back( new SoundIC7410{argv[1], argv[3]} );
+	soundlist.push_back( new SoundSoft66{argv[2], nullptr} ); /* no rig control yet */
 
 	argc = 1;			/* just for the next line */
 	Glib::RefPtr < Gtk::Application > app = Gtk::Application::create(argc, argv, "org.gtkmm.example");
-
 	MyWindow win(soundlist);
-	win.set_title("IC-7410 Rig Control Program (C++ version)");
-	win.show_all();
 	return app->run(win);
 
 }

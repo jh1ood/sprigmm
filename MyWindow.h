@@ -19,7 +19,7 @@ public:
 	virtual ~MyWindow();
 private:
   Gtk::ScrolledWindow myscrolledwindow;
-  Gtk::VBox    myvbox;
+  Gtk::VBox           myvbox;
 };
 
 #endif /* MYWINDOW_H_ */
