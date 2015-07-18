@@ -25,7 +25,7 @@ public:
 	int get_waterfall_x() const override { return       512; }
 	int get_waterfall_y() const override { return       150; }
 	int get_timervalue () const override { return       100; }
-	bool get_smeter    () const override { return      true; }
+	int get_smeter     ()       override;
 	int get_index(int i, int, int) const override { return i; }
 	int asound_fftcopy() override;
 	virtual ~SoundIC7410();

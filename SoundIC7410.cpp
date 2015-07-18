@@ -41,6 +41,28 @@ SoundIC7410::SoundIC7410(char* s, char* t) {
 	asound_init();
 }
 
+int SoundIC7410::get_smeter() {
+
+	static unsigned char command2[3] = { 0x15, 0x02, 0xfd };
+	char string[256];
+	unsigned char buf[255];
+	int res;
+
+	/* S-meter response in char[6]-char[5] */
+
+		send_command(command2);
+		res = myread(buf);
+
+		if (res != 9) {
+			fprintf(stderr, "S-meter response is wrong! \n");
+		}
+
+		sprintf(string, "%02x%02x", buf[6], buf[7]);
+		s_meter = atoi(string);
+
+		return s_meter;
+}
+
 int SoundIC7410::get_frequency  () {
 
 	/* freq response in char[8]-char[5] */

@@ -135,9 +135,9 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	}
 
 	int freq1 = s->get_frequency();
-	int freq2 = s->get_other_frequency();
-	cout << "freq1 = " << freq1 << ", freq2 = " << freq2 << endl;
-	cout << "ic7410_frequency = " << s->ic7410_frequency << ", soft66_frequency = " << s->soft66_frequency << endl;
+//	int freq2 = s->get_other_frequency();
+//	cout << "freq1 = " << freq1 << ", freq2 = " << freq2 << endl;
+//	cout << "ic7410_frequency = " << s->ic7410_frequency << ", soft66_frequency = " << s->soft66_frequency << endl;
 
 	/* frequency display */
 	cr->save();
@@ -150,7 +150,7 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	int text_height;
 
 	char string[128];
-	sprintf(string, "%9.3fkHz  %9.3fkHz", (double)freq1 / 1000.0, (double)freq2 / 1000.0);
+	sprintf(string, "%9.3fkHz", (double)freq1 / 1000.0);
 	Glib::RefPtr<Pango::Layout> layout = create_pango_layout(string);
 
 	layout->set_font_description(font);
@@ -162,21 +162,21 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->restore();
 
 	/* S meter */
-	//	if(s->get_smeter()) {
-	//		double s_frac = 2.0 * (double) s_meter / 255.0;
-	//		if (s_frac > 1.0) {
-	//			s_frac = 1.0;
-	//		}
-	//		cr->save();
-	//		cr->set_line_width(2);
-	//		cr->set_source_rgba(colormap_r(s_frac) / 255.0, colormap_g(s_frac) / 255.0,
-	//				colormap_b(s_frac), 1.0);	// partially translucent
-	//		cr->rectangle(1250, 5, count%256, waveform_y);
-	//		cr->fill_preserve();
-	//		cr->set_source_rgb(0.0, 0.0, 0.0);
-	//		cr->stroke();
-	//		cr->restore();
-	//	}
+		if(nch == 1) {
+			double s_frac = 2.0 * (double) s->get_smeter() / 255.0;
+			if (s_frac > 1.0) {
+				s_frac = 1.0;
+			}
+			cr->save();
+			cr->set_line_width(2);
+			cr->set_source_rgba(colormap_r(s_frac) / 255.0, colormap_g(s_frac) / 255.0,
+					colormap_b(s_frac), 1.0);	// partially translucent
+			cr->rectangle(1250, 5, s_frac*400, waveform_y);
+			cr->fill_preserve();
+			cr->set_source_rgb(0.0, 0.0, 0.0);
+			cr->stroke();
+			cr->restore();
+		}
 
 	/* waveform */
 	cr->save();

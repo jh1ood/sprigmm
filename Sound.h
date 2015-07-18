@@ -28,7 +28,7 @@ public:
 	virtual int  get_waterfall_y() const = 0;
 	virtual int  get_timervalue () const = 0;
 	virtual int  get_index(int, int, int) const = 0;
-	virtual bool get_smeter     () const = 0;
+	virtual int  get_smeter     ()       = 0;
 	virtual int  asound_fftcopy () = 0;
 	virtual int  get_frequency  () = 0;
 	virtual int  get_other_frequency() = 0;
