@@ -67,15 +67,6 @@ int Sound::asound_init() {
 		exit(EXIT_FAILURE);
 	}
 
-	return 0;
-}
-
-int Sound::asound_go() {
-
-	int err = 0;
-	cout << "Sound::asound_go() begin.. \n"
-		 << "  channels = " << channels << endl;
-
 	if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
 		if ((err = snd_pcm_start(handle)) < 0) {
 			cout << "Sound::asound_go(): pcm_start error: " << snd_strerror(err) << endl;

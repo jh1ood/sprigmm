@@ -218,6 +218,15 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->fill();
 	cr->stroke();
 
+	/* show CW pitch for IC-7410 waterfall */
+	if(nch == 1) {
+		cr->save();
+		cr->set_source_rgba(1.0, 1.0, 1.0, 0.8);
+		cr->rectangle(xspacing + s->cw_pitch / s->bin_size - 1, yspacing+(waveform_y+yspacing)*nch, 2, spectrum_y);
+		cr->fill();
+		cr->stroke();
+	}
+
 	/* show IC-7410 VFO on Soft66LC4 waterfall */
 	if(nch == 2) {
 		cr->save();
@@ -226,8 +235,6 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->fill();
 		cr->stroke();
 	}
-
-
 
 	/* spectrum draw, and waterfall put one line */
 	cr->set_source_rgba(0.9, 0.9, 0.1, 1.0);

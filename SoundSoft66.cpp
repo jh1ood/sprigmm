@@ -31,7 +31,6 @@ SoundSoft66::SoundSoft66(char* s, char*) { /* 2nd param dummy */
 	plan = fftw_plan_dft_1d    (nfft, in     , out, FFTW_FORWARD, FFTW_MEASURE);
 
 	asound_init();
-	asound_go();
 }
 
 int SoundSoft66::asound_fftcopy() {

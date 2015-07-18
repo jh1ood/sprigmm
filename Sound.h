@@ -38,7 +38,6 @@ public:
 	static void set_soft66_frequency(int i)  { soft66_frequency = i; }
 
 	int asound_init();
-	int asound_go();
 	int asound_read();
 	int asound_set_hwparams();
 	int asound_set_swparams();

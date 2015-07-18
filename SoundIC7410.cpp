@@ -31,16 +31,14 @@ SoundIC7410::SoundIC7410(char* s, char* t) {
 				<< ", buffer_size = " << buffer_size
 				<< ", period_size = " << period_size << endl;
 
-	samples            = new signed short[period_size * channels * 2];
-	audio_signal       = new double      [period_size * channels * 2];
-	in_real = new double[nfft];
-	out  = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * ( nfft/2 + 1 )*2 );
-	plan = fftw_plan_dft_r2c_1d(nfft, in_real, out, FFTW_MEASURE);
+	samples      = new signed short[period_size * channels * 2];
+	audio_signal = new double      [period_size * channels * 2];
+	in_real      = new double[nfft];
+	out          = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * ( nfft/2 + 1 )*2 );
+	plan         = fftw_plan_dft_r2c_1d(nfft, in_real, out, FFTW_MEASURE);
 
 	rig_init_serial(tty_device); /* currently for IC-7410 only */
-
 	asound_init();
-	asound_go();
 }
 
 int SoundIC7410::get_frequency  () {
