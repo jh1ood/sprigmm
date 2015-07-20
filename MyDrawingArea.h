@@ -12,9 +12,10 @@
 #include "Sound.h"
 #include "SoundIC7410.h"
 #include "SoundSoft66.h"
+#include "RigParams.h"
 #include <gtkmm.h>
 
-class MyDrawingArea : public Gtk::DrawingArea {
+class MyDrawingArea : public Gtk::DrawingArea, public RigParams {
 public:
 	MyDrawingArea(Sound*);
 	bool on_draw(const Cairo::RefPtr < Cairo::Context > &cr) override;
@@ -22,25 +23,27 @@ public:
 	bool on_timeout();
 	virtual ~MyDrawingArea();
 private:
-    double x_press;
+	Sound* s  {nullptr};
+	int nch         {0}; /* parameters that depend on Sound* */
+	int nfft        {0};
+	int spectrum_x  {0};
+	int spectrum_y  {0};
+	int waterfall_x {0};
+	int waterfall_y {0};
+
+	double x_press;      /* for on_button_press_event() */
     double y_press;
 
-	int count = 0;
-	int xspacing = 5;
-	int yspacing = 5;
-	int waveform_x = 800;
-	int waveform_y = 100;
-	int spectrum_x = 0;
-	int spectrum_y = 0;
-	int waterfall_x = 0;
-	int waterfall_y = 0;
-	int xoffset = waveform_x+20;
-	int nch = 0;
-	int nfft = 0;
-	Sound* s = nullptr;
+	int count      =   {0};
+	int xspacing   =   {5};
+	int yspacing   =   {5};
+	int waveform_x = {800};
+	int waveform_y = {100};
+	int xoffset    = {820}; /* waveform_x + 20 */
+
 	Glib::RefPtr < Gdk::Pixbuf > m_image;
-	guint8 *p = nullptr;
-	int rowstride = 0;
+	guint8 *p {nullptr};
+	int rowstride {0};
 };
 
 #endif /* MYDRAWINGAREA_H_ */

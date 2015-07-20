@@ -9,13 +9,14 @@
 #define MYWINDOW_H_
 
 #include "Sound.h"
+#include "Rig.h"
 #include <gtkmm.h>
 #include <vector>
 using namespace std;
 
 class MyWindow : public Gtk::Dialog {
 public:
-	MyWindow(vector <Sound*> &slist);
+	MyWindow(vector <Sound*> &slist, vector <Rig*> &rlist);
 	virtual ~MyWindow();
 private:
   Gtk::ScrolledWindow myscrolledwindow;
