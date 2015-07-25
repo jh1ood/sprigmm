@@ -15,9 +15,10 @@ SoundSoft66::SoundSoft66(char* s) {
 	period_size =  2 * 1024;
 	nfft = 2 * 1024;
 	bin_size = (double) rate / (double) nfft;
-	spectrum_x = 1600;
-	spectrum_y =   50;
-	waterfall_y = 200;
+	spectrum_x  = 1600;
+	spectrum_y  =  100;
+	waterfall_x = 1600;
+	waterfall_y =  100;
 	timervalue =  ( 1000.0 / ( (double)rate/(double)period_size) ) / 1.1;
 	timervalue = 100;
 

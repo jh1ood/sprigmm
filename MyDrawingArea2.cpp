@@ -27,6 +27,8 @@ MyDrawingArea2::MyDrawingArea2(Rig* rr) : r {rr} {
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingArea2::on_timeout), 100 );
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
+	cout << "MyDrawingArea2::MyDrawingArea2(): r = " << r << endl;
+
 }
 
 MyDrawingArea2::~MyDrawingArea2() {

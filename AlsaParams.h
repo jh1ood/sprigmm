@@ -23,7 +23,7 @@ public:
 
 	int    spectrum_x         {1200};
 	int    spectrum_y          { 50};
-	int   &waterfall_x  {spectrum_x};
+	int    waterfall_x        {1200};
 	int    waterfall_y         {200};
 	double bin_size            {0.0};
 	double amax                {9.0}; /* for psuedcolor */

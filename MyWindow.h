@@ -14,13 +14,14 @@
 #include <vector>
 using namespace std;
 
-class MyWindow : public Gtk::Dialog {
+class MyWindow : public Gtk::Window {
 public:
-	MyWindow(vector <Sound*> &slist, vector <Rig*> &rlist);
+//	MyWindow(const vector <Sound*> &slist, const vector <Rig*> &rlist);
+	MyWindow(char*, char*, char*);
 	virtual ~MyWindow();
 private:
-  Gtk::ScrolledWindow myscrolledwindow;
-  Gtk::VBox           myvbox;
+  Gtk::Window mywindow;
+  Gtk::VBox   myvbox;
 };
 
 #endif /* MYWINDOW_H_ */
