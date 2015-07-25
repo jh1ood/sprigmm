@@ -17,7 +17,6 @@ public:
 	void set_frequency(int) override { ; }
 	virtual ~RigSoft66();
 private:
-	int frequency {7020000};
 };
 
 #endif /* RIGSOFT66_H_ */

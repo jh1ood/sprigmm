@@ -27,7 +27,6 @@ public:
 	int mystrcmp(unsigned char*, unsigned char*);
 
 private:
-	int frequency {7026123};
 	int fd             {-1};
 	int cw_pitch      {600};
 	int s_meter         {0};

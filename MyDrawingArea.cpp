@@ -52,7 +52,7 @@ bool MyDrawingArea::on_button_press_event(GdkEventButton * event) {
 //	RigParams::frequency_to_set = s;
 //	RigParams::frequency_to_go  = true;
 
-	int freq;
+//	int freq;
 	switch (nch) {
 	case 1: /* IC-7410 */
 //		if(s->operating_mode == 3) { /* CW is LSB */
@@ -128,6 +128,8 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	double val  =  0.0;
 	int ixx = 0;
 
+	cr->save();
+	cr->set_source_rgba(0.9, 0.9, 0.1, 1.0);
 	for(int ix=0;ix<spectrum_x;ix++) {
 		ixx = s->get_index(ix, nfft, spectrum_x);
 		val = s->out[ixx][0] * s->out[ixx][0] + s->out[ixx][1] * s->out[ixx][1];

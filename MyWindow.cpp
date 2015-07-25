@@ -11,7 +11,7 @@
 
 MyWindow::MyWindow(vector <Sound*> &slist, vector <Rig*> &rlist) {
 	set_title("IC-7410 Rig Control Program (C++ version)");
-	set_size_request(1800, 900);
+	set_size_request(1800, 1000);
 	myscrolledwindow.set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_ALWAYS);
 	get_content_area()->pack_start(myscrolledwindow);
 

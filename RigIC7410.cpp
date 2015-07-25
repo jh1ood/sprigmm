@@ -138,6 +138,7 @@ int RigIC7410::get_frequency() {
 	sprintf(string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
 	frequency = atoi(string);
 	cout << "res = " << res << ", frequency = " << frequency << endl;
+	ic7410_frequency = frequency;
 
 	return frequency;
 }

@@ -38,7 +38,7 @@ private:
 	int xspacing   =   {5};
 	int yspacing   =   {5};
 	int waveform_x = {800};
-	int waveform_y = {100};
+	int waveform_y = { 50};
 	int xoffset    = {820}; /* waveform_x + 20 */
 
 	Glib::RefPtr < Gdk::Pixbuf > m_image;

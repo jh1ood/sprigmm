@@ -28,7 +28,7 @@ public:
 	double bin_size            {0.0};
 	double amax                {9.0}; /* for psuedcolor */
 	double amin                {1.0};
-	int    timervalue          {100}; /* on_timeout() */
+	int    timervalue          { 50}; /* on_timeout() */
 
 	snd_pcm_uframes_t   buffer_size          {0};
 	snd_pcm_uframes_t   period_size          {0};

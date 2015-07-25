@@ -10,9 +10,12 @@
 
 struct RigParams {
 public:
+	int frequency {7020123};
 	static int  frequency_to_set;
 	static bool frequency_to_go;
+	static int  ic7410_frequency;
 	static int  soft66_frequency;
+
 };
 
 #endif /* RIGPARAMS_H_ */

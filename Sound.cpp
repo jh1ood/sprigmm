@@ -58,16 +58,21 @@ int Sound::asound_init() {
 }
 
 int Sound::asound_read() {
+	static int count = 0;
 
 	avail = snd_pcm_avail_update(handle);
+	cout << "Sound::asound_read(): count = " << count++ << ", avail = " << avail << endl;
 
 	if (avail == -EPIPE) {    /* under-run */
-		cout << "Sound::asound_read(): underrun occurred, trying to recover now .." << endl;
+		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
 		int err = snd_pcm_recover(handle, -EPIPE, 0);
 		if (err < 0) {
-			cout << "Sound::asound_read(): can not recover from underrun: " << snd_strerror(err) << endl;
+			cout << "Sound::asound_read(): can not recover from -EPIPE error: " << snd_strerror(err) << endl;
 		}
-		return 0;
+		avail = snd_pcm_avail_update(handle);
+		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
+
+//		return 0;
 	}
 
 	int loop_count = 0;
