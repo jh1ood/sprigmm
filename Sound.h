@@ -17,11 +17,10 @@ using namespace std;
 
 class Sound : public AlsaParams {
 public:
-	Sound();
 	virtual ~Sound();
 
 	virtual int  get_index(int, int, int) const = 0;
-	virtual int  asound_fftcopy () = 0;
+	virtual int  asound_fftcopy ()              = 0;
 
 	int asound_init();
 	int asound_read();

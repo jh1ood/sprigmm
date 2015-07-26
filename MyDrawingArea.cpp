@@ -7,6 +7,7 @@
 
 #include "MyDrawingArea.h"
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 int colormap_r(double);
@@ -16,13 +17,17 @@ int colormap_b(double);
 MyDrawingArea::MyDrawingArea(Sound* ss) : s {ss} {
 	nch         = s->channels;
 	nfft        = s->nfft;
+	waveform_x  = s->waveform_x;
+	waveform_y  = s->waveform_y;
 	spectrum_x  = s->spectrum_x;
 	spectrum_y  = s->spectrum_y;
 	waterfall_x = s->waterfall_x;
 	waterfall_y = s->waterfall_y;
 
-	set_size_request(2*xspacing + max(max(waveform_x, spectrum_x), waterfall_x)
-			, 2*yspacing + nch * (waveform_y + yspacing) + spectrum_y + waterfall_y);
+	size_x = 2*xspacing + max(max(waveform_x, spectrum_x), waterfall_x);
+	size_y = 2*yspacing + nch * (waveform_y + yspacing) + spectrum_y + waterfall_y;
+	set_size_request(size_x, size_y);
+
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingArea::on_timeout), s->timervalue );
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
@@ -31,13 +36,14 @@ MyDrawingArea::MyDrawingArea(Sound* ss) : s {ss} {
 	p = m_image->get_pixels();
 	for (int j = 0; j < waterfall_y; j++) {
 		for (int i = 0; i < waterfall_x; i++) {
-			*p++ = 153;
+			*p++ =  53;
 			*p++ = 214;
 			*p++ = 173;
 		}
 	}
 
-	cout << "MyDrawingArea::MyDrawingArea(): s = " << s << ", nch = " << nch << endl;
+	cout << "MyDrawingArea::MyDrawingArea(): s = " << s << ", nch = " << nch
+		 <<	", size_x = " << size_x << ", sizy_y = " << size_y << endl;
 }
 
 MyDrawingArea::~MyDrawingArea() {
@@ -49,33 +55,40 @@ bool MyDrawingArea::on_button_press_event(GdkEventButton * event) {
 	x_press = event->x;
 	y_press = event->y;
 
-//	RigParams::frequency_to_set = s;
-//	RigParams::frequency_to_go  = true;
-
-//	int freq;
 	switch (nch) {
 	case 1: /* IC-7410 */
-//		if(s->operating_mode == 3) { /* CW is LSB */
-//			freq = AlsaParams::ic7410_frequency - ( (x_press - xspacing) * s->bin_size - s->cw_pitch );
-//		} else if(s->operating_mode == 7) { /* CW-R is USB */
-//			freq = AlsaParams::ic7410_frequency + ( (x_press - xspacing) * s->bin_size - s->cw_pitch );
-//		} else {
-//			;
-//		}
+		if(RigParams::operating_mode == 3) {        /* CW   is LSB */
+			RigParams::frequency_to_set = RigParams::ic7410_frequency - ( (x_press - xspacing) * s->bin_size - RigParams::cw_pitch );
+		} else if(RigParams::operating_mode == 7) { /* CW-R is USB */
+			RigParams::frequency_to_set = RigParams::ic7410_frequency + ( (x_press - xspacing) * s->bin_size - RigParams::cw_pitch );
+		} else {
+			return false;
+		}
 		break;
 	case 2: /* Soft66LC4 */
 		RigParams::frequency_to_set = RigParams::soft66_frequency + ( (x_press - xspacing) - (waterfall_x / 2) ) * s->bin_size;
-		RigParams::frequency_to_go  = true;
 		break;
 	default:
 		return false;
 	}
 
+	RigParams::frequency_to_go  = true;
 	return true;
 }
 
 bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
-	cout << "MyDrawingArea::on_draw(): count = " << count++ << ", nch = " << nch << endl;
+
+	double phase = (count++ % 360) / 360.0 * 2.0 * 3.141592;
+	cout << "MyDrawingArea::on_draw(): count = " << count << ", nch = " << nch
+			<< ", size_x = " << size_x << ", sizy_y = " << size_y << endl;
+
+	/* fill in the area */
+	cr->save();
+	cr->set_source_rgba(0.5+0.1*sin(phase), 0.5+0.1*cos(phase), 0.5, 1.0);
+	cr->rectangle(0, 0, size_x, size_y);
+	cr->fill();
+	cr->stroke();
+	cr->restore();
 
 	/* get sound, and fft */
 	s->asound_read();
@@ -121,17 +134,20 @@ bool MyDrawingArea::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cr->rectangle(xspacing, yspacing+(waveform_y+yspacing)*nch, spectrum_x, spectrum_y);
 	cr->fill();
 	cr->stroke();
+	cr->restore();
 
 	/* log10 and normalize */
 	double amax = 14.0;
 	double amin =  7.0;
 	double val  =  0.0;
-	int ixx = 0;
 
 	cr->save();
 	cr->set_source_rgba(0.9, 0.9, 0.1, 1.0);
 	for(int ix=0;ix<spectrum_x;ix++) {
-		ixx = s->get_index(ix, nfft, spectrum_x);
+		int ixx = s->get_index(ix, nfft, spectrum_x);
+				if(nch == 1 && RigParams::operating_mode == 3) { /* LSB */
+						ixx = (spectrum_x - 1) - ixx;
+				}
 		val = s->out[ixx][0] * s->out[ixx][0] + s->out[ixx][1] * s->out[ixx][1];
 		if (val < pow(10.0, amin)) {
 			val = 0.0;
@@ -163,11 +179,12 @@ bool MyDrawingArea::on_timeout() {
 
 	Glib::RefPtr<Gdk::Window> win = get_window();
 	if (win) {
-		Gdk::Rectangle rrr(0, 0, get_allocation().get_width(), get_allocation().get_height());
-		win->invalidate_rect(rrr, false);
+		Gdk::Rectangle rect(0, 0, get_allocation().get_width(), get_allocation().get_height());
+		win->invalidate_rect(rect, false);
 	}
 	cout << "MyDrawingArea ::on_timeout: win = " << win << ", width = " << get_allocation().get_width()
 			<< ", height = " << get_allocation().get_height() << endl;
+
 	return true;
 }
 

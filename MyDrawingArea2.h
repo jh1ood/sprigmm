@@ -21,6 +21,7 @@ public:
 	virtual ~MyDrawingArea2();
 private:
 	Rig* r  {nullptr};
+	int  count    {0};
 };
 
 #endif /* MYDRAWINGAREA2_H_ */

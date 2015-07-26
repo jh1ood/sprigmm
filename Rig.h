@@ -13,8 +13,10 @@
 class Rig : public RigParams {
 public:
 	Rig();
-	virtual int  get_frequency()    = 0;
-	virtual void set_frequency(int) = 0;
+	virtual int  get_frequency     ()    = 0;
+	virtual void set_frequency     (int) = 0;
+	virtual int  get_operating_mode()    = 0;
+	virtual void set_operating_mode(int) = 0;
 	virtual ~Rig();
 };
 

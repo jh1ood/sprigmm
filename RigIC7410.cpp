@@ -122,6 +122,24 @@ int RigIC7410::send_command(unsigned char *partial_command)
 	return true;
 }
 
+int RigIC7410::get_operating_mode() {
+	/* read operating mode, response in char[5]-char[6] */
+	static unsigned char command3[2] = { 0x04, 0xfd };
+	unsigned char buf[255];
+	int res;
+
+	send_command(command3);
+	res = myread(buf);
+	if (res != 8) {
+		fprintf(stderr, "operating mode response is wrong! \n");
+	}
+	operating_mode = buf[5];
+	dsp_filter     = buf[6];
+	cout << "myclock: operating_mode = " << operating_mode << ", dsp_filter = " << dsp_filter << endl;
+
+	return operating_mode;
+}
+
 int RigIC7410::get_frequency() {
 	/* freq response in char[8]-char[5] */
 

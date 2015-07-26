@@ -15,12 +15,14 @@ SoundIC7410::SoundIC7410(char* s) {
 	rate = 32000;
 	buffer_size = 32 * 1024;
 	period_size =  8 * 1024;
-	nfft = 4 * 1024;
+	nfft        =  8 * 1024;
 	bin_size = (double) rate / (double) nfft;
-	spectrum_x  =  400;
-	spectrum_y  =  100;
-	waterfall_x =  400;
-	waterfall_y =  100;
+	waveform_x   = 480;
+	waveform_y  =   50;
+	spectrum_x  =  480;
+	spectrum_y  =   60;
+	waterfall_x =  480;
+	waterfall_y =  120;
 	timervalue =  ( 1000.0 / ( (double)rate/(double)period_size) ) / 1.1;
 	timervalue = 100;
 
@@ -47,6 +49,10 @@ int SoundIC7410::asound_fftcopy() {
 	}
 	return 0;
 }
+
+//int SoundIC7410::get_index(const int i, const int, const int) const {
+//		return i;
+//}
 
 SoundIC7410::~SoundIC7410() {
 	cout << "SoundIC7410::~SoundIC7410() destructor.. \n";

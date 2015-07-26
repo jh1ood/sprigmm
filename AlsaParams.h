@@ -16,19 +16,21 @@ struct AlsaParams  {
 public:
 	int nfft                   {0};  /* for fftw3 */
 	double *audio_signal {nullptr};
-	double *in_real      {nullptr};  /* for IC-7410 only */
-	fftw_complex *in;                /* for Soft66LC4 only */
+	double *in_real      {nullptr};  /* IC-7410   */
+	fftw_complex *in;                /* Soft66LC4 */
 	fftw_complex *out;
 	fftw_plan     plan;
 
-	int    spectrum_x         {1200};
-	int    spectrum_y          { 50};
-	int    waterfall_x        {1200};
-	int    waterfall_y         {200};
-	double bin_size            {0.0};
-	double amax                {9.0}; /* for psuedcolor */
-	double amin                {1.0};
-	int    timervalue          { 50}; /* on_timeout() */
+	int    waveform_x        {0};
+	int    waveform_y        {0};
+	int    spectrum_x        {0};
+	int    spectrum_y        {0};
+	int    waterfall_x       {0};
+	int    waterfall_y       {0};
+	double bin_size        {0.0};
+	double amax            {9.0}; /* for psuedcolor */
+	double amin            {1.0};
+	int    timervalue      { 50}; /* on_timeout() */
 
 	snd_pcm_uframes_t   buffer_size          {0};
 	snd_pcm_uframes_t   period_size          {0};

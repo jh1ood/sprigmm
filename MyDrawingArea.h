@@ -34,16 +34,17 @@ private:
 	double x_press;      /* for on_button_press_event() */
     double y_press;
 
-	int count      =   {0};
-	int xspacing   =   {5};
-	int yspacing   =   {5};
-	int waveform_x = {800};
-	int waveform_y = { 50};
-	int xoffset    = {820}; /* waveform_x + 20 */
+	int count         {0};
+	int xspacing     {10};
+	int yspacing     {10};
+	int waveform_x    {0};
+	int waveform_y    {0};
+	int size_x      {  0};
+	int size_y      {  0};
 
 	Glib::RefPtr < Gdk::Pixbuf > m_image;
 	guint8 *p {nullptr};
-	int rowstride {0};
+	int rowstride    {0};
 };
 
 #endif /* MYDRAWINGAREA_H_ */

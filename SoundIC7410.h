@@ -14,7 +14,7 @@
 class SoundIC7410: public Sound {
 public:
 	SoundIC7410(char *s);
-	int get_index(const int i, const int, const int) const override { return i; }
+	int get_index (int i, int j, int k) const override { return i; }
 	int asound_fftcopy() override;
 	virtual ~SoundIC7410();
 private:
