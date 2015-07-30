@@ -6,11 +6,11 @@
  */
 
 #include "Sound.h"
-#include "Mydefine.h"
 #include <iostream>
 using namespace std;
 
 Sound::~Sound() {
+	cout << "Sound::~Sound() detructor.." << endl;
 }
 
 int Sound::asound_init() {

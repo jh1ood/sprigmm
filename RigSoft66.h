@@ -13,13 +13,13 @@
 class RigSoft66 : public Rig {
 public:
 	RigSoft66(char *s);
+	virtual ~RigSoft66();
 
 	int  get_frequency      ()    override { return frequency;}
 	void set_frequency      (int) override { ; }
 	int  get_operating_mode ()    override { return 0;}
 	void set_operating_mode(int) override { ; }
 
-	virtual ~RigSoft66();
 private:
 };
 

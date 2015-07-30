@@ -17,12 +17,10 @@ SoundIC7410::SoundIC7410(char* s) {
 	period_size =  8 * 1024;
 	nfft        =  8 * 1024;
 	bin_size = (double) rate / (double) nfft;
-	waveform_x   = 480;
-	waveform_y  =   50;
-	spectrum_x  =  480;
-	spectrum_y  =   60;
-	waterfall_x =  480;
-	waterfall_y =  120;
+	waveform_x   = 480; waveform_y  =   90;
+	spectrum_x  =  480;	spectrum_y  =   90;
+	waterfall_x =  480;	waterfall_y =   90;
+	density_x   =  480;	density_y   =   90;
 	timervalue =  ( 1000.0 / ( (double)rate/(double)period_size) ) / 1.1;
 	timervalue = 100;
 

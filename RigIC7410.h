@@ -16,8 +16,8 @@
 class RigIC7410 : public Rig {
 public:
 	RigIC7410(char*);
-
 	virtual ~RigIC7410();
+
 	int  get_frequency      ()    override;
 	void set_frequency      (int) override;
 	int  get_operating_mode ()    override;

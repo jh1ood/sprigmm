@@ -12,10 +12,12 @@ using namespace std;
 #define END_OF_COMMAND          0xfd
 
 RigIC7410::RigIC7410(char *s) {
+	nch = 1;
 	rig_init_serial(s);
 }
 
 RigIC7410::~RigIC7410() {
+	cout << "RigIC7410::~RigIC7410() destrctor.." << endl;
 }
 
 int RigIC7410::myread(unsigned char *myresponse)

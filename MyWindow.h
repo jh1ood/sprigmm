@@ -1,9 +1,7 @@
 /*
  * MyWindow.h
  *
- *  Created on: Jul 11, 2015
- *      Author: user1
- */
+ls - */
 
 #ifndef MYWINDOW_H_
 #define MYWINDOW_H_
@@ -16,8 +14,8 @@ using namespace std;
 
 class MyWindow : public Gtk::Window {
 public:
-//	MyWindow(const vector <Sound*> &slist, const vector <Rig*> &rlist);
-	MyWindow(char*, char*, char*);
+	MyWindow(const vector <Sound*> &slist, const vector <Rig*> &rlist);
+//	MyWindow(char*, char*, char*);
 	virtual ~MyWindow();
 private:
   Gtk::Window mywindow;

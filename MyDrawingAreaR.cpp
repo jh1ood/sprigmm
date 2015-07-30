@@ -1,11 +1,11 @@
 /*
- * MyDrawingArea2.cpp
+ * MyDrawingAreaR.cpp
  *
  *  Created on: Jul 20, 2015
  *      Author: user1
  */
 
-#include "MyDrawingArea2.h"
+#include "MyDrawingAreaR.h"
 
 #include <cmath>
 #include <iostream>
@@ -21,23 +21,34 @@ void g() {
 	system("/usr/local/bin/soft66-control -t 7025100");
 }
 
-MyDrawingArea2::MyDrawingArea2(Rig* rr) : r {rr} {
+MyDrawingAreaR::MyDrawingAreaR(Rig* rr) : r {rr} {
 
-	set_size_request(400, 60);
-	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingArea2::on_timeout), 100 );
+	set_size_request(530, 60);
+	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaR::on_timeout), 100 );
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
-	cout << "MyDrawingArea2::MyDrawingArea2(): r = " << r << endl;
+	cout << "MyDrawingAreaR::MyDrawingAreaR(): r = " << r << endl;
 
 }
 
-MyDrawingArea2::~MyDrawingArea2() {
+MyDrawingAreaR::~MyDrawingAreaR() {
+	cout << "MyDrawingAreaR::~MyDrawingAreaR() destructor.." << endl;
 }
 
-bool MyDrawingArea2::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
+bool MyDrawingAreaR::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	double phase = (count++ % 360) / 360.0 * 2.0 * 3.141592;
-	cout << "MyDrawingArea2::on_draw: count = " << count << endl;
+	cout << "MyDrawingAreaR::on_draw: count = " << count << endl;
+
+	/* paint whole widget */
+	{
+		cr->save();
+		cr->set_source_rgba(0.5+0.1*sin(phase), 0.5, 0.5+0.1*cos(phase), 1.0);
+		cr->rectangle(0, 0, 530, 60);
+		cr->fill();
+		cr->stroke();
+		cr->restore();
+	}
 
 	/* frequency display box */
 	{
@@ -50,6 +61,7 @@ bool MyDrawingArea2::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	}
 
 	/* frequency display */
+	{
 	cr->save();
 	Pango::FontDescription font;
 	font.set_family("Monospace");
@@ -63,7 +75,17 @@ bool MyDrawingArea2::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	r->get_operating_mode();
 
 	char string[128];
-	sprintf(string, "%9.3fkHz", (double) r->frequency / 1000.0);
+	if(r->nch == 1) {
+		if(RigParams::operating_mode == 3) {
+			sprintf(string, "%9.3fkHz LSB", (double) r->frequency / 1000.0);
+		} else {
+			sprintf(string, "%9.3fkHz USB", (double) r->frequency / 1000.0);
+		}
+	} else if(r->nch == 2) {
+		sprintf(string, "%9.3fkHz", (double) r->frequency / 1000.0);
+	}
+
+
 	Glib::RefPtr<Pango::Layout> layout = create_pango_layout(string);
 
 	layout->set_font_description(font);
@@ -73,6 +95,7 @@ bool MyDrawingArea2::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	layout->show_in_cairo_context(cr);
 	cr->stroke();
 	cr->restore();
+	}
 
 	/* check if waterfall clicked */
 	if(RigParams::frequency_to_go) {
@@ -83,7 +106,7 @@ bool MyDrawingArea2::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	return true;
 }
 
-bool MyDrawingArea2::on_timeout() {
+bool MyDrawingAreaR::on_timeout() {
 
 	Glib::RefPtr<Gdk::Window> win = get_window();
 	if (win) {
@@ -91,7 +114,7 @@ bool MyDrawingArea2::on_timeout() {
 		win->invalidate_rect(rect, false);
 	}
 
-	cout << "MyDrawingArea2::on_timeout: win = " << win << ", width = " << get_allocation().get_width()
+	cout << "MyDrawingAreaR::on_timeout: win = " << win << ", width = " << get_allocation().get_width()
 							<< ", height = " << get_allocation().get_height() << endl;
 	return true;
 }
