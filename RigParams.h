@@ -10,7 +10,7 @@
 
 struct RigParams {
 public:
-	int         frequency {7020123};
+	int         frequency {7020000};
 	int fd             {-1};
 	int s_meter         {0};
 	int nch             {0};

@@ -26,7 +26,8 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 	waterfall_y = s->waterfall_y;
 	density_x   = s->density_x;
 	density_y   = s->density_y;
-
+	amax        = s->amax;
+	amin        = s->amin;
 
 	size_x = 2*xspacing + max(max(waveform_x, spectrum_x), waterfall_x);
 	size_y = 2*yspacing + nch * (waveform_y + yspacing) + spectrum_y + waterfall_y   +   waterfall_y;
@@ -37,13 +38,12 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 
 	m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, waterfall_x, waterfall_y);
 	rowstride = m_image->get_rowstride();
-	p = m_image->get_pixels();
 
-	m_image2 = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, waterfall_x, waterfall_y);
+	m_image2 = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, density_x, density_y);
 	rowstride2 = m_image2->get_rowstride();
-	p2 = m_image2->get_pixels();
 
 	for (int j = 0; j < waterfall_y; j++) {
+		p = m_image->get_pixels() + j * rowstride;
 		for (int i = 0; i < waterfall_x; i++) {
 			*p++ = i%256;
 			*p++ =  0;
@@ -53,9 +53,10 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 
 	cout << "density_x = " << density_x << ", density_y = " << density_y << endl;
 	for (int j = 0; j < density_y; j++) {
+		p2 = m_image2->get_pixels() + j * rowstride2;
 		for (int i = 0; i < density_x; i++) {
 			*p2++ =  0;
-			*p2++ = j%256;
+			*p2++ = 128;
 			*p2++ =  0;
 		}
 	}
@@ -101,6 +102,16 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	cout << "MyDrawingAreaS::on_draw(): count = " << count << ", nch = " << nch
 			<< ", size_x = " << size_x << ", sizy_y = " << size_y << endl;
 
+	if(count % 100 == 0) {
+		cout << "MyDrawingAreaS::on_draw(): reseting vv. count = " << count << ", density_x = "
+				<< density_x << ", density_y = " << density_y << ", vvmax = " << vvmax << endl;
+		for (int j = 0; j < density_y; j++) {
+			for (int i = 0; i < density_x; i++) {
+				vv[j][i] = 0;
+			}
+		}
+		vvmax = 0;
+	}
 	/* fill in the area */
 	{
 		cr->save();
@@ -142,11 +153,12 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->restore();
 	}
 
+	cout << "rowstride = " << rowstride << ", waterfall_x = " << waterfall_x << ", waterfall_y = " << waterfall_y << endl;
 	/* waterfall shiftdown */
 	for (int i = waterfall_y - 1; i > 0 ; i--) {
 		p = m_image->get_pixels() + i * rowstride;
 		for (int j = 0; j < waterfall_x * 3; j++) {
-			*p = *(p - waterfall_x * 3);
+			*p = *(p - rowstride);
 			p++;
 		}
 	}
@@ -161,9 +173,22 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->restore();
 	}
 
+	/* show IC-7410 frequency */
+	{
+		if(nch == 2) {
+			cr->save();
+			cr->set_source_rgba(1.0, 1.0, 1.0, 0.2);
+			int xpos = spectrum_x/2 + (RigParams::ic7410_frequency - RigParams::soft66_frequency) / s->bin_size;
+			cr->rectangle(xspacing+xpos-10, yspacing+(waveform_y+yspacing)*nch, 20, spectrum_y);
+			cr->fill();
+			cr->stroke();
+			cr->restore();
+		}
+	}
+
 	/* log10 and normalize */
-	double amax = 16.0;
-	double amin =  7.0;
+//	double amax = 16.0;
+//	double amin =  7.0;
 	double val  =  0.0;
 	{
 		cr->save();
@@ -188,9 +213,7 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			*p++ = colormap_b(val);
 			cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*nch+spectrum_y - val*spectrum_y*0.9);
 
-			int iy = (1.0-val)*density_y*0.9 + density_y*0.1;
-			iy = max(            0, iy);
-			iy = min(density_y-1, iy);
+			int iy = (1.0-val)*density_y*0.9 + density_y*0.09; /* iy < density_y */
 			vv[iy][ix]++;
 			if(vv[iy][ix] > vvmax) {
 				vvmax = vv[iy][ix];
@@ -212,9 +235,8 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	}
 
 	/* density draw */
-	p2 = m_image2->get_pixels();
-
 	for (int j = 0; j < density_y; j++) {
+		p2 = m_image2->get_pixels() + j * rowstride2;
 		for (int i = 0; i < density_x; i++) {
 			double vvv = 2.0 * double (vv[j][i]) / double (vvmax);
 			if(vvv > 1.0)  vvv = 1.0;
@@ -244,7 +266,7 @@ bool MyDrawingAreaS::on_timeout() {
 		win->invalidate_rect(rect, false);
 	}
 	cout << "MyDrawingAreaS::on_timeout(): win = " << win << ", width = " << get_allocation().get_width()
-							<< ", height = " << get_allocation().get_height() << endl;
+											<< ", height = " << get_allocation().get_height() << endl;
 
 	return true;
 }

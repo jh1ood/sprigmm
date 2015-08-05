@@ -15,12 +15,14 @@ SoundSoft66::SoundSoft66(char* s) {
 	period_size =  2 * 1024;
 	nfft = 2 * 1024;
 	bin_size = (double) rate / (double) nfft;
-	waveform_x   = 500; waveform_y  =  40;
-	spectrum_x  = 1800;	spectrum_y  =  90;
-	waterfall_x = 1800;	waterfall_y =  90;
-	density_x   = 1800;	density_y   =  90;
+	waveform_x   = 900; waveform_y  =  40;
+	spectrum_x  = 1801;	spectrum_y  =  90;
+	waterfall_x = 1801;	waterfall_y =  90;
+	density_x   = 1801;	density_y   =  90;
 	timervalue =  ( 1000.0 / ( (double)rate/(double)period_size) ) / 1.1;
 	timervalue = 100;
+	amax = 12.0;
+	amin =  7.0;
 
 	cout << "SoundSoft66::SoundSoft66() begin.. \n"
 				<< "  sound_device = " << sound_device

@@ -32,6 +32,8 @@ private:
 	int waterfall_y {0};
 	int density_x   {0};
 	int density_y   {0};
+	double amax     {0.0};
+	double amin     {0.0};
 
 	double x_press;      /* for on_button_press_event() */
     double y_press;
@@ -44,7 +46,7 @@ private:
 	int size_x      {  0};
 	int size_y      {  0};
 
-	int vv[480][2048];
+	int vv[510][2048];
 	int vvmax       {0};
 
 	Glib::RefPtr < Gdk::Pixbuf > m_image;

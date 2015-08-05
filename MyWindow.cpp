@@ -12,9 +12,8 @@
 #include "MyDrawingAreaS.h"
 
 MyWindow::MyWindow(const vector <Sound*> &slist, const vector <Rig*> &rlist) {
-//MyWindow::MyWindow(char* c1, char* c2, char* c3) {
-	set_title("IC-7410 Rig Control Program (C++ version), build=123");
-	set_size_request(1610, 900);
+	set_title("IC-7410 Rig Control Program (C++ version), build=0801a");
+//	set_size_request(1610, 900);
 
 	int countr = 0;
 	for(auto r : rlist) {
