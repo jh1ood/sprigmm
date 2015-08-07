@@ -39,6 +39,8 @@ private:
     double y_press;
 
 	int count         {0};
+	int loop_count    {0};
+	int loop_count_sum {0};
 	int xspacing     {10};
 	int yspacing     {10};
 	int waveform_x    {0};

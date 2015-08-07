@@ -75,7 +75,7 @@ int Sound::asound_read() {
 	int loop_count = 0;
 	while (avail >= (snd_pcm_sframes_t) period_size) {
 		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
-		cout << "Sound::asound_read(): loop_count = " << loop_count++ << ", frames_actually_read = " << frames_actually_read << endl;
+		cout << "Sound::asound_read(): loop_count = " << ++loop_count << ", frames_actually_read = " << frames_actually_read << endl;
 
 		if (frames_actually_read < 0) {
 			cout << "Sound::asound_read(): snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
@@ -95,8 +95,54 @@ int Sound::asound_read() {
 		cout << "Sound::asound_read(): " << "in the while loop, avail = " << avail << endl;
 	}
 
+	cout << "Sound::asound_read(): returning with loop_count = " << loop_count << endl;
 	return loop_count;
 }
+
+//int Sound::asound_read() {
+//	static int count = 0;
+//
+//	avail = snd_pcm_avail_update(handle);
+//	cout << "Sound::asound_read(): count = " << count++ << ", avail = " << avail << endl;
+//
+//	if (avail == -EPIPE) {    /* under-run */
+//		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
+//		int err = snd_pcm_recover(handle, -EPIPE, 0);
+//		if (err < 0) {
+//			cout << "Sound::asound_read(): can not recover from -EPIPE error: " << snd_strerror(err) << endl;
+//		}
+//		avail = snd_pcm_avail_update(handle);
+//		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
+//
+////		return 0;
+//	}
+//
+//	int loop_count = 0;
+//	while (avail >= (snd_pcm_sframes_t) period_size) {
+//		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
+//		cout << "Sound::asound_read(): loop_count = " << ++loop_count << ", frames_actually_read = " << frames_actually_read << endl;
+//
+//		if (frames_actually_read < 0) {
+//			cout << "Sound::asound_read(): snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
+//			exit(EXIT_FAILURE);
+//		}
+//		if (frames_actually_read != (int) period_size) {
+//			cout << "Sound::asound_read(): frames_actually_read (" << frames_actually_read
+//					<< ") does not match the period_size (" << period_size << endl;
+//			exit(EXIT_FAILURE);
+//		}
+//
+//		/* copy samples into audio_signal */
+//		for (int i = 0; i < (int) (period_size * channels); i++) {
+//			audio_signal[i] = samples[i];
+//		}
+//		avail = snd_pcm_avail_update(handle);
+//		cout << "Sound::asound_read(): " << "in the while loop, avail = " << avail << endl;
+//	}
+//
+//	cout << "Sound::asound_read(): returning with loop_count = " << loop_count << endl;
+//	return loop_count;
+//}
 
 int Sound::asound_set_hwparams() {
 	unsigned int rrate;

@@ -9,6 +9,7 @@
 #define ALSAPARAMS_H_
 
 #include <asoundlib.h>
+#include <cmath>
 #include <fftw3.h>
 
 struct AlsaParams  {
@@ -16,6 +17,7 @@ struct AlsaParams  {
 public:
 	int nfft                   {0};  /* for fftw3 */
 	double *audio_signal {nullptr};
+	double *audio_window {nullptr};
 	double *in_real      {nullptr};  /* IC-7410   */
 	fftw_complex *in;                /* Soft66LC4 */
 	fftw_complex *out;

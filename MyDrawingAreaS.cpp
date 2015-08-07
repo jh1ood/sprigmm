@@ -100,9 +100,10 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	double phase = (count++ % 360) / 360.0 * 2.0 * 3.141592;
 	cout << "MyDrawingAreaS::on_draw(): count = " << count << ", nch = " << nch
+			<< ", loop_count = " << loop_count << ", loop_count_sum = " << loop_count_sum
 			<< ", size_x = " << size_x << ", sizy_y = " << size_y << endl;
 
-	if(count % 100 == 0) {
+	if(count % 1000 == 0) {
 		cout << "MyDrawingAreaS::on_draw(): reseting vv. count = " << count << ", density_x = "
 				<< density_x << ", density_y = " << density_y << ", vvmax = " << vvmax << endl;
 		for (int j = 0; j < density_y; j++) {
@@ -122,10 +123,13 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->restore();
 	}
 
+
 	/* get sound, and fft */
-	s->asound_read();
-	s->asound_fftcopy();
-	fftw_execute(s->plan);
+	if( (loop_count = s->asound_read()) ) {
+		loop_count_sum += loop_count;
+		s->asound_fftcopy();
+		fftw_execute(s->plan);
+	}
 
 	/* waveform */
 	{
@@ -154,12 +158,15 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	}
 
 	cout << "rowstride = " << rowstride << ", waterfall_x = " << waterfall_x << ", waterfall_y = " << waterfall_y << endl;
+
 	/* waterfall shiftdown */
-	for (int i = waterfall_y - 1; i > 0 ; i--) {
-		p = m_image->get_pixels() + i * rowstride;
-		for (int j = 0; j < waterfall_x * 3; j++) {
-			*p = *(p - rowstride);
-			p++;
+	if(loop_count) {
+		for (int i = waterfall_y - 1; i > 0 ; i--) {
+			p = m_image->get_pixels() + i * rowstride;
+			for (int j = 0; j < waterfall_x * 3; j++) {
+				*p = *(p - rowstride);
+				p++;
+			}
 		}
 	}
 
@@ -187,8 +194,8 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	}
 
 	/* log10 and normalize */
-//	double amax = 16.0;
-//	double amin =  7.0;
+	//	double amax = 16.0;
+	//	double amin =  7.0;
 	double val  =  0.0;
 	{
 		cr->save();
@@ -213,9 +220,9 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			*p++ = colormap_b(val);
 			cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*nch+spectrum_y - val*spectrum_y*0.9);
 
-			int iy = (1.0-val)*density_y*0.9 + density_y*0.09; /* iy < density_y */
+			int iy = max(0, min(density_y-1, (int) ((1.0-val)*density_y*0.9 + density_y*0.1) ));
 			vv[iy][ix]++;
-			if(vv[iy][ix] > vvmax) {
+			if( (iy != density_y-1) && (vv[iy][ix] > vvmax) ) { /* no count for val = 0.0 */
 				vvmax = vv[iy][ix];
 				cout << "vvmax = " << vvmax << ", at ix= " << ix << ", iy= " << iy << endl;
 			}
@@ -253,7 +260,6 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->stroke();
 		cr->restore();
 	}
-
 	return true;
 }
 
@@ -266,7 +272,7 @@ bool MyDrawingAreaS::on_timeout() {
 		win->invalidate_rect(rect, false);
 	}
 	cout << "MyDrawingAreaS::on_timeout(): win = " << win << ", width = " << get_allocation().get_width()
-											<< ", height = " << get_allocation().get_height() << endl;
+																	<< ", height = " << get_allocation().get_height() << endl;
 
 	return true;
 }

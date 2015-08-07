@@ -11,6 +11,7 @@
 #include "MyDrawingAreaS.h"
 #include <vector>
 #include <iostream>
+#include <chrono>
 #include <stdlib.h>
 #include <stdio.h>
 #include <gtkmm.h>
@@ -26,6 +27,8 @@ int main(int argc, char *argv[]) {
 	if(system(NULL)) {
 		system("/usr/local/bin/soft66-control -t 7020000");
 	}
+
+	auto start = chrono::system_clock::now();
 
 	vector <Sound*> slist;
 	SoundIC7410 s1{argv[1]};
@@ -66,5 +69,8 @@ int main(int argc, char *argv[]) {
 //	win.add(myvbox);
 //	win.show_all();
 
+	auto end = chrono::system_clock::now();
+	auto diff = end - start;
+	cout << "elapsed time = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count() << " msec." << endl;
 	return app->run(win);
 }
