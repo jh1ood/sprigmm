@@ -40,7 +40,6 @@ private:
 
 	int count         {0};
 	int loop_count    {0};
-	int loop_count_sum {0};
 	int xspacing     {10};
 	int yspacing     {10};
 	int waveform_x    {0};
@@ -48,6 +47,7 @@ private:
 	int size_x      {  0};
 	int size_y      {  0};
 
+	double val_line[2048];
 	int vv[510][2048];
 	int vvmax       {0};
 

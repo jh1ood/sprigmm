@@ -12,7 +12,7 @@
 #include "MyDrawingAreaS.h"
 
 MyWindow::MyWindow(const vector <Sound*> &slist, const vector <Rig*> &rlist) {
-	set_title("IC-7410 Rig Control Program (C++ version), build=0801a");
+	set_title("IC-7410 Rig Control Program (C++ version), build=0811a");
 //	set_size_request(1610, 900);
 
 	int countr = 0;

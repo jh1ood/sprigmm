@@ -7,10 +7,11 @@
 
 #include "Sound.h"
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 Sound::~Sound() {
-	cout << "Sound::~Sound() detructor.." << endl;
+	cout << "Sound::~Sound() destructor.." << endl;
 }
 
 int Sound::asound_init() {
@@ -55,7 +56,11 @@ int Sound::asound_init() {
 }
 
 int Sound::asound_read() {
-	static int count = 0;
+	static int    count  =   0;
+	static double phase1 = 0.0;
+	static double phase2 = 0.0;
+	static double phase3 = 0.0;
+	static double phase4 = 0.0;
 
 	avail = snd_pcm_avail_update(handle);
 	cout << "Sound::asound_read(): count = " << count++ << ", avail = " << avail << endl;
@@ -68,8 +73,7 @@ int Sound::asound_read() {
 		}
 		avail = snd_pcm_avail_update(handle);
 		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
-
-//		return 0;
+		return 0;
 	}
 
 	int loop_count = 0;
@@ -88,67 +92,31 @@ int Sound::asound_read() {
 		}
 
 		/* copy samples into audio_signal */
+
+		//		for (int i = 0; i < (int) (period_size * channels); i++) {
+		//			audio_signal[i] = samples[i];
+		//		}
+
 		for (int i = 0; i < (int) (period_size * channels); i++) {
-			audio_signal[i] = samples[i];
+			*signal_end++ = samples[i];
+//			*signal_end++ = 16384.0 * ( sin(phase1) + 0.0*sin(phase2+0.1234) + 0.0*sin(phase3+0.5678) + 0.0*sin(phase4+0.101) );
+//			phase1 += 0.3; phase2 += 0.05; phase3 += 0.13; phase4 += 0.15;
 		}
+
 		avail = snd_pcm_avail_update(handle);
 		cout << "Sound::asound_read(): " << "in the while loop, avail = " << avail << endl;
 	}
 
-	cout << "Sound::asound_read(): returning with loop_count = " << loop_count << endl;
+	cout << "Sound::asound_read(): returning with loop_count = " << loop_count << ", period_size = " << period_size
+			<< ", channels = " << channels << endl;
 	return loop_count;
 }
-
-//int Sound::asound_read() {
-//	static int count = 0;
-//
-//	avail = snd_pcm_avail_update(handle);
-//	cout << "Sound::asound_read(): count = " << count++ << ", avail = " << avail << endl;
-//
-//	if (avail == -EPIPE) {    /* under-run */
-//		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
-//		int err = snd_pcm_recover(handle, -EPIPE, 0);
-//		if (err < 0) {
-//			cout << "Sound::asound_read(): can not recover from -EPIPE error: " << snd_strerror(err) << endl;
-//		}
-//		avail = snd_pcm_avail_update(handle);
-//		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
-//
-////		return 0;
-//	}
-//
-//	int loop_count = 0;
-//	while (avail >= (snd_pcm_sframes_t) period_size) {
-//		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
-//		cout << "Sound::asound_read(): loop_count = " << ++loop_count << ", frames_actually_read = " << frames_actually_read << endl;
-//
-//		if (frames_actually_read < 0) {
-//			cout << "Sound::asound_read(): snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
-//			exit(EXIT_FAILURE);
-//		}
-//		if (frames_actually_read != (int) period_size) {
-//			cout << "Sound::asound_read(): frames_actually_read (" << frames_actually_read
-//					<< ") does not match the period_size (" << period_size << endl;
-//			exit(EXIT_FAILURE);
-//		}
-//
-//		/* copy samples into audio_signal */
-//		for (int i = 0; i < (int) (period_size * channels); i++) {
-//			audio_signal[i] = samples[i];
-//		}
-//		avail = snd_pcm_avail_update(handle);
-//		cout << "Sound::asound_read(): " << "in the while loop, avail = " << avail << endl;
-//	}
-//
-//	cout << "Sound::asound_read(): returning with loop_count = " << loop_count << endl;
-//	return loop_count;
-//}
 
 int Sound::asound_set_hwparams() {
 	unsigned int rrate;
 	int err;
 	cout << "Sound::asound_set_hwparams() begin... \n"
-	     << "  channels = " << channels << endl;
+			<< "  channels = " << channels << endl;
 
 	/* choose all parameters */
 	err = snd_pcm_hw_params_any(handle, hwparams);
@@ -241,7 +209,7 @@ int Sound::asound_set_hwparams() {
 int Sound::asound_set_swparams() {
 	int err;
 	cout << "Sound::asound_set_swparams() begin... \n"
-	     << "  channels = " << channels << endl;
+			<< "  channels = " << channels << endl;
 
 	/* get the current swparams */
 	err = snd_pcm_sw_params_current(handle, swparams);

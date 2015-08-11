@@ -23,7 +23,7 @@ void g() {
 
 MyDrawingAreaR::MyDrawingAreaR(Rig* rr) : r {rr} {
 
-	set_size_request(530, 60);
+	set_size_request(512, 60);
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaR::on_timeout), 100 );
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 

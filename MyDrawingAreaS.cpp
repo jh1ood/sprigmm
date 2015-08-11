@@ -16,6 +16,8 @@ int colormap_g(double);
 int colormap_b(double);
 
 MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
+	start = chrono::system_clock::now();
+	current_b4 = start;
 	nch         = s->channels;
 	nfft        = s->nfft;
 	waveform_x  = s->waveform_x;
@@ -33,7 +35,7 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 	size_y = 2*yspacing + nch * (waveform_y + yspacing) + spectrum_y + waterfall_y   +   waterfall_y;
 	set_size_request(size_x, size_y);
 
-	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout), s->timervalue );
+	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout), s->timer_value );
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
 	m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, waterfall_x, waterfall_y);
@@ -97,15 +99,14 @@ bool MyDrawingAreaS::on_button_press_event(GdkEventButton * event) {
 }
 
 bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
+	//	current = chrono::system_clock::now();
+	//	auto diff1 = current - start;
+	//	auto diff2 = current - current_b4;
+	//	current_b4 = current;
+	//	cout << "MyDrawingAreaS::on_draw(): elapsed time = " << chrono::duration_cast<std::chrono::milliseconds>(diff1).count() << " msec (delta = "
+	//			<< chrono::duration_cast<std::chrono::milliseconds>(diff2).count() << " msec),  count = " << count << ", nch = " << nch << endl;
 
-	double phase = (count++ % 360) / 360.0 * 2.0 * 3.141592;
-	cout << "MyDrawingAreaS::on_draw(): count = " << count << ", nch = " << nch
-			<< ", loop_count = " << loop_count << ", loop_count_sum = " << loop_count_sum
-			<< ", size_x = " << size_x << ", sizy_y = " << size_y << endl;
-
-	if(count % 1000 == 0) {
-		cout << "MyDrawingAreaS::on_draw(): reseting vv. count = " << count << ", density_x = "
-				<< density_x << ", density_y = " << density_y << ", vvmax = " << vvmax << endl;
+	if(count % 500 == 0) {
 		for (int j = 0; j < density_y; j++) {
 			for (int i = 0; i < density_x; i++) {
 				vv[j][i] = 0;
@@ -113,25 +114,90 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		}
 		vvmax = 0;
 	}
-	/* fill in the area */
+
+	/* fill in the whole area */
 	{
 		cr->save();
-		cr->set_source_rgba(0.5+0.1*sin(phase), 0.5+0.1*cos(phase), 0.5, 1.0);
+		double color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
+		cr->set_source_rgba(0.5+0.1*sin(color_phase), 0.5+0.1*cos(color_phase), 0.5, 1.0);
 		cr->rectangle(0, 0, size_x, size_y);
 		cr->fill();
 		cr->stroke();
 		cr->restore();
 	}
 
+	/* get sound samples, and repeat while there is enough data for fft */
 
-	/* get sound, and fft */
-	if( (loop_count = s->asound_read()) ) {
-		loop_count_sum += loop_count;
-		s->asound_fftcopy();
-		fftw_execute(s->plan);
+	loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
+
+	if(loop_count) {
+		while(s->signal_end - s->signal_start >= nfft) {
+			s->asound_fftcopy();
+			fftw_execute(s->plan);
+
+			/* waterfall shiftdown */
+			if(loop_count) {
+				for (int i = waterfall_y - 1; i > 0 ; i--) {
+					p = m_image->get_pixels() + i * rowstride;
+					for (int j = 0; j < waterfall_x * 3; j++) {
+						*p = *(p - rowstride);
+						p++;
+					}
+				}
+			}
+
+			/* log10 and normalize */
+			double val  =  0.0;
+			{
+				p = m_image->get_pixels();
+
+				for(int ix=0;ix<spectrum_x;ix++) {
+					int ixx = s->get_index(ix, nfft, spectrum_x);
+					if(nch == 1 && RigParams::operating_mode == 3) { /* LSB */
+						ixx = (spectrum_x - 1) - ixx;
+					}
+					val = s->out[ixx][0] * s->out[ixx][0] + s->out[ixx][1] * s->out[ixx][1];
+					if (val < pow(10.0, amin)) {
+						val = 0.0;
+					} else if (val > pow(10.0, amax)) {
+						val = 1.0;
+					} else {
+						val = (log10(val) - amin) / (amax - amin);
+					}
+					val_line[ix] = val;
+
+					*p++ = colormap_r(val);
+					*p++ = colormap_g(val);
+					*p++ = colormap_b(val);
+
+					int iy = max(0, min(density_y-1, (int) ((1.0-val)*density_y*0.9 + density_y*0.1) ));
+					vv[iy][ix]++;
+					if( (iy != density_y-1) && (vv[iy][ix] > vvmax) ) { /* no count for val = 0.0 */
+						vvmax = vv[iy][ix];
+						cout << "vvmax = " << vvmax << ", at ix= " << ix << ", iy= " << iy << endl;
+					}
+
+				}
+			}
+		}
+
+		/* shift audio_signal */
+
+		auto p = s->audio_signal;
+		auto q = s->signal_start;
+		int i=0;
+		while(q < s->signal_end) {
+			*p++ = *q++;
+			i++;
+		}
+		cout << "shifted " << i << " times." << endl;
+
+		s->signal_start = s->audio_signal;
+		s->signal_end   = p;
+
 	}
 
-	/* waveform */
+	/* draw waveform */
 	{
 		cr->save();
 		for(int iy=0;iy<nch;iy++) {
@@ -150,24 +216,13 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			/* draw a waveform */
 			cr->set_source_rgba(0.4, 0.9, 0.1, 1.0);
 			for(int ix=0;ix<waveform_x;ix++) {
-				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[nch*ix+iy]/32768.0*(waveform_y/2));
+				//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[nch*ix+iy]/32768.0*(waveform_y/2));
+				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in_real     [ix       ]/32768.0*(waveform_y/2));
+				//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_window[ix       ]        *(waveform_y/2));
 			}
 			cr->stroke();
 		}
 		cr->restore();
-	}
-
-	cout << "rowstride = " << rowstride << ", waterfall_x = " << waterfall_x << ", waterfall_y = " << waterfall_y << endl;
-
-	/* waterfall shiftdown */
-	if(loop_count) {
-		for (int i = waterfall_y - 1; i > 0 ; i--) {
-			p = m_image->get_pixels() + i * rowstride;
-			for (int j = 0; j < waterfall_x * 3; j++) {
-				*p = *(p - rowstride);
-				p++;
-			}
-		}
 	}
 
 	/* spectrum box */
@@ -180,6 +235,15 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->restore();
 	}
 
+	/* draw spectrum */
+	cr->save();
+	cr->set_source_rgba(0.9, 0.9, 0.1, 1.0);
+	for(int ix=0;ix<spectrum_x;ix++) {
+		cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*nch+spectrum_y - val_line[ix]*spectrum_y*0.9);
+	}
+	cr->stroke();
+	cr->restore();
+
 	/* show IC-7410 frequency */
 	{
 		if(nch == 2) {
@@ -191,45 +255,6 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			cr->stroke();
 			cr->restore();
 		}
-	}
-
-	/* log10 and normalize */
-	//	double amax = 16.0;
-	//	double amin =  7.0;
-	double val  =  0.0;
-	{
-		cr->save();
-		cr->set_source_rgba(0.9, 0.9, 0.1, 1.0);
-		p = m_image->get_pixels();
-
-		for(int ix=0;ix<spectrum_x;ix++) {
-			int ixx = s->get_index(ix, nfft, spectrum_x);
-			if(nch == 1 && RigParams::operating_mode == 3) { /* LSB */
-				ixx = (spectrum_x - 1) - ixx;
-			}
-			val = s->out[ixx][0] * s->out[ixx][0] + s->out[ixx][1] * s->out[ixx][1];
-			if (val < pow(10.0, amin)) {
-				val = 0.0;
-			} else if (val > pow(10.0, amax)) {
-				val = 1.0;
-			} else {
-				val = (log10(val) - amin) / (amax - amin);
-			}
-			*p++ = colormap_r(val);
-			*p++ = colormap_g(val);
-			*p++ = colormap_b(val);
-			cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*nch+spectrum_y - val*spectrum_y*0.9);
-
-			int iy = max(0, min(density_y-1, (int) ((1.0-val)*density_y*0.9 + density_y*0.1) ));
-			vv[iy][ix]++;
-			if( (iy != density_y-1) && (vv[iy][ix] > vvmax) ) { /* no count for val = 0.0 */
-				vvmax = vv[iy][ix];
-				cout << "vvmax = " << vvmax << ", at ix= " << ix << ", iy= " << iy << endl;
-			}
-
-		}
-		cr->stroke();
-		cr->restore();
 	}
 
 	/* waterfall draw */
@@ -260,11 +285,19 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->stroke();
 		cr->restore();
 	}
+
+	count++;
 	return true;
 }
 
 bool MyDrawingAreaS::on_timeout() {
-	cout << "MyDrawingAreaS::on_timeout(): count = " << count << ", nch = " << nch << endl;
+	current = chrono::system_clock::now();
+	auto diff1 = current - start;
+	auto diff2 = current - current_b4;
+	current_b4 = current;
+	cout << "MyDrawingAreaS::on_timeout(): elapsed time = " << chrono::duration_cast<std::chrono::milliseconds>(diff1).count() << " msec (delta = "
+			<< chrono::duration_cast<std::chrono::milliseconds>(diff2).count() << " msec),  count = " << count << ", nch = " << nch << endl;
+	//	cout << "MyDrawingAreaS::on_timeout(): count = " << count << ", nch = " << nch << endl;
 
 	Glib::RefPtr<Gdk::Window> win = get_window();
 	if (win) {
@@ -272,7 +305,7 @@ bool MyDrawingAreaS::on_timeout() {
 		win->invalidate_rect(rect, false);
 	}
 	cout << "MyDrawingAreaS::on_timeout(): win = " << win << ", width = " << get_allocation().get_width()
-																	<< ", height = " << get_allocation().get_height() << endl;
+																											<< ", height = " << get_allocation().get_height() << endl;
 
 	return true;
 }

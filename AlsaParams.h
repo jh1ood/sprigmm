@@ -10,13 +10,18 @@
 
 #include <asoundlib.h>
 #include <cmath>
+#include <chrono>
 #include <fftw3.h>
 
 struct AlsaParams  {
 
 public:
+
 	int nfft                   {0};  /* for fftw3 */
 	double *audio_signal {nullptr};
+	double *signal_start {nullptr};  /* valid data in [start,end) */
+	double *signal_end   {nullptr};
+
 	double *audio_window {nullptr};
 	double *in_real      {nullptr};  /* IC-7410   */
 	fftw_complex *in;                /* Soft66LC4 */
@@ -32,9 +37,9 @@ public:
 	int    density_x         {0};
 	int    density_y         {0};
 	double bin_size        {0.0};
-	double amax            {9.0}; /* for psuedcolor */
-	double amin            {1.0};
-	int    timervalue      { 50}; /* on_timeout() */
+	double amax            {0.0}; /* for psuedcolor */
+	double amin            {0.0};
+	int    timer_value       {0}; /* on_timeout() */
 
 	snd_pcm_uframes_t   buffer_size          {0};
 	snd_pcm_uframes_t   period_size          {0};
@@ -51,6 +56,9 @@ public:
 	const int period_event     {0};
 	unsigned int channels      {0};
 	unsigned int rate          {0};
+
+	std::chrono::system_clock::time_point start;
+	std::chrono::system_clock::time_point current;
 
 };
 

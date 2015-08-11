@@ -10,6 +10,7 @@
 
 #include "AlsaParams.h"
 #include "Sound.h"
+#include <chrono>
 
 class SoundIC7410: public Sound {
 public:
