@@ -12,7 +12,7 @@
 #include "MyDrawingAreaS.h"
 
 MyWindow::MyWindow(const vector <Sound*> &slist, const vector <Rig*> &rlist) {
-	set_title("IC-7410 Rig Control Program (C++ version), build=0812a");
+	set_title("IC-7410 Rig Control Program (C++ version), build=0812b");
 
 	for(auto r : rlist) {
 		myvbox.pack_start( *(new MyDrawingAreaR{r}), FALSE, FALSE, 0);

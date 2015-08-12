@@ -25,13 +25,11 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 	spectrum_y  = s->spectrum_y;
 	waterfall_x = s->waterfall_x;
 	waterfall_y = s->waterfall_y;
-	density_x   = s->density_x;
-	density_y   = s->density_y;
 	amax        = s->amax;
 	amin        = s->amin;
 
 	size_x = 2*xspacing + max(max(waveform_x, spectrum_x), waterfall_x);
-	size_y = 2*yspacing + channels * (waveform_y + yspacing) + spectrum_y + waterfall_y + waterfall_y;
+	size_y = 2*yspacing + channels * (waveform_y + yspacing) + spectrum_y + waterfall_y ;
 	set_size_request(size_x, size_y);
 
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout), s->timer_value );
@@ -40,24 +38,12 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 	m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, waterfall_x, waterfall_y);
 	rowstride = m_image->get_rowstride();
 
-	m_image2 = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, density_x, density_y);
-	rowstride2 = m_image2->get_rowstride();
-
 	for (int j = 0; j < waterfall_y; j++) {
 		p = m_image->get_pixels() + j * rowstride;
 		for (int i = 0; i < waterfall_x; i++) {
 			*p++ = i%256;
 			*p++ =  0;
 			*p++ =  0;
-		}
-	}
-
-	for (int j = 0; j < density_y; j++) {
-		p2 = m_image2->get_pixels() + j * rowstride2;
-		for (int i = 0; i < density_x; i++) {
-			*p2++ =  0;
-			*p2++ = 128;
-			*p2++ =  0;
 		}
 	}
 
@@ -95,14 +81,7 @@ bool MyDrawingAreaS::on_button_press_event(GdkEventButton * event) {
 
 bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
-	if(count++ % 50 == 0) {
-		for (int j = 0; j < density_y; j++) {
-			for (int i = 0; i < density_x; i++) {
-				vv[j][i] = 0;
-			}
-		}
-		vvmax = 0;
-	}
+	static int count = 0;
 
 	/* fill in the whole area */
 	{
@@ -121,10 +100,17 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	if(loop_count) {
 		while(s->signal_end - s->signal_start >= nfft*channels) {
+
+			cout << "AAA count = " << count++
+					<< " , loop_count = " << loop_count
+					<< " , start = " << s->signal_start - s->audio_signal
+					<< " , end = " << s-> signal_end - s-> audio_signal
+					<< " , end-start = " << s->signal_end - s-> signal_start << endl;
+
 			s->asound_fftcopy();
 
 			/* forward FFT block */
-			s->signal_start += (int) (s->nfft * s->fft_forward_ratio);
+			s->signal_start += (int) (s->nfft * s->fft_forward_ratio * s->channels);
 
 			fftw_execute(s->plan);
 
@@ -163,11 +149,6 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 					*p++ = colormap_g(val);
 					*p++ = colormap_b(val);
 
-					int iy = max(0, min(density_y-1, (int) ((1.0-val)*density_y*0.9 + density_y*0.1) ));
-					vv[iy][ix]++;
-					if( (iy != density_y-1) && (vv[iy][ix] > vvmax) ) { /* no count for val = 0.0 */
-						vvmax = vv[iy][ix];
-					}
 
 				}
 			}
@@ -257,25 +238,6 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->restore();
 	}
 
-	/* density draw */
-	for (int j = 0; j < density_y; j++) {
-		p2 = m_image2->get_pixels() + j * rowstride2;
-		for (int i = 0; i < density_x; i++) {
-			double vvv = 2.0 * double (vv[j][i]) / double (vvmax);
-			if(vvv > 1.0)  vvv = 1.0;
-			*p2++ = colormap_r( vvv );
-			*p2++ = colormap_g( vvv );
-			*p2++ = colormap_b( vvv );
-		}
-	}
-
-	Gdk::Cairo::set_source_pixbuf(cr, m_image2, xspacing, yspacing+(waveform_y+yspacing)*channels+spectrum_y   + waterfall_y);
-	{
-		cr->save();
-		cr->paint();
-		cr->stroke();
-		cr->restore();
-	}
 
 	return true;
 }

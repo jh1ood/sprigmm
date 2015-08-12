@@ -30,8 +30,6 @@ private:
 	int spectrum_y  {0};
 	int waterfall_x {0};
 	int waterfall_y {0};
-	int density_x   {0};
-	int density_y   {0};
 	double amax     {0.0};
 	double amin     {0.0};
 
@@ -48,16 +46,11 @@ private:
 	int size_y      {  0};
 
 	double val_line[2048];
-	int vv[510][2048];
-	int vvmax       {0};
 
 	Glib::RefPtr < Gdk::Pixbuf > m_image;
 	guint8 *p {nullptr};
 	int rowstride    {0};
 
-	Glib::RefPtr < Gdk::Pixbuf > m_image2;
-	guint8 *p2 {nullptr};
-	int rowstride2   {0};
 };
 
 #endif /* MYDRAWINGAREAS_H_ */

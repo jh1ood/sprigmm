@@ -12,19 +12,18 @@ SoundIC7410::SoundIC7410(char* s) {
 	rate              =  32   * 1000; /* it is 1000, not 1024 */
 	buffer_size       =  32   * 1024;
 	period_size       =   8   * 1024;
-	nfft              =  16   * 1024;
+	nfft              =   2   * 1024;
 	fft_forward_ratio = 0.25;
 	timer_margin      = 2.0;
 
 	bin_size    = (double) rate / (double) nfft;
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
 
-	waveform_x  = 1801; waveform_y  =   90;
-	spectrum_x  = 1801;	spectrum_y  =   90;
-	waterfall_x = 1801;	waterfall_y =   90;
-	density_x   = 1801;	density_y   =  120;
+	waveform_x  = 1801; waveform_y  =   40;
+	spectrum_x  = 1801;	spectrum_y  =   40;
+	waterfall_x = 1801;	waterfall_y =  190;
 
-	amax = 15.0; /* waterfall pseudo color */
+	amax = 14.0; /* waterfall pseudo color */
 	amin =  8.0; /* waterfall pseudo color */
 
 	cout << "SoundIC7410::SoundIC7410()"

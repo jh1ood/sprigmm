@@ -19,8 +19,7 @@ SoundSoft66::SoundSoft66(char* s) {
 	bin_size = (double) rate / (double) nfft;
 	waveform_x  = 1801; waveform_y  =  40;
 	spectrum_x  = 1801;	spectrum_y  =  90;
-	waterfall_x = 1801;	waterfall_y =  90;
-	density_x   = 1801;	density_y   =  90;
+	waterfall_x = 1801;	waterfall_y =  490;
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
 	amax = 14.0; /* waterfall pseudo color */
 	amin =  7.0; /* waterfall pseudo color */
@@ -57,8 +56,8 @@ int SoundSoft66::asound_fftcopy() {
 	if(signal_end - signal_start >= nfft*channels) { /* this should always be true */
 		auto p = signal_start;
 		for (int i = 0; i < nfft; i++) {
-			in[i][0] = *p++ * audio_window[i]; /* invert I and Q signals */
 			in[i][1] = *p++ * audio_window[i]; /* invert I and Q signals */
+			in[i][0] = *p++ * audio_window[i]; /* invert I and Q signals */
 		}
 		return 0;
 	} else { /* should never happen */

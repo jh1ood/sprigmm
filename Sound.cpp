@@ -51,7 +51,7 @@ int Sound::asound_init() {
 }
 
 int Sound::asound_read() {
-	static int    count  =   0;
+//	static int    count  =   0;
 //	static double phase1 = 0.0;
 //	static double phase2 = 0.0;
 //	static double phase3 = 0.0;

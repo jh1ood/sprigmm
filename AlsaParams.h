@@ -30,8 +30,6 @@ public:
 	int    spectrum_y        {0};
 	int    waterfall_x       {0};
 	int    waterfall_y       {0};
-	int    density_x         {0};
-	int    density_y         {0};
 	double bin_size        {0.0};
 	double amax            {0.0}; /* waterfall pseudo color */
 	double amin            {0.0}; /* waterfall pseudo color */
