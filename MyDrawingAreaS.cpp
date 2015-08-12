@@ -129,10 +129,13 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	/* get sound samples, and repeat while there is enough data for fft */
 
 	loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
+	cout << "AAAA " << s->signal_end - s->signal_start << " " << s->signal_start - s->audio_signal << " " << s->signal_end - s->audio_signal
+			<< ", loop_count = " << loop_count << endl;
 
 	if(loop_count) {
 		while(s->signal_end - s->signal_start >= nfft) {
 			s->asound_fftcopy();
+			cout << "BBB " << s->signal_end - s->signal_start << " " << s->signal_start - s->audio_signal << " " << s->signal_end - s->audio_signal << endl;
 			fftw_execute(s->plan);
 
 			/* waterfall shiftdown */
@@ -174,7 +177,6 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 					vv[iy][ix]++;
 					if( (iy != density_y-1) && (vv[iy][ix] > vvmax) ) { /* no count for val = 0.0 */
 						vvmax = vv[iy][ix];
-						cout << "vvmax = " << vvmax << ", at ix= " << ix << ", iy= " << iy << endl;
 					}
 
 				}
@@ -190,10 +192,10 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			*p++ = *q++;
 			i++;
 		}
-		cout << "shifted " << i << " times." << endl;
 
 		s->signal_start = s->audio_signal;
 		s->signal_end   = p;
+		cout << "CCC " << s->signal_end - s->signal_start << " " << s->signal_start - s->audio_signal << " " << s->signal_end - s->audio_signal << endl;
 
 	}
 
@@ -216,8 +218,8 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			/* draw a waveform */
 			cr->set_source_rgba(0.4, 0.9, 0.1, 1.0);
 			for(int ix=0;ix<waveform_x;ix++) {
-				//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[nch*ix+iy]/32768.0*(waveform_y/2));
-				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in_real     [ix       ]/32768.0*(waveform_y/2));
+								cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[nch*ix+iy]/32768.0*(waveform_y/2));
+//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in_real     [ix       ]/32768.0*(waveform_y/2));
 				//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_window[ix       ]        *(waveform_y/2));
 			}
 			cr->stroke();

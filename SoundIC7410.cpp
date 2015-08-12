@@ -15,10 +15,10 @@ SoundIC7410::SoundIC7410(char* s) {
 	channels = 1;
 	rate = 32000;
 	buffer_size =  32   * 1024;
-	period_size =   5.5 * 1024;
-	nfft        =   2   * 1024;
+	period_size =   8.123   * 1024;
+	nfft        =   4   * 1024;
 	bin_size = (double) rate / (double) nfft;
-	waveform_x  = 2048; waveform_y  =   90;
+	waveform_x  = 1801; waveform_y  =   90;
 	spectrum_x  =  600;	spectrum_y  =   90;
 	waterfall_x =  600;	waterfall_y =   90;
 	density_x   =  600;	density_y   =  120;
@@ -47,13 +47,10 @@ SoundIC7410::SoundIC7410(char* s) {
 		audio_window[i] = 0.5* ( 1.0 - cos(2.0*3.14159265*(double)i / (double) (nfft - 1))); /* Hanning */
 	}
 
-//	in_real      = new double[nfft];
-	in_real      = new double[2*buffer_size];
+	in_real      = new double[nfft];
+//	in_real      = new double[2*buffer_size];
 	out          = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * ( nfft/2 + 1 )*2 );
 	plan         = fftw_plan_dft_r2c_1d(nfft, in_real, out, FFTW_MEASURE);
-
-	cout << "samples = " << samples << ", audio_signal = " << audio_signal << ", signal_start = " << signal_start << ", signal_end = " << signal_end
-			<< ", audio_window = " << audio_window << ", in_real = " << in_real << endl;
 
 	asound_init();
 }
@@ -77,25 +74,10 @@ int SoundIC7410::asound_fftcopy() {
 	}
 
 	/* forward nfft/2 samples */
-	signal_start += nfft/2;
+	signal_start += (int) (nfft/2.345);
 	cout << "signal_start offset = " << signal_start - audio_signal << endl;
 
-//	/* shift audio_signal */
-//
-//	auto p = audio_signal;
-//	auto q = signal_start;
-//	cout << "shift amount = " << signal_start - audio_signal << endl;
-//	int i=0;
-//	while(q < signal_end) {
-//		*p++ = *q++;
-//		i++;
-//	}
-//	cout << "shifted " << i << " times." << endl;
-//
-//	signal_start = audio_signal;
-//	signal_end   = p;
-
-	cout << "AAA " << signal_end - signal_start << " " << signal_start - audio_signal << " " << signal_end - audio_signal << endl;
+//	cout << "AAA " << signal_end - signal_start << " " << signal_start - audio_signal << " " << signal_end - audio_signal << endl;
 	return signal_end - signal_start;
 }
 

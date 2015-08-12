@@ -32,9 +32,9 @@ int main(int argc, char *argv[]) {
 
 	vector <Sound*> slist;
 	SoundIC7410 s1{argv[1]};
-//	SoundSoft66 s2{argv[2]};
+	SoundSoft66 s2{argv[2]};
 	slist.push_back(&s1);
-//	slist.push_back(&s2);
+	slist.push_back(&s2);
 
 	vector <Rig*> rlist;
 	RigIC7410 r1{argv[3]};
