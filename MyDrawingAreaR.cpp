@@ -27,8 +27,6 @@ MyDrawingAreaR::MyDrawingAreaR(Rig* rr) : r {rr} {
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaR::on_timeout), 100 );
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
-	cout << "MyDrawingAreaR::MyDrawingAreaR(): r = " << r << endl;
-
 }
 
 MyDrawingAreaR::~MyDrawingAreaR() {
@@ -38,7 +36,6 @@ MyDrawingAreaR::~MyDrawingAreaR() {
 bool MyDrawingAreaR::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	double phase = (count++ % 360) / 360.0 * 2.0 * 3.141592;
-	cout << "MyDrawingAreaR::on_draw: count = " << count << endl;
 
 	/* paint whole widget */
 	{
@@ -114,8 +111,6 @@ bool MyDrawingAreaR::on_timeout() {
 		win->invalidate_rect(rect, false);
 	}
 
-	cout << "MyDrawingAreaR::on_timeout: win = " << win << ", width = " << get_allocation().get_width()
-							<< ", height = " << get_allocation().get_height() << endl;
 	return true;
 }
 

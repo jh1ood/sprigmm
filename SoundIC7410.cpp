@@ -1,8 +1,5 @@
 /*
  * SoundIC7410.cpp
- *
- *  Created on: Jul 4, 2015
- *      Author: user1
  */
 
 #include "SoundIC7410.h"
@@ -10,35 +7,38 @@
 using namespace std;
 
 SoundIC7410::SoundIC7410(char* s) {
-	start = chrono::system_clock::now();
-	sound_device = s;
-	channels = 1;
-	rate = 32000;
-	buffer_size =  32   * 1024;
-	period_size =   8.123   * 1024;
-	nfft        =   4   * 1024;
-	bin_size = (double) rate / (double) nfft;
+	sound_device      =            s;
+	channels          =            1;
+	rate              =  32   * 1000; /* it is 1000, not 1024 */
+	buffer_size       =  32   * 1024;
+	period_size       =   8   * 1024;
+	nfft              =  16   * 1024;
+	fft_forward_ratio = 0.25;
+	timer_margin      = 2.0;
+
+	bin_size    = (double) rate / (double) nfft;
+	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
+
 	waveform_x  = 1801; waveform_y  =   90;
-	spectrum_x  =  600;	spectrum_y  =   90;
-	waterfall_x =  600;	waterfall_y =   90;
-	density_x   =  600;	density_y   =  120;
-	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / 2.0;
-	cout << "SoundIC7410::SoundIC7410(): timer_value = " << timer_value << endl;
-	amax = 15.0;
-	amin =  8.0;
+	spectrum_x  = 1801;	spectrum_y  =   90;
+	waterfall_x = 1801;	waterfall_y =   90;
+	density_x   = 1801;	density_y   =  120;
 
-	cout << "SoundIC7410::SoundIC7410() begin.. \n"
+	amax = 15.0; /* waterfall pseudo color */
+	amin =  8.0; /* waterfall pseudo color */
 
+	cout << "SoundIC7410::SoundIC7410()"
 				<< "  sound_device = " << sound_device
-				<< ", channels = " << channels
-				<< ", rate = " << rate
-				<< ", bin_size = " << bin_size
-				<< ", buffer_size = " << buffer_size
-				<< ", period_size = " << period_size << endl;
+				<< ", channels = "     << channels
+				<< ", rate = "         << rate
+				<< ", bin_size = "     << bin_size
+				<< ", buffer_size = "  << buffer_size
+				<< ", period_size = "  << period_size
+				<< ", timer_value = "  << timer_value
+				<< endl;
 
 	samples      = new signed short[period_size * channels];
-
-	audio_signal = new double [2*buffer_size];
+	audio_signal = new double      [buffer_size];
 	signal_start = audio_signal;
 	signal_end   = audio_signal;
 
@@ -47,38 +47,26 @@ SoundIC7410::SoundIC7410(char* s) {
 		audio_window[i] = 0.5* ( 1.0 - cos(2.0*3.14159265*(double)i / (double) (nfft - 1))); /* Hanning */
 	}
 
-	in_real      = new double[nfft];
-//	in_real      = new double[2*buffer_size];
-	out          = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * ( nfft/2 + 1 )*2 );
-	plan         = fftw_plan_dft_r2c_1d(nfft, in_real, out, FFTW_MEASURE);
+	in   = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft); /* imaginary part is always zero */
+	out  = (fftw_complex *) fftw_malloc(sizeof(fftw_complex) * nfft);
+	plan = fftw_plan_dft_1d(nfft, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
 	asound_init();
 }
 
 int SoundIC7410::asound_fftcopy() {
-	auto end = chrono::system_clock::now();
-	auto diff = end - start;
-	cout << "SoundIC7410::asound_fftcopy(): elapsed time = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count() << " msec." << endl;
-
-	/* copy audio_signal into fft input buffer */
-
-	cout << "entered asound_fftcopy(): audio_signal = " << audio_signal << ", signal_start = " << signal_start << ", signal_end = " << signal_end << ", diff = "
-			<< signal_end - signal_start << endl;
-
-	if(signal_end - signal_start >= nfft) { /* this should always be true */
-		cout << "signal_end - signal_start = " << signal_end - signal_start << endl;
+	/* copy into FFT input buffer */
+	if(signal_end - signal_start >= nfft*channels) { /* this should always be true */
 		auto p = signal_start;
 		for (int i = 0; i < nfft; i++) {
-			in_real[i] = *p++ * audio_window[i];
+			in[i][0] = *p++ * audio_window[i];
+			in[i][1] = 0.0; /* no imaginary part */
 		}
+		return 0;
+	} else { /* should never happen */
+		cout << "SoundIC7410::asound_fftcopy((): error " << endl;
+		return 1;
 	}
-
-	/* forward nfft/2 samples */
-	signal_start += (int) (nfft/2.345);
-	cout << "signal_start offset = " << signal_start - audio_signal << endl;
-
-//	cout << "AAA " << signal_end - signal_start << " " << signal_start - audio_signal << " " << signal_end - audio_signal << endl;
-	return signal_end - signal_start;
 }
 
 SoundIC7410::~SoundIC7410() {

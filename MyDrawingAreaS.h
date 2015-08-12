@@ -24,7 +24,7 @@ public:
 	bool on_timeout();
 private:
 	Sound* s  {nullptr};
-	int nch         {0}; /* parameters that depend on Sound* */
+	int channels    {0}; /* parameters that depend on Sound* */
 	int nfft        {0};
 	int spectrum_x  {0};
 	int spectrum_y  {0};

@@ -24,7 +24,6 @@ int RigIC7410::myread(unsigned char *myresponse)
 {
 	int res = 0;
 	unsigned char mybuf[256], *p;
-	cout << "Sound::myread is called.." << endl;
 
 	p = myresponse;
 	do {
@@ -93,7 +92,6 @@ int RigIC7410::send_command(unsigned char *partial_command)
 		command[4 + i] = partial_command[i];
 	}
 	command[n_command - 1] = 0xfd;
-	cout << "send_command: fd = " << fd << endl;
 	write(fd, command, n_command);
 	n_echoback = myread(echoback);
 
@@ -137,7 +135,6 @@ int RigIC7410::get_operating_mode() {
 	}
 	operating_mode = buf[5];
 	dsp_filter     = buf[6];
-	cout << "myclock: operating_mode = " << operating_mode << ", dsp_filter = " << dsp_filter << endl;
 
 	return operating_mode;
 }
@@ -157,7 +154,6 @@ int RigIC7410::get_frequency() {
 	}
 	sprintf(string, "%02x%02x%02x%02x", buf[8], buf[7], buf[6], buf[5]);
 	frequency = atoi(string);
-	cout << "res = " << res << ", frequency = " << frequency << endl;
 	ic7410_frequency = frequency;
 
 	return frequency;
@@ -190,14 +186,11 @@ int RigIC7410::rig_init_serial(char *serial_port)
 {
 	struct termios tio;
 
-	std::cout << "rig_init_serial: begin ... \n";
-
 	fd = open(serial_port, O_RDWR | O_NOCTTY);
 	if (fd < 0) {
 		std::cout << "error: can not open " << serial_port << endl;
 		return 1;
 	}
-	cout << "fd = " << fd << endl;
 
 	memset(&tio, 0, sizeof(tio));
 	tio.c_cflag = CS8 | CLOCAL | CREAD;

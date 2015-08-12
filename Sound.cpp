@@ -1,8 +1,5 @@
 /*
  * Sound.cpp
- *
- *  Created on: Jul 4, 2015
- *      Author: user1
  */
 
 #include "Sound.h"
@@ -16,8 +13,6 @@ Sound::~Sound() {
 
 int Sound::asound_init() {
 	int err;
-
-	cout << "Sound::asound_init(): channels = " << channels << endl;
 
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
@@ -57,13 +52,13 @@ int Sound::asound_init() {
 
 int Sound::asound_read() {
 	static int    count  =   0;
-	static double phase1 = 0.0;
-	static double phase2 = 0.0;
-	static double phase3 = 0.0;
-	static double phase4 = 0.0;
+//	static double phase1 = 0.0;
+//	static double phase2 = 0.0;
+//	static double phase3 = 0.0;
+//	static double phase4 = 0.0;
 
 	avail = snd_pcm_avail_update(handle);
-	cout << "Sound::asound_read(): count = " << count++ << ", avail = " << avail << endl;
+//	cout << "Sound::asound_read(): count = " << count++ << ", avail = " << avail << endl;
 
 	if (avail == -EPIPE) {    /* under-run */
 		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
@@ -78,8 +73,8 @@ int Sound::asound_read() {
 
 	int loop_count = 0;
 	while (avail >= (snd_pcm_sframes_t) period_size) {
+		loop_count++;
 		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
-		cout << "Sound::asound_read(): loop_count = " << ++loop_count << ", frames_actually_read = " << frames_actually_read << endl;
 
 		if (frames_actually_read < 0) {
 			cout << "Sound::asound_read(): snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
@@ -93,10 +88,6 @@ int Sound::asound_read() {
 
 		/* copy samples into audio_signal */
 
-		//		for (int i = 0; i < (int) (period_size * channels); i++) {
-		//			audio_signal[i] = samples[i];
-		//		}
-
 		for (int i = 0; i < (int) (period_size * channels); i++) {
 			*signal_end++ = samples[i];
 //			*signal_end++ = 16384.0 * ( sin(phase1) + 0.0*sin(phase2+0.1234) + 0.0*sin(phase3+0.5678) + 0.0*sin(phase4+0.101) );
@@ -104,19 +95,14 @@ int Sound::asound_read() {
 		}
 
 		avail = snd_pcm_avail_update(handle);
-		cout << "Sound::asound_read(): " << "in the while loop, avail = " << avail << endl;
 	}
 
-	cout << "Sound::asound_read(): returning with loop_count = " << loop_count << ", period_size = " << period_size
-			<< ", channels = " << channels << endl;
 	return loop_count;
 }
 
 int Sound::asound_set_hwparams() {
 	unsigned int rrate;
 	int err;
-	cout << "Sound::asound_set_hwparams() begin... \n"
-			<< "  channels = " << channels << endl;
 
 	/* choose all parameters */
 	err = snd_pcm_hw_params_any(handle, hwparams);
@@ -208,8 +194,6 @@ int Sound::asound_set_hwparams() {
 
 int Sound::asound_set_swparams() {
 	int err;
-	cout << "Sound::asound_set_swparams() begin... \n"
-			<< "  channels = " << channels << endl;
 
 	/* get the current swparams */
 	err = snd_pcm_sw_params_current(handle, swparams);

@@ -14,20 +14,16 @@
 #include <fftw3.h>
 
 struct AlsaParams  {
-
 public:
-
-	int nfft                   {0};  /* for fftw3 */
-	double *audio_signal {nullptr};
-	double *signal_start {nullptr};  /* valid data in [start,end) */
+	double *audio_signal {nullptr}; /* valid data in [start,end) */
+	double *signal_start {nullptr};
 	double *signal_end   {nullptr};
-
 	double *audio_window {nullptr};
-	double *in_real      {nullptr};  /* IC-7410   */
-	fftw_complex *in;                /* Soft66LC4 */
+	int nfft                   {0}; /* for fftw3 */
+	double fft_forward_ratio {1.0}; /* (0, 1] the value 1.0 is for non-overlap */
+	fftw_complex *in;
 	fftw_complex *out;
 	fftw_plan     plan;
-
 	int    waveform_x        {0};
 	int    waveform_y        {0};
 	int    spectrum_x        {0};
@@ -37,10 +33,10 @@ public:
 	int    density_x         {0};
 	int    density_y         {0};
 	double bin_size        {0.0};
-	double amax            {0.0}; /* for psuedcolor */
-	double amin            {0.0};
+	double amax            {0.0}; /* waterfall pseudo color */
+	double amin            {0.0}; /* waterfall pseudo color */
 	int    timer_value       {0}; /* on_timeout() */
-
+	double timer_margin    {2.0}; /* reduce timer_value */
 	snd_pcm_uframes_t   buffer_size          {0};
 	snd_pcm_uframes_t   period_size          {0};
 	snd_pcm_sframes_t   avail                {0};
@@ -56,10 +52,6 @@ public:
 	const int period_event     {0};
 	unsigned int channels      {0};
 	unsigned int rate          {0};
-
-	std::chrono::system_clock::time_point start;
-	std::chrono::system_clock::time_point current;
-
 };
 
 #endif /* ALSAPARAMS_H_ */
