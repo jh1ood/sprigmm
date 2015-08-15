@@ -23,7 +23,7 @@ public:
 	static int  cw_pitch;
 	static int  operating_mode;	/* CW=03, CW-REV=07, LSB=00, USB=01 */
 	static int  dsp_filter;		/* FIL1=01, FIL2=02, FIL3=03 */
-	std::chrono::system_clock::time_point start;
+//	std::chrono::system_clock::time_point start;
 	std::chrono::system_clock::time_point current;
 	std::chrono::system_clock::time_point current_b4;
 

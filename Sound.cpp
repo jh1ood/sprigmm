@@ -105,8 +105,21 @@ int Sound::asound_read() {
 		loop_count++;
 		frames_actually_read = snd_pcm_readi(handle, samples, period_size);
 
-		if (frames_actually_read < 0) {
+		if (frames_actually_read < 0) { /* this sometimes happens */
 			cout << "Sound::asound_read(): snd_pcm_readi error: " << snd_strerror(frames_actually_read) << endl;
+			cout << "Sound::asound_read(): snd_pcm_readi error: frames_actually_read = " << frames_actually_read << endl;
+
+			if(frames_actually_read == -EPIPE) {
+			err = snd_pcm_prepare(handle);
+			cout << "Sound::asound_read(): snd_pcm_prepare returns with = " << err << endl;
+			if(err > 0) {
+				cout << "Sound::asound_read(): can not recover from overrun, snd_pcm_prepare failed." << endl;
+			}
+			avail = snd_pcm_avail_update(handle);
+			cout << "Sound::asound_read(): now avail = " << avail << endl;
+			return 0;
+			}
+			cout << "funny error" << endl;
 			exit(EXIT_FAILURE);
 		}
 		if (frames_actually_read != (int) period_size) {

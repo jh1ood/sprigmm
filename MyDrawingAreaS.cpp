@@ -16,7 +16,7 @@ int colormap_g(double);
 int colormap_b(double);
 
 MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
-	current_b4 = start;
+	current_b4  = chrono::system_clock::now();
 	channels    = s->channels;
 	nfft        = s->nfft;
 	waveform_x  = s->waveform_x;
@@ -81,53 +81,48 @@ bool MyDrawingAreaS::on_button_press_event(GdkEventButton * event) {
 
 bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
-	static std::chrono::system_clock::time_point current_b4;
-
-	if(count == 0) current_b4 = chrono::system_clock::now();
-	auto current = chrono::system_clock::now();
-    auto diff = current - current_b4;
+	current    = chrono::system_clock::now();
+    auto diff  = current - current_b4;
     current_b4 = current;
 
 	cout << "MyDrawingAreaS::on_draw(): count = " << count
          << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-			<< " , start = " << s->signal_start - s->audio_signal
-			<< " , end = " << s-> signal_end - s-> audio_signal
-			<< " , end-start = " << s->signal_end - s-> signal_start << endl;
+			<< " , start = "     << s->signal_start - s->audio_signal
+			<< " , end = "       << s->signal_end   - s->audio_signal
+			<< " , end-start = " << s->signal_end   - s->signal_start << endl;
 
-	/* fill in the whole area */
-	{
-		cr->save();
-		double color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
-		cr->set_source_rgba(0.5+0.1*sin(color_phase), 0.5+0.1*cos(color_phase), 0.5, 1.0);
-		cr->rectangle(0, 0, size_x, size_y);
-		cr->fill();
-		cr->stroke();
-		cr->restore();
-	}
 
 	/* get sound samples, and repeat while there is enough data for fft */
 
 	loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
 
+	if(loop_count) {
 	cout << "MyDrawingAreaS::on_draw(): count = " << count
          << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-			<< " , start = " << s->signal_start - s->audio_signal
-			<< " , end = " << s-> signal_end - s-> audio_signal
-			<< " , end-start = " << s->signal_end - s-> signal_start << endl;
+			<< " , start = "     << s->signal_start - s->audio_signal
+			<< " , end = "       << s->signal_end   - s->audio_signal
+			<< " , end-start = " << s->signal_end   - s->signal_start << endl;
+	}
 
 	if(loop_count) {
 		while(s->signal_end - s->signal_start >= nfft*channels) {
 
-			cout << "AAA channels = " << channels
-					<< " , loop_count = " << loop_count
-					<< " , start = " << s->signal_start - s->audio_signal
-					<< " , end = " << s-> signal_end - s-> audio_signal
-					<< " , end-start = " << s->signal_end - s-> signal_start << endl;
+			cout << "MyDrawingAreaS::on_draw(): count = " << count
+		         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+					<< " , start = "     << s->signal_start - s->audio_signal
+					<< " , end = "       << s->signal_end   - s->audio_signal
+					<< " , end-start = " << s->signal_end   - s->signal_start << endl;
 
 			s->asound_fftcopy();
 
 			/* forward FFT block */
 			s->signal_start += (int) (s->nfft * s->fft_forward_ratio * s->channels);
+
+			cout << "MyDrawingAreaS::on_draw(): count = " << count
+		         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+					<< " , start = "     << s->signal_start - s->audio_signal
+					<< " , end = "       << s->signal_end   - s->audio_signal
+					<< " , end-start = " << s->signal_end   - s->signal_start << endl;
 
 			fftw_execute(s->plan);
 
@@ -184,6 +179,23 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		s->signal_start = s->audio_signal;
 		s->signal_end   = p;
 
+		cout << "MyDrawingAreaS::on_draw(): count = " << count
+	         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+				<< " , start = "     << s->signal_start - s->audio_signal
+				<< " , end = "       << s->signal_end   - s->audio_signal
+				<< " , end-start = " << s->signal_end   - s->signal_start << endl;
+
+	}
+
+	/* fill in the whole area */
+	{
+		cr->save();
+		double color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
+		cr->set_source_rgba(0.5+0.1*sin(color_phase), 0.5+0.1*cos(color_phase), 0.5, 1.0);
+		cr->rectangle(0, 0, size_x, size_y);
+		cr->fill();
+		cr->stroke();
+		cr->restore();
 	}
 
 	/* draw waveform */
