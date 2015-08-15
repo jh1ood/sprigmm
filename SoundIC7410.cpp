@@ -10,18 +10,18 @@ SoundIC7410::SoundIC7410(char* s) {
 	sound_device      =            s;
 	channels          =            1;
 	rate              =  32   * 1000; /* it is 1000, not 1024 */
-	buffer_size       =  32   * 1024;
-	period_size       =   8   * 1024;
-	nfft              =   2   * 1024;
-	fft_forward_ratio = 0.25;
-	timer_margin      = 2.0;
+	buffer_size       = 128   * 1024;
+	period_size       =   6.4   * 1000;
+	nfft              =  16   * 1024;
+	fft_forward_ratio = 0.5;
+	timer_margin      = 1.0;
 
 	bin_size    = (double) rate / (double) nfft;
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
 
 	waveform_x  = 1801; waveform_y  =   40;
 	spectrum_x  = 1801;	spectrum_y  =   40;
-	waterfall_x = 1801;	waterfall_y =  190;
+	waterfall_x = 1801;	waterfall_y =  100;
 
 	amax = 14.0; /* waterfall pseudo color */
 	amin =  8.0; /* waterfall pseudo color */
@@ -51,21 +51,6 @@ SoundIC7410::SoundIC7410(char* s) {
 	plan = fftw_plan_dft_1d(nfft, in, out, FFTW_FORWARD, FFTW_MEASURE);
 
 	asound_init();
-}
-
-int SoundIC7410::asound_fftcopy() {
-	/* copy into FFT input buffer */
-	if(signal_end - signal_start >= nfft*channels) { /* this should always be true */
-		auto p = signal_start;
-		for (int i = 0; i < nfft; i++) {
-			in[i][0] = *p++ * audio_window[i];
-			in[i][1] = 0.0; /* no imaginary part */
-		}
-		return 0;
-	} else { /* should never happen */
-		cout << "SoundIC7410::asound_fftcopy((): error " << endl;
-		return 1;
-	}
 }
 
 SoundIC7410::~SoundIC7410() {

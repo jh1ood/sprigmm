@@ -20,6 +20,7 @@ public:
 	double *signal_end   {nullptr};
 	double *audio_window {nullptr};
 	int nfft                   {0}; /* for fftw3 */
+
 	double fft_forward_ratio {1.0}; /* (0, 1] the value 1.0 is for non-overlap */
 	fftw_complex *in;
 	fftw_complex *out;

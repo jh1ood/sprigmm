@@ -20,10 +20,11 @@ public:
 	virtual ~Sound();
 
 	virtual int  get_index(int, int, int) const = 0;
-	virtual int  asound_fftcopy ()              = 0;
+//	virtual int  asound_fftcopy()               = 0;
 
 	int asound_init();
 	int asound_read();
+	int asound_fftcopy();
 	int asound_set_hwparams();
 	int asound_set_swparams();
 

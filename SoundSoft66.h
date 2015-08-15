@@ -17,7 +17,6 @@ class SoundSoft66: public Sound {
 public:
 	SoundSoft66(char* s);
 	int get_index (int i, int j, int k) const override { return (2*j-(k/2)+i)%j; }
-	int asound_fftcopy() override;
 	virtual ~SoundSoft66();
 };
 

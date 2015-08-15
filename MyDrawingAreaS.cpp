@@ -81,7 +81,18 @@ bool MyDrawingAreaS::on_button_press_event(GdkEventButton * event) {
 
 bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
-	static int count = 0;
+	static std::chrono::system_clock::time_point current_b4;
+
+	if(count == 0) current_b4 = chrono::system_clock::now();
+	auto current = chrono::system_clock::now();
+    auto diff = current - current_b4;
+    current_b4 = current;
+
+	cout << "MyDrawingAreaS::on_draw(): count = " << count
+         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+			<< " , start = " << s->signal_start - s->audio_signal
+			<< " , end = " << s-> signal_end - s-> audio_signal
+			<< " , end-start = " << s->signal_end - s-> signal_start << endl;
 
 	/* fill in the whole area */
 	{
@@ -98,10 +109,16 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
 
+	cout << "MyDrawingAreaS::on_draw(): count = " << count
+         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+			<< " , start = " << s->signal_start - s->audio_signal
+			<< " , end = " << s-> signal_end - s-> audio_signal
+			<< " , end-start = " << s->signal_end - s-> signal_start << endl;
+
 	if(loop_count) {
 		while(s->signal_end - s->signal_start >= nfft*channels) {
 
-			cout << "AAA count = " << count++
+			cout << "AAA channels = " << channels
 					<< " , loop_count = " << loop_count
 					<< " , start = " << s->signal_start - s->audio_signal
 					<< " , end = " << s-> signal_end - s-> audio_signal
@@ -188,9 +205,9 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 			/* draw a waveform */
 			cr->set_source_rgba(0.4, 0.9, 0.1, 1.0);
 			for(int ix=0;ix<waveform_x;ix++) {
-								cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[channels*ix+iy]/32768.0*(waveform_y/2));
-//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in_real     [ix       ]/32768.0*(waveform_y/2));
-				//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_window[ix       ]        *(waveform_y/2));
+//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[channels*ix+iy]/32768.0*(waveform_y/2));
+				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in[ix][iy]/32768.0*(waveform_y/2));
+//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_window[ix       ]        *(waveform_y/2));
 			}
 			cr->stroke();
 		}
@@ -238,7 +255,7 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		cr->restore();
 	}
 
-
+	count++;
 	return true;
 }
 
