@@ -54,15 +54,15 @@ int Sound::asound_init() {
 int Sound::asound_read() {
 	int err;
 
-//	static int    count  =   0;
-//	static double phase1 = 0.0;
-//	static double phase2 = 0.0;
-//	static double phase3 = 0.0;
-//	static double phase4 = 0.0;
+	//	static int    count  =   0;
+	//	static double phase1 = 0.0;
+	//	static double phase2 = 0.0;
+	//	static double phase3 = 0.0;
+	//	static double phase4 = 0.0;
 
 	avail = snd_pcm_avail_update(handle);
 
-//	if (avail == -EPIPE) {    /* under-run */
+	//	if (avail == -EPIPE) {    /* under-run */
 	while (avail == -EPIPE) {    /* under-run */
 		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
 
@@ -91,12 +91,12 @@ int Sound::asound_read() {
 
 
 
-//		err = snd_pcm_recover(handle, -EPIPE, 0);
-//		if (err < 0) {
-//			cout << "Sound::asound_read(): can not recover from -EPIPE error: " << snd_strerror(err) << endl;
-//		}
-//		avail = snd_pcm_avail_update(handle);
-//		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
+		//		err = snd_pcm_recover(handle, -EPIPE, 0);
+		//		if (err < 0) {
+		//			cout << "Sound::asound_read(): can not recover from -EPIPE error: " << snd_strerror(err) << endl;
+		//		}
+		//		avail = snd_pcm_avail_update(handle);
+		//		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
 		return 0;
 	}
 
@@ -110,18 +110,35 @@ int Sound::asound_read() {
 			cout << "Sound::asound_read(): snd_pcm_readi error: frames_actually_read = " << frames_actually_read << endl;
 
 			if(frames_actually_read == -EPIPE) {
-			err = snd_pcm_prepare(handle);
-			cout << "Sound::asound_read(): snd_pcm_prepare returns with = " << err << endl;
-			if(err > 0) {
-				cout << "Sound::asound_read(): can not recover from overrun, snd_pcm_prepare failed." << endl;
-			}
-			avail = snd_pcm_avail_update(handle);
-			cout << "Sound::asound_read(): now avail = " << avail << endl;
-			return 0;
+				err = snd_pcm_prepare(handle);
+				cout << "Sound::asound_read(): snd_pcm_prepare returns with = " << err << endl;
+				if(err > 0) {
+					cout << "Sound::asound_read(): can not recover from overrun, snd_pcm_prepare failed." << endl;
+				}
+				avail = snd_pcm_avail_update(handle);
+				cout << "Sound::asound_read(): now avail = " << avail << endl;
+
+				if ((err = snd_pcm_prepare(handle)) < 0) {
+					cout  << "snd_pcm_prepare error: " << snd_strerror(err) << endl;
+					exit(EXIT_FAILURE);
+				}
+
+				if (snd_pcm_state(handle) == SND_PCM_STATE_PREPARED) {
+					if ((err = snd_pcm_start(handle)) < 0) {
+						cout  << "pcm_start error: " << snd_strerror(err) << endl;
+						exit(EXIT_FAILURE);
+					}
+				} else {
+					cout  << "snd_pcm_state is not PREPARED" << endl;
+					exit(EXIT_FAILURE);
+				}
+
+				return 0;
 			}
 			cout << "funny error" << endl;
 			exit(EXIT_FAILURE);
 		}
+
 		if (frames_actually_read != (int) period_size) {
 			cout << "Sound::asound_read(): frames_actually_read (" << frames_actually_read
 					<< ") does not match the period_size (" << period_size << endl;
@@ -132,8 +149,8 @@ int Sound::asound_read() {
 
 		for (int i = 0; i < (int) (period_size * channels); i++) {
 			*signal_end++ = samples[i];
-//			*signal_end++ = 16384.0 * ( sin(phase1) + 0.0*sin(phase2+0.1234) + 0.0*sin(phase3+0.5678) + 0.0*sin(phase4+0.101) );
-//			phase1 += 0.3; phase2 += 0.05; phase3 += 0.13; phase4 += 0.15;
+			//			*signal_end++ = 16384.0 * ( sin(phase1) + 0.0*sin(phase2+0.1234) + 0.0*sin(phase3+0.5678) + 0.0*sin(phase4+0.101) );
+			//			phase1 += 0.3; phase2 += 0.05; phase3 += 0.13; phase4 += 0.15;
 		}
 
 		avail = snd_pcm_avail_update(handle);
@@ -240,18 +257,50 @@ int Sound::asound_set_hwparams() {
 	}
 
 	/* set the buffer size */
+	buffer_size_org = buffer_size; /* save the original value */
 	err = snd_pcm_hw_params_set_buffer_size_near(handle, hwparams, &buffer_size);
-	cout << "snd_pcm_hw_params_set_buffer_size_near: err = " << err << endl;
 	if (err < 0) {
-		cout << "Sound::asound_set_hwparams: buffer size error = " << err << endl;
+		cout << "Sound::asound_set_hwparams: snd_pcm_hw_params_set_buffer_size_near, error = " << err << endl;
+		return err;
+	} else {
+		cout << "Sound::asound_set_hwparams: snd_pcm_hw_params_set_buffer_size_near, error = " << err
+		     << " ,buffer_size_org = " << buffer_size_org << " , buffer_size = " << buffer_size << endl;
+	}
+
+	/* get the buffer size to check */
+	err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size_get);
+	if (err < 0) {
+		printf("Unable to get buffer size: %s\n", snd_strerror(err));
+		return err;
+	}
+	cout << "snd_pcm_hw_params_get_buffer_size: err = " << err << " , buffer_size_get = " << buffer_size_get << endl;
+	if(buffer_size_get != buffer_size) {
+		cout << "snd_pcm_hw_params_get_buffer_size: buffer_size does not match!" << endl;
 		return err;
 	}
 
 	/* set the period size */
+	period_size_org = period_size;
 	err = snd_pcm_hw_params_set_period_size_near(handle, hwparams, &period_size, NULL);
 	cout << "snd_pcm_hw_params_set_period_size_near: err = " << err << endl;
 	if (err < 0) {
 		cout << "Sound::asound_set_hwparams: period size error = " << err << endl;
+		return err;
+	} else {
+		cout << "Sound::asound_set_hwparams: snd_pcm_hw_params_set_period_size_near, error = " << err
+		     << " ,period_size_org = " << period_size_org << " , period_size = " << period_size << endl;
+	}
+
+	/* get the period size to check */
+	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size_get, &sub_unit_direction);
+	if (err < 0) {
+		printf("Unable to get period size: %s\n", snd_strerror(err));
+		return err;
+	}
+	cout << "snd_pcm_hw_params_get_period_size: err = " << err << " , period_size_get = " << period_size_get
+			<< " , sub_unit_direction = " << sub_unit_direction << endl;
+	if(period_size_get != period_size) {
+		cout << "snd_pcm_hw_params_get_period_size: period_size does not match!" << endl;
 		return err;
 	}
 

@@ -37,7 +37,12 @@ public:
 	int    timer_value       {0}; /* on_timeout() */
 	double timer_margin    {2.0}; /* reduce timer_value */
 	snd_pcm_uframes_t   buffer_size          {0};
+	snd_pcm_uframes_t   buffer_size_org      {0};
+	snd_pcm_uframes_t   buffer_size_get      {0};
 	snd_pcm_uframes_t   period_size          {0};
+	snd_pcm_uframes_t   period_size_org      {0};
+	snd_pcm_uframes_t   period_size_get      {0};
+	int                 sub_unit_direction   {0};
 	snd_pcm_sframes_t   avail                {0};
 	snd_pcm_sframes_t   frames_actually_read {0};
 	snd_pcm_t           *handle   {nullptr};

@@ -11,9 +11,9 @@ SoundIC7410::SoundIC7410(char* s) {
 	channels          =            1;
 	rate              =  32   * 1000; /* it is 1000, not 1024 */
 	buffer_size       = 128   * 1024;
-	period_size       =   6.4   * 1000;
-	nfft              =  16   * 1024;
-	fft_forward_ratio = 0.5;
+	period_size       =   4   * 1024;
+	nfft              =   8   * 1024;
+	fft_forward_ratio = 0.5; /* (0.0, 1.0], 0.5 is half overlap, 1.0 is no overlap */
 	timer_margin      = 1.0;
 
 	bin_size    = (double) rate / (double) nfft;
@@ -37,7 +37,7 @@ SoundIC7410::SoundIC7410(char* s) {
 				<< endl;
 
 	samples      = new signed short[period_size * channels];
-	audio_signal = new double      [buffer_size];
+	audio_signal = new double      [10*buffer_size]; /* just the buffer_size is not enough */
 	signal_start = audio_signal;
 	signal_end   = audio_signal;
 
