@@ -33,6 +33,11 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 	set_size_request(size_x, size_y);
 
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout), s->timer_value );
+	cout << "MyDrawingAreaS::MyDrawingAreaS(): signal_timeout().connect, timer_value = " << s->timer_value << endl;
+
+	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout2), s->timer_value2 );
+	cout << "MyDrawingAreaS::MyDrawingAreaS(): signal_timeout().connect, timer_value2 = " << s->timer_value2 << endl;
+
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
 	m_image = Gdk::Pixbuf::create(Gdk::COLORSPACE_RGB, false, 8, waterfall_x, waterfall_y);
@@ -82,11 +87,11 @@ bool MyDrawingAreaS::on_button_press_event(GdkEventButton * event) {
 bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	current    = chrono::system_clock::now();
-    auto diff  = current - current_b4;
-    current_b4 = current;
+	auto diff  = current - current_b4;
+	current_b4 = current;
 
 	cout << "MyDrawingAreaS::on_draw(): count = " << count
-         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
+			<< " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
 			<< " , start = "     << s->signal_start - s->audio_signal
 			<< " , end = "       << s->signal_end   - s->audio_signal
 			<< " , end-start = " << s->signal_end   - s->signal_start << endl;
@@ -94,40 +99,25 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 	/* get sound samples, and repeat while there is enough data for fft */
 
-	loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
+//	s->loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
 
-	if(loop_count) {
-	cout << "MyDrawingAreaS::on_draw(): count = " << count
-         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-			<< " , start = "     << s->signal_start - s->audio_signal
-			<< " , end = "       << s->signal_end   - s->audio_signal
-			<< " , end-start = " << s->signal_end   - s->signal_start << endl;
+	cout << "loop_count = " << s->loop_count << endl;
+
+	if(s->loop_count) {
 	}
 
-	if(loop_count) {
+	if(s->loop_count) {
 		while(s->signal_end - s->signal_start >= nfft*channels) {
-
-			cout << "MyDrawingAreaS::on_draw(): count = " << count
-		         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-					<< " , start = "     << s->signal_start - s->audio_signal
-					<< " , end = "       << s->signal_end   - s->audio_signal
-					<< " , end-start = " << s->signal_end   - s->signal_start << endl;
 
 			s->asound_fftcopy();
 
 			/* forward FFT block */
 			s->signal_start += (int) (s->nfft * s->fft_forward_ratio * s->channels);
 
-			cout << "MyDrawingAreaS::on_draw(): count = " << count
-		         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-					<< " , start = "     << s->signal_start - s->audio_signal
-					<< " , end = "       << s->signal_end   - s->audio_signal
-					<< " , end-start = " << s->signal_end   - s->signal_start << endl;
-
 			fftw_execute(s->plan);
 
 			/* waterfall shiftdown */
-			if(loop_count) {
+			if(s->loop_count) {
 				for (int i = waterfall_y - 1; i > 0 ; i--) {
 					p = m_image->get_pixels() + i * rowstride;
 					for (int j = 0; j < waterfall_x * 3; j++) {
@@ -139,30 +129,26 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 			/* log10 and normalize */
 			double val  =  0.0;
-			{
-				p = m_image->get_pixels();
+			p = m_image->get_pixels();
 
-				for(int ix=0;ix<spectrum_x;ix++) {
-					int ixx = s->get_index(ix, nfft, spectrum_x);
-					if(channels == 1 && RigParams::operating_mode == 3) { /* LSB */
-						ixx = (spectrum_x - 1) - ixx;
-					}
-					val = s->out[ixx][0] * s->out[ixx][0] + s->out[ixx][1] * s->out[ixx][1];
-					if (val < pow(10.0, amin)) {
-						val = 0.0;
-					} else if (val > pow(10.0, amax)) {
-						val = 1.0;
-					} else {
-						val = (log10(val) - amin) / (amax - amin);
-					}
-					val_line[ix] = val;
-
-					*p++ = colormap_r(val);
-					*p++ = colormap_g(val);
-					*p++ = colormap_b(val);
-
-
+			for(int ix=0;ix<spectrum_x;ix++) {
+				int ixx = s->get_index(ix, nfft, spectrum_x);
+				if(channels == 1 && RigParams::operating_mode == 3) { /* LSB */
+					ixx = (spectrum_x - 1) - ixx;
 				}
+				val = s->out[ixx][0] * s->out[ixx][0] + s->out[ixx][1] * s->out[ixx][1];
+				if (val < pow(10.0, amin)) {
+					val = 0.0;
+				} else if (val > pow(10.0, amax)) {
+					val = 1.0;
+				} else {
+					val = (log10(val) - amin) / (amax - amin);
+				}
+				val_line[ix] = val;
+
+				*p++ = colormap_r(val);
+				*p++ = colormap_g(val);
+				*p++ = colormap_b(val);
 			}
 		}
 
@@ -179,18 +165,12 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		s->signal_start = s->audio_signal;
 		s->signal_end   = p;
 
-		cout << "MyDrawingAreaS::on_draw(): count = " << count
-	         << " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-				<< " , start = "     << s->signal_start - s->audio_signal
-				<< " , end = "       << s->signal_end   - s->audio_signal
-				<< " , end-start = " << s->signal_end   - s->signal_start << endl;
-
 	}
 
 	/* fill in the whole area */
 	{
 		cr->save();
-		double color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
+//		color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
 		cr->set_source_rgba(0.5+0.1*sin(color_phase), 0.5+0.1*cos(color_phase), 0.5, 1.0);
 		cr->rectangle(0, 0, size_x, size_y);
 		cr->fill();
@@ -216,10 +196,18 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 
 			/* draw a waveform */
 			cr->set_source_rgba(0.4, 0.9, 0.1, 1.0);
+
+			int nexpand = 1;
+//			int ixx = s->nfft/2 - nexpand*waveform_x/2;
+//			cout << "X: s->nfft/2 = " << s->nfft/2 << " , waveform_x/2 = " << waveform_x/2 << " , ixx = " << ixx << endl;
 			for(int ix=0;ix<waveform_x;ix++) {
 //				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_signal[channels*ix+iy]/32768.0*(waveform_y/2));
-				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in[ix][iy]/32768.0*(waveform_y/2));
-//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->audio_window[ix       ]        *(waveform_y/2));
+//				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in[ix][iy]/32768.0*(waveform_y/2));
+				int ixx = min(max(s->nfft/2 - nexpand*waveform_x/2 + nexpand*ix, 0), s->nfft - 1);
+//				ixx = max(ixx, 0);
+//				ixx = min(ixx, s->nfft - 1);
+//				cout << "X: ixx = " << ixx << " , ix = " << ix << endl;
+				cr->line_to(xspacing+ix, yspacing+(waveform_y+yspacing)*iy+(waveform_y/2) + s->in[ixx][iy]/32768.0*(waveform_y/2));
 			}
 			cr->stroke();
 		}
@@ -278,6 +266,16 @@ bool MyDrawingAreaS::on_timeout() {
 		Gdk::Rectangle rect(0, 0, get_allocation().get_width(), get_allocation().get_height());
 		win->invalidate_rect(rect, false);
 	}
+
+	return true;
+}
+
+bool MyDrawingAreaS::on_timeout2() {
+
+	color_phase = (count2++ % 360) / 360.0 * 2.0 * 3.1415926535;
+	cout << "count2 = " << count2 << " , color_phase = " << color_phase << endl;
+
+	s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
 
 	return true;
 }

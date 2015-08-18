@@ -22,6 +22,7 @@ public:
 	bool on_draw(const Cairo::RefPtr < Cairo::Context > &cr) override;
 	bool on_button_press_event(GdkEventButton * event) override;
 	bool on_timeout();
+	bool on_timeout2();
 private:
 	Sound* s  {nullptr};
 	int channels    {0}; /* parameters that depend on Sound* */
@@ -30,6 +31,7 @@ private:
 	int spectrum_y  {0};
 	int waterfall_x {0};
 	int waterfall_y {0};
+	double color_phase {0.0};
 	double amax     {0.0};
 	double amin     {0.0};
 
@@ -37,7 +39,7 @@ private:
     double y_press;
 
 	int count         {0};
-	int loop_count    {0};
+	int count2        {0};
 	int xspacing     {10};
 	int yspacing     {10};
 	int waveform_x    {0};

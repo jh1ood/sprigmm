@@ -19,7 +19,9 @@ public:
 	double *signal_start {nullptr};
 	double *signal_end   {nullptr};
 	double *audio_window {nullptr};
+	static constexpr int audio_signal_buffer_size {1024*1024};
 	int nfft                   {0}; /* for fftw3 */
+	int loop_count             {0};
 
 	double fft_forward_ratio {1.0}; /* (0, 1] the value 1.0 is for non-overlap */
 	fftw_complex *in;
@@ -35,7 +37,8 @@ public:
 	double amax            {0.0}; /* waterfall pseudo color */
 	double amin            {0.0}; /* waterfall pseudo color */
 	int    timer_value       {0}; /* on_timeout() */
-	double timer_margin    {2.0}; /* reduce timer_value */
+	int    timer_value2      {0}; /* on_timeout2() */
+	double timer_margin    {1.0}; /* reduce timer_value by this factor */
 	snd_pcm_uframes_t   buffer_size          {0};
 	snd_pcm_uframes_t   buffer_size_org      {0};
 	snd_pcm_uframes_t   buffer_size_get      {0};

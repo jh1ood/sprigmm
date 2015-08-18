@@ -62,7 +62,6 @@ int Sound::asound_read() {
 
 	avail = snd_pcm_avail_update(handle);
 
-	//	if (avail == -EPIPE) {    /* under-run */
 	while (avail == -EPIPE) {    /* under-run */
 		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
 
@@ -88,15 +87,6 @@ int Sound::asound_read() {
 			cout  << "snd_pcm_state is not PREPARED" << endl;
 			exit(EXIT_FAILURE);
 		}
-
-
-
-		//		err = snd_pcm_recover(handle, -EPIPE, 0);
-		//		if (err < 0) {
-		//			cout << "Sound::asound_read(): can not recover from -EPIPE error: " << snd_strerror(err) << endl;
-		//		}
-		//		avail = snd_pcm_avail_update(handle);
-		//		cout << "Sound::asound_read(): avail after snd_pcm_recover() = " << avail << endl;
 		return 0;
 	}
 
@@ -132,11 +122,11 @@ int Sound::asound_read() {
 					cout  << "snd_pcm_state is not PREPARED" << endl;
 					exit(EXIT_FAILURE);
 				}
-
 				return 0;
+			} else {
+				cout << "error not -EPIPE occurred" << endl;
+				exit(EXIT_FAILURE);
 			}
-			cout << "funny error" << endl;
-			exit(EXIT_FAILURE);
 		}
 
 		if (frames_actually_read != (int) period_size) {
@@ -160,7 +150,7 @@ int Sound::asound_read() {
 }
 
 int Sound::asound_fftcopy() {
-	/* copy into FFT input buffer */
+
 	if(signal_end - signal_start >= nfft*channels) { /* this should always be true */
 		auto p = signal_start;
 		switch (channels) {
@@ -182,7 +172,7 @@ int Sound::asound_fftcopy() {
 		return 0;
 	} else { /* should never happen */
 		cout << "Sound::asound_fftcopy((): error " << endl;
-		return 1;
+		exit(1);
 	}
 }
 
@@ -264,7 +254,7 @@ int Sound::asound_set_hwparams() {
 		return err;
 	} else {
 		cout << "Sound::asound_set_hwparams: snd_pcm_hw_params_set_buffer_size_near, error = " << err
-		     << " ,buffer_size_org = " << buffer_size_org << " , buffer_size = " << buffer_size << endl;
+				<< " ,buffer_size_org = " << buffer_size_org << " , buffer_size = " << buffer_size << endl;
 	}
 
 	/* get the buffer size to check */
@@ -288,7 +278,7 @@ int Sound::asound_set_hwparams() {
 		return err;
 	} else {
 		cout << "Sound::asound_set_hwparams: snd_pcm_hw_params_set_period_size_near, error = " << err
-		     << " ,period_size_org = " << period_size_org << " , period_size = " << period_size << endl;
+				<< " ,period_size_org = " << period_size_org << " , period_size = " << period_size << endl;
 	}
 
 	/* get the period size to check */

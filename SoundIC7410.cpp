@@ -18,6 +18,7 @@ SoundIC7410::SoundIC7410(char* s) {
 
 	bin_size    = (double) rate / (double) nfft;
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
+	timer_value2 = timer_value / 1.1;
 
 	waveform_x  = 1801; waveform_y  =   40;
 	spectrum_x  = 1801;	spectrum_y  =   40;
@@ -34,10 +35,11 @@ SoundIC7410::SoundIC7410(char* s) {
 				<< ", buffer_size = "  << buffer_size
 				<< ", period_size = "  << period_size
 				<< ", timer_value = "  << timer_value
+				<< ", audio_signal_buffer_size = " << audio_signal_buffer_size
 				<< endl;
 
 	samples      = new signed short[period_size * channels];
-	audio_signal = new double      [10*buffer_size]; /* just the buffer_size is not enough */
+	audio_signal = new double      [audio_signal_buffer_size]; /* just the buffer_size is not enough */
 	signal_start = audio_signal;
 	signal_end   = audio_signal;
 
