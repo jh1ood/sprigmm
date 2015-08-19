@@ -9,13 +9,31 @@
 
 #include <iostream>
 #include <cmath>
+#include <thread>
 using namespace std;
 
 int colormap_r(double);
 int colormap_g(double);
 int colormap_b(double);
 
+void thread_test(Sound* s) {
+	cout << "thread_test(): s = " << s << endl;
+	int err = snd_pcm_nonblock(s->handle, 0); /* 0=block mode, 1=nonblock mode */
+	cout << "snd_pcm_nonblock(): err = " << err << endl;
+
+	while(1) {
+		usleep(100000);
+		s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
+		cout << "A";
+	}
+}
+
 MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
+
+	cout << "MyDrawingAreaS::MyDrawingAreaS(): s = " << s << endl;
+	std::thread t1{bind(thread_test, s)};
+	t1.detach();
+
 	current_b4  = chrono::system_clock::now();
 	channels    = s->channels;
 	nfft        = s->nfft;
@@ -275,7 +293,7 @@ bool MyDrawingAreaS::on_timeout2() {
 	color_phase = (count2++ % 360) / 360.0 * 2.0 * 3.1415926535;
 	cout << "count2 = " << count2 << " , color_phase = " << color_phase << endl;
 
-	s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
+//	s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
 
 	return true;
 }

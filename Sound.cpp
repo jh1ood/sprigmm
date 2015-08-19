@@ -48,6 +48,8 @@ int Sound::asound_init() {
 		exit(EXIT_FAILURE);
 	}
 
+	cout << "Sound::asound_init(): done" << endl;
+
 	return 0;
 }
 
@@ -61,6 +63,7 @@ int Sound::asound_read() {
 	//	static double phase4 = 0.0;
 
 	avail = snd_pcm_avail_update(handle);
+	cout << "Sound::asound_read(): avail = " << avail << endl;
 
 	while (avail == -EPIPE) {    /* under-run */
 		cout << "Sound::asound_read(): -EPIPE error (overrun for capture) occurred, trying to recover now .." << endl;
