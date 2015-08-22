@@ -1,8 +1,5 @@
 /*
  * SoundSof66.cpp
- *
- *  Created on: Jul 4, 2015
- *      Author: user1
  */
 
 #include "SoundSoft66.h"
@@ -11,7 +8,7 @@ SoundSoft66::SoundSoft66(char* s) {
 	sound_device = s;
 	channels     = 2;
 	rate         =  48 * 1000; /* it is 1000, not 1024 */
-	buffer_size  =  16 * 1024; /* this is the maximum value */
+	buffer_size  =  64 * 1024;
 	period_size  =   4 * 1024;
 	nfft         =   2 * 1024;
 	fft_forward_ratio = 0.5; /* (0.0, 1.0], 0.5 is half overlap, 1.0 is no overlap */
@@ -19,11 +16,10 @@ SoundSoft66::SoundSoft66(char* s) {
 
 	bin_size    = (double) rate / (double) nfft;
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
-//	timer_value2 = timer_value / 1.1;
 
-	waveform_x  = 1801; waveform_y  =   40;
-	spectrum_x  = 1801;	spectrum_y  =   80;
-	waterfall_x = 1801;	waterfall_y =  480;
+	waveform_x  = 1880; waveform_y  =   40;
+	spectrum_x  = 1880;	spectrum_y  =   80;
+	waterfall_x = 1880;	waterfall_y =  480;
 	amax = 14.0; /* waterfall pseudo color */
 	amin =  7.0; /* waterfall pseudo color */
 

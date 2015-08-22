@@ -10,7 +10,7 @@ SoundIC7410::SoundIC7410(char* s) {
 	sound_device      =            s;
 	channels          =            1;
 	rate              =  32   * 1000; /* it is 1000, not 1024 */
-	buffer_size       = 128   * 1024;
+	buffer_size       =  32   * 1024;
 	period_size       =   4   * 1024;
 	nfft              =   8   * 1024;
 	fft_forward_ratio = 0.5; /* (0.0, 1.0], 0.5 is half overlap, 1.0 is no overlap */
@@ -20,9 +20,9 @@ SoundIC7410::SoundIC7410(char* s) {
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
 //	timer_value2 = timer_value / 1.1;
 
-	waveform_x  = 1801; waveform_y  =   40;
-	spectrum_x  = 1801;	spectrum_y  =   40;
-	waterfall_x = 1801;	waterfall_y =  100;
+	waveform_x  = 1880; waveform_y  =   40;
+	spectrum_x  = 1880;	spectrum_y  =   40;
+	waterfall_x = 1880;	waterfall_y =  100;
 
 	amax = 14.0; /* waterfall pseudo color */
 	amin =  8.0; /* waterfall pseudo color */

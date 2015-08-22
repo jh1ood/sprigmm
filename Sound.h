@@ -1,8 +1,5 @@
 /*
  * Sound.h
- *
- *  Created on: Jul 4, 2015
- *      Author: user1
  */
 
 #ifndef SOUND_H_
@@ -20,7 +17,6 @@ public:
 	virtual ~Sound();
 
 	virtual int  get_index(int, int, int) const = 0;
-//	virtual int  asound_fftcopy()               = 0;
 
 	int asound_init();
 	int asound_read();

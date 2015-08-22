@@ -1,8 +1,5 @@
 /*
  * AlsaParams.h
- *
- *  Created on: Jul 4, 2015
- *      Author: user1
  */
 
 #ifndef ALSAPARAMS_H_
@@ -19,7 +16,7 @@ public:
 	double *signal_start {nullptr};
 	double *signal_end   {nullptr};
 	double *audio_window {nullptr};
-	static constexpr int audio_signal_buffer_size {1024*1024};
+	static constexpr int audio_signal_buffer_size {128*1024};
 	int nfft                   {0}; /* for fftw3 */
 	int loop_count             {0};
 

@@ -18,7 +18,7 @@
 #include <mutex>
 
 using namespace std;
-mutex mtx;
+mutex mtx; /* global */
 
 int main(int argc, char *argv[]) {
 
@@ -31,14 +31,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	vector <Sound*> slist;
-//	SoundIC7410 s1{argv[1]}; slist.push_back(&s1);
+	SoundIC7410 s1{argv[1]}; slist.push_back(&s1);
 	SoundSoft66 s2{argv[2]}; slist.push_back(&s2);
 
-	vector <Rig*> rlist;
-	RigIC7410 r1{argv[3]};
-	RigSoft66 r2{nullptr};
-	rlist.push_back(&r1);
-	rlist.push_back(&r2);
+	vector <Rig*>   rlist;
+	RigIC7410   r1{argv[3]}; rlist.push_back(&r1);
+	RigSoft66   r2{nullptr}; rlist.push_back(&r2);
 
 	int argc_dummy = 1; /* to ignore argv */
 	auto app = Gtk::Application::create(argc_dummy, argv, "app.id");

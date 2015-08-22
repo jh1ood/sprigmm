@@ -14,13 +14,10 @@ extern mutex mtx;
 
 void thread_for_read(Sound* s) {
 
-	cout << "thread_test(): id = " << this_thread::get_id() << endl;
+	cout << "thread_for_read(): id = " << this_thread::get_id() << endl;
 	while(1) {
-		usleep(200000);
-		mtx.lock();
-		cout << "AAA locked in thread_test();" << endl;
-		s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
-		mtx.unlock();
+		usleep(200000); /* 0.2sec */
+		s->loop_count = s->asound_read();
 	}
 }
 
@@ -75,12 +72,6 @@ int Sound::asound_init() {
 
 int Sound::asound_read() {
 	int err;
-
-	//	static int    count  =   0;
-	//	static double phase1 = 0.0;
-	//	static double phase2 = 0.0;
-	//	static double phase3 = 0.0;
-	//	static double phase4 = 0.0;
 
 	avail = snd_pcm_avail_update(handle);
 	cout << "Sound::asound_read(): avail = " << avail << endl;
@@ -160,11 +151,11 @@ int Sound::asound_read() {
 
 		/* copy samples into audio_signal */
 
+		mtx.lock();
 		for (int i = 0; i < (int) (period_size * channels); i++) {
 			*signal_end++ = samples[i];
-			//			*signal_end++ = 16384.0 * ( sin(phase1) + 0.0*sin(phase2+0.1234) + 0.0*sin(phase3+0.5678) + 0.0*sin(phase4+0.101) );
-			//			phase1 += 0.3; phase2 += 0.05; phase3 += 0.13; phase4 += 0.15;
 		}
+		mtx.unlock();
 
 		avail = snd_pcm_avail_update(handle);
 	}
@@ -174,29 +165,24 @@ int Sound::asound_read() {
 
 int Sound::asound_fftcopy() {
 
-	if(signal_end - signal_start >= nfft*channels) { /* this should always be true */
-		auto p = signal_start;
-		switch (channels) {
-		case 1:
-			for (int i = 0; i < nfft; i++) {
-				in[i][0] = *p++ * audio_window[i];
-				in[i][1] = 0.0; /* no imaginary part */
-			}
-			break;
-		case 2:
-			for (int i = 0; i < nfft; i++) {
-				in[i][1] = *p++ * audio_window[i]; /* reverse I and Q */
-				in[i][0] = *p++ * audio_window[i]; /* reverse I and Q */
-			}
-			break;
-		default:
-			exit(1);
+	auto p = signal_start;
+	switch (channels) {
+	case 1:
+		for (int i = 0; i < nfft; i++) {
+			in[i][0] = *p++ * audio_window[i];
+			in[i][1] = 0.0; /* no imaginary part */
 		}
-		return 0;
-	} else { /* should never happen */
-		cout << "Sound::asound_fftcopy((): error " << endl;
+		break;
+	case 2:
+		for (int i = 0; i < nfft; i++) {
+			in[i][1] = *p++ * audio_window[i]; /* reverse I and Q */
+			in[i][0] = *p++ * audio_window[i]; /* reverse I and Q */
+		}
+		break;
+	default:
 		exit(1);
 	}
+	return 0;
 }
 
 int Sound::asound_set_hwparams() {

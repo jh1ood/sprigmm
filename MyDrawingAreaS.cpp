@@ -19,23 +19,7 @@ int colormap_b(double);
 
 extern mutex mtx;
 
-//void thread_test(Sound* s) {
-//
-//	cout << "thread_test(): id = " << this_thread::get_id() << endl;
-//	while(1) {
-//		usleep(200000);
-//		mtx.lock();
-//		cout << "AAA locked in thread_test();" << endl;
-//		s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
-//		mtx.unlock();
-//	}
-//}
-
 MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
-
-//	cout << "MyDrawingAreaS::MyDrawingAreaS(): s = " << s << endl;
-//	std::thread t1{bind(thread_test, s)};
-//	t1.detach();
 
 	current_b4  = chrono::system_clock::now();
 	channels    = s->channels;
@@ -108,29 +92,14 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 	auto diff  = current - current_b4;
 	current_b4 = current;
 
-	cout << "MyDrawingAreaS::on_draw(): count = " << count
-			<< " , elapsed time (msec) = " << chrono::duration_cast<std::chrono::milliseconds>(diff).count()
-			<< " , start = "     << s->signal_start - s->audio_signal
-			<< " , end = "       << s->signal_end   - s->audio_signal
-			<< " , end-start = " << s->signal_end   - s->signal_start << endl;
-
-
-	/* get sound samples, and repeat while there is enough data for fft */
-
-//	s->loop_count = s->asound_read(); /* loop_count = 0 or 1 if timer_value is small enough */
+	/* check if new samples are available, and repeat while there is enough data for fft */
 
 	cout << "loop_count = " << s->loop_count << endl;
 
 	if(s->loop_count) {
-	}
-
-	if(s->loop_count) {
 		while(s->signal_end - s->signal_start >= nfft*channels) {
 
-			mtx.lock();
-			cout << "BBB locked in on_draw();" << endl;
 			s->asound_fftcopy();
-			mtx.unlock();
 
 			/* forward FFT block */
 			s->signal_start += (int) (s->nfft * s->fft_forward_ratio * s->channels);
@@ -184,14 +153,17 @@ bool MyDrawingAreaS::on_draw(const Cairo::RefPtr<Cairo::Context> &cr) {
 		}
 
 		s->signal_start = s->audio_signal;
-		s->signal_end   = p;
+
+		mtx.lock();
+		s->signal_end = p;
+		mtx.unlock();
 
 	}
 
 	/* fill in the whole area */
 	{
 		cr->save();
-//		color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
+		color_phase = (count % 360) / 360.0 * 2.0 * 3.1415926535;
 		cr->set_source_rgba(0.5+0.1*sin(color_phase), 0.5+0.1*cos(color_phase), 0.5, 1.0);
 		cr->rectangle(0, 0, size_x, size_y);
 		cr->fill();
