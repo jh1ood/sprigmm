@@ -19,25 +19,23 @@ int colormap_b(double);
 
 extern mutex mtx;
 
-void thread_test(Sound* s) {
-//	int err = snd_pcm_nonblock(s->handle, 0); /* 0=block mode, 1=nonblock mode */
-//	if(err) cout << "snd_pcm_nonblock(): err = " << err << endl;
-
-	cout << "thread_test(): id = " << this_thread::get_id() << endl;
-	while(1) {
-		usleep(200000);
-		mtx.lock();
-		cout << "AAA locked in thread_test();" << endl;
-		s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
-		mtx.unlock();
-	}
-}
+//void thread_test(Sound* s) {
+//
+//	cout << "thread_test(): id = " << this_thread::get_id() << endl;
+//	while(1) {
+//		usleep(200000);
+//		mtx.lock();
+//		cout << "AAA locked in thread_test();" << endl;
+//		s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
+//		mtx.unlock();
+//	}
+//}
 
 MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 
-	cout << "MyDrawingAreaS::MyDrawingAreaS(): s = " << s << endl;
-	std::thread t1{bind(thread_test, s)};
-	t1.detach();
+//	cout << "MyDrawingAreaS::MyDrawingAreaS(): s = " << s << endl;
+//	std::thread t1{bind(thread_test, s)};
+//	t1.detach();
 
 	current_b4  = chrono::system_clock::now();
 	channels    = s->channels;
@@ -57,9 +55,6 @@ MyDrawingAreaS::MyDrawingAreaS(Sound* ss) : s {ss} {
 
 	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout), s->timer_value );
 	cout << "MyDrawingAreaS::MyDrawingAreaS(): signal_timeout().connect, timer_value = " << s->timer_value << endl;
-
-//	Glib::signal_timeout().connect( sigc::mem_fun(*this, &MyDrawingAreaS::on_timeout2), s->timer_value2 );
-//	cout << "MyDrawingAreaS::MyDrawingAreaS(): signal_timeout().connect, timer_value2 = " << s->timer_value2 << endl;
 
 	add_events(	Gdk::BUTTON_PRESS_MASK );
 
@@ -295,16 +290,6 @@ bool MyDrawingAreaS::on_timeout() {
 
 	return true;
 }
-
-//bool MyDrawingAreaS::on_timeout2() {
-//
-//	color_phase = (count2++ % 360) / 360.0 * 2.0 * 3.1415926535;
-//	cout << "count2 = " << count2 << " , color_phase = " << color_phase << endl;
-//
-////	s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
-//
-//	return true;
-//}
 
 int colormap_r(double tmp)
 {

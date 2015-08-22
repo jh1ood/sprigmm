@@ -37,7 +37,7 @@ public:
 	double amax            {0.0}; /* waterfall pseudo color */
 	double amin            {0.0}; /* waterfall pseudo color */
 	int    timer_value       {0}; /* on_timeout() */
-	int    timer_value2      {0}; /* on_timeout2() */
+//	int    timer_value2      {0}; /* on_timeout2() */
 	double timer_margin    {1.0}; /* reduce timer_value by this factor */
 	snd_pcm_uframes_t   buffer_size          {0};
 	snd_pcm_uframes_t   buffer_size_org      {0};

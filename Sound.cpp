@@ -6,7 +6,23 @@
 #include <iostream>
 #include <cmath>
 #include <chrono>
+#include <thread>
+#include <mutex>
 using namespace std;
+
+extern mutex mtx;
+
+void thread_for_read(Sound* s) {
+
+	cout << "thread_test(): id = " << this_thread::get_id() << endl;
+	while(1) {
+		usleep(200000);
+		mtx.lock();
+		cout << "AAA locked in thread_test();" << endl;
+		s->loop_count = s->asound_read(); /* s->loop_count = 0 or 1 if timer_value is small enough */
+		mtx.unlock();
+	}
+}
 
 Sound::~Sound() {
 	cout << "Sound::~Sound() destructor.." << endl;
@@ -47,6 +63,10 @@ int Sound::asound_init() {
 		cout  << "snd_pcm_state is not PREPARED" << endl;
 		exit(EXIT_FAILURE);
 	}
+
+	cout << "Sound::asound_init(): starting a thread." << endl;
+	std::thread t1{bind(thread_for_read, this)};
+	t1.detach();
 
 	cout << "Sound::asound_init(): done" << endl;
 

@@ -19,7 +19,7 @@ SoundSoft66::SoundSoft66(char* s) {
 
 	bin_size    = (double) rate / (double) nfft;
 	timer_value =  ( 1000.0 / ( (double)rate/(double)period_size) ) / timer_margin;
-	timer_value2 = timer_value / 1.1;
+//	timer_value2 = timer_value / 1.1;
 
 	waveform_x  = 1801; waveform_y  =   40;
 	spectrum_x  = 1801;	spectrum_y  =   80;
