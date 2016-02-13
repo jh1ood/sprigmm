@@ -1,5 +1,5 @@
 # sprigmm
-Spinor Rig Control Program in C++
+Spinor Rig Control Program in C++.
 
 This is a master branch. Please check the develop branch for the latest code.
 
